@@ -20,6 +20,15 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> TerrainComponent::Get
     return m_materials;
 }
 
+std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponent::GetTextureArray(uint32_t index) const
+{
+    auto it = m_textureArrays.find(index);
+    if (it != m_textureArrays.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 bool TerrainComponent::GetHeightAt(const glm::vec3& position, float& outHeight) const
 {
     const float terrainX = position.x - m_position.x;

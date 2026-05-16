@@ -51,6 +51,8 @@ private:
 
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const HeightGenerator& generator) const;
 
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateTextureArray(const std::vector<std::string>& paths) const;
+
 private:
     prev::core::device::Device& m_device;
 

@@ -43,15 +43,9 @@ struct UniformBufferObject {
 
 var<private> gl_FragCoord_1: vec4<f32>;
 @group(0) @binding(2) 
-var colorTexture0_: texture_2d<f32>;
-@group(0) @binding(6) 
-var colorSampler: sampler;
+var colorTextures: texture_2d_array<f32>;
 @group(0) @binding(3) 
-var colorTexture1_: texture_2d<f32>;
-@group(0) @binding(4) 
-var colorTexture2_: texture_2d<f32>;
-@group(0) @binding(5) 
-var colorTexture3_: texture_2d<f32>;
+var colorSampler: sampler;
 var<private> inToLightVector0_1: vec3<f32>;
 var<private> inToLightVector1_1: vec3<f32>;
 var<private> inToLightVector2_1: vec3<f32>;
@@ -61,9 +55,9 @@ var<private> inClipDistance_1: f32;
 var<uniform> uboFS: UniformBufferObject;
 var<private> inWorldPosition_1: vec3<f32>;
 var<private> inTextureCoord_1: vec2<f32>;
-@group(0) @binding(7) 
+@group(0) @binding(4) 
 var depthTexture_4: texture_2d_array<f32>;
-@group(0) @binding(8) 
+@group(0) @binding(5) 
 var depthSampler_4: sampler;
 var<private> inViewPosition_1: vec3<f32>;
 var<private> inNormal_1: vec3<f32>;
@@ -79,67 +73,67 @@ fn GetSpecularColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_f1_u0
     var shinePower: f32;
     var dampedFactor: f32;
 
-    let _e69 = (*toLightVector);
-    lightDirection = -(_e69);
-    let _e71 = lightDirection;
-    let _e72 = (*normal);
-    reflectedLightDirection = reflect(_e71, _e72);
+    let _e66 = (*toLightVector);
+    lightDirection = -(_e66);
+    let _e68 = lightDirection;
+    let _e69 = (*normal);
+    reflectedLightDirection = reflect(_e68, _e69);
     if true {
-        let _e74 = (*toLightVector);
-        let _e75 = (*toCameraVector);
-        halfwayDir = normalize((_e74 + _e75));
-        let _e78 = (*normal);
-        let _e79 = halfwayDir;
-        specularFactor = max(dot(_e78, _e79), 0f);
-        let _e82 = (*shineDamper);
-        shinePower = (_e82 * 2.4f);
+        let _e71 = (*toLightVector);
+        let _e72 = (*toCameraVector);
+        halfwayDir = normalize((_e71 + _e72));
+        let _e75 = (*normal);
+        let _e76 = halfwayDir;
+        specularFactor = max(dot(_e75, _e76), 0f);
+        let _e79 = (*shineDamper);
+        shinePower = (_e79 * 2.4f);
     } else {
-        let _e84 = reflectedLightDirection;
-        let _e85 = (*toCameraVector);
-        specularFactor = max(dot(_e84, _e85), 0f);
-        let _e88 = (*shineDamper);
-        shinePower = _e88;
+        let _e81 = reflectedLightDirection;
+        let _e82 = (*toCameraVector);
+        specularFactor = max(dot(_e81, _e82), 0f);
+        let _e85 = (*shineDamper);
+        shinePower = _e85;
     }
-    let _e89 = specularFactor;
-    let _e90 = shinePower;
-    dampedFactor = pow(_e89, _e90);
-    let _e92 = dampedFactor;
-    let _e93 = (*reflectivity);
-    let _e95 = (*lightColor);
-    let _e97 = (*attenuationFactor);
-    return ((_e95 * (_e92 * _e93)) / vec3(_e97));
+    let _e86 = specularFactor;
+    let _e87 = shinePower;
+    dampedFactor = pow(_e86, _e87);
+    let _e89 = dampedFactor;
+    let _e90 = (*reflectivity);
+    let _e92 = (*lightColor);
+    let _e94 = (*attenuationFactor);
+    return ((_e92 * (_e89 * _e90)) / vec3(_e94));
 }
 
 fn GetDiffuseColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b(normal_1: ptr<function, vec3<f32>>, toLightVector_1: ptr<function, vec3<f32>>, lightColor_1: ptr<function, vec3<f32>>, attenuationFactor_1: ptr<function, f32>) -> vec3<f32> {
     var nDotL: f32;
     var brightness: f32;
 
-    let _e62 = (*normal_1);
-    let _e63 = (*toLightVector_1);
-    nDotL = dot(_e62, _e63);
-    let _e65 = nDotL;
-    brightness = max(_e65, 0f);
-    let _e67 = brightness;
-    let _e68 = (*lightColor_1);
-    let _e70 = (*attenuationFactor_1);
-    return ((_e68 * _e67) / vec3(_e70));
+    let _e59 = (*normal_1);
+    let _e60 = (*toLightVector_1);
+    nDotL = dot(_e59, _e60);
+    let _e62 = nDotL;
+    brightness = max(_e62, 0f);
+    let _e64 = brightness;
+    let _e65 = (*lightColor_1);
+    let _e67 = (*attenuationFactor_1);
+    return ((_e65 * _e64) / vec3(_e67));
 }
 
 fn GetAttenuationFactor_u0028_vf3_u003b_vf3_u003b(attenuation: ptr<function, vec3<f32>>, toLightVector_2: ptr<function, vec3<f32>>) -> f32 {
     var toLightDistance: f32;
     var attenuationFactor_2: f32;
 
-    let _e60 = (*toLightVector_2);
-    toLightDistance = length(_e60);
-    let _e63 = (*attenuation)[0u];
-    let _e65 = (*attenuation)[1u];
-    let _e66 = toLightDistance;
-    let _e70 = (*attenuation)[2u];
-    let _e71 = toLightDistance;
-    let _e73 = toLightDistance;
-    attenuationFactor_2 = ((_e63 + (_e65 * _e66)) + ((_e70 * _e71) * _e73));
-    let _e76 = attenuationFactor_2;
-    return _e76;
+    let _e57 = (*toLightVector_2);
+    toLightDistance = length(_e57);
+    let _e60 = (*attenuation)[0u];
+    let _e62 = (*attenuation)[1u];
+    let _e63 = toLightDistance;
+    let _e67 = (*attenuation)[2u];
+    let _e68 = toLightDistance;
+    let _e70 = toLightDistance;
+    attenuationFactor_2 = ((_e60 + (_e62 * _e63)) + ((_e67 * _e68) * _e70));
+    let _e73 = attenuationFactor_2;
+    return _e73;
 }
 
 fn GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture: texture_2d_array<f32>, depthSampler: sampler, shadowCoord: ptr<function, vec4<f32>>, shadowCoordOffset: ptr<function, vec2<f32>>, cascadeIndex: ptr<function, u32>, depthBias: ptr<function, f32>, useReverseDepth: ptr<function, u32>) -> f32 {
@@ -148,41 +142,41 @@ fn GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f
     var phi_104_: bool;
 
     shadow = 1f;
-    let _e66 = (*shadowCoord)[2u];
-    let _e67 = (_e66 >= 0f);
-    phi_104_ = _e67;
-    if _e67 {
-        let _e69 = (*shadowCoord)[2u];
-        phi_104_ = (_e69 <= 1f);
+    let _e63 = (*shadowCoord)[2u];
+    let _e64 = (_e63 >= 0f);
+    phi_104_ = _e64;
+    if _e64 {
+        let _e66 = (*shadowCoord)[2u];
+        phi_104_ = (_e66 <= 1f);
     }
-    let _e72 = phi_104_;
-    if _e72 {
-        let _e73 = (*shadowCoord);
-        let _e75 = (*shadowCoordOffset);
-        let _e76 = (_e73.xy + _e75);
-        let _e77 = (*cascadeIndex);
-        let _e81 = vec3<f32>(_e76.x, _e76.y, f32(_e77));
-        let _e87 = textureSampleLevel(depthTexture, depthSampler, vec2<f32>(_e81.x, _e81.y), i32(_e81.z), 0f);
-        depth = _e87.x;
-        let _e89 = (*useReverseDepth);
-        if (_e89 != 0u) {
-            let _e91 = depth;
-            let _e93 = (*shadowCoord)[2u];
-            let _e94 = (*depthBias);
-            if (_e91 > (_e93 + _e94)) {
+    let _e69 = phi_104_;
+    if _e69 {
+        let _e70 = (*shadowCoord);
+        let _e72 = (*shadowCoordOffset);
+        let _e73 = (_e70.xy + _e72);
+        let _e74 = (*cascadeIndex);
+        let _e78 = vec3<f32>(_e73.x, _e73.y, f32(_e74));
+        let _e84 = textureSampleLevel(depthTexture, depthSampler, vec2<f32>(_e78.x, _e78.y), i32(_e78.z), 0f);
+        depth = _e84.x;
+        let _e86 = (*useReverseDepth);
+        if (_e86 != 0u) {
+            let _e88 = depth;
+            let _e90 = (*shadowCoord)[2u];
+            let _e91 = (*depthBias);
+            if (_e88 > (_e90 + _e91)) {
                 shadow = 0.2f;
             }
         } else {
-            let _e97 = depth;
-            let _e99 = (*shadowCoord)[2u];
-            let _e100 = (*depthBias);
-            if (_e97 < (_e99 - _e100)) {
+            let _e94 = depth;
+            let _e96 = (*shadowCoord)[2u];
+            let _e97 = (*depthBias);
+            if (_e94 < (_e96 - _e97)) {
                 shadow = 0.2f;
             }
         }
     }
-    let _e103 = shadow;
-    return _e103;
+    let _e100 = shadow;
+    return _e100;
 }
 
 fn GetShadowPCFInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1: texture_2d_array<f32>, depthSampler_1: sampler, shadowCoord_1: ptr<function, vec4<f32>>, cascadeIndex_1: ptr<function, u32>, depthBias_1: ptr<function, f32>, useReverseDepth_1: ptr<function, u32>) -> f32 {
@@ -211,68 +205,68 @@ fn GetShadowPCFInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1
     var param_18: f32;
     var param_19: u32;
 
-    let _e86 = textureDimensions(depthTexture_1, 0i);
-    textureDim = vec2<f32>(vec2<i32>(_e86).xy);
-    let _e90 = textureDim;
-    texelSize = (vec2(1f) / _e90);
+    let _e83 = textureDimensions(depthTexture_1, 0i);
+    textureDim = vec2<f32>(vec2<i32>(_e83).xy);
+    let _e87 = textureDim;
+    texelSize = (vec2(1f) / _e87);
     shadow_1 = 0f;
-    let _e93 = gl_FragCoord_1;
-    offset = (fract((_e93.xy * 0.5f)) + vec2(0.25f));
-    let _e100 = offset[1u];
-    if (_e100 > 1.1f) {
+    let _e90 = gl_FragCoord_1;
+    offset = (fract((_e90.xy * 0.5f)) + vec2(0.25f));
+    let _e97 = offset[1u];
+    if (_e97 > 1.1f) {
         offset[1u] = 0f;
     }
-    let _e103 = texelSize;
-    let _e104 = offset;
-    let _e107 = (*shadowCoord_1);
-    param = _e107;
-    param_1 = (_e103 * (_e104 + vec2<f32>(-1.5f, 0.5f)));
-    let _e108 = (*cascadeIndex_1);
-    param_2 = _e108;
-    let _e109 = (*depthBias_1);
-    param_3 = _e109;
-    let _e110 = (*useReverseDepth_1);
-    param_4 = _e110;
-    let _e111 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param), (&param_1), (&param_2), (&param_3), (&param_4));
-    let _e112 = texelSize;
-    let _e113 = offset;
-    let _e116 = (*shadowCoord_1);
-    param_5 = _e116;
-    param_6 = (_e112 * (_e113 + vec2<f32>(0.5f, 0.5f)));
-    let _e117 = (*cascadeIndex_1);
-    param_7 = _e117;
-    let _e118 = (*depthBias_1);
-    param_8 = _e118;
-    let _e119 = (*useReverseDepth_1);
-    param_9 = _e119;
-    let _e120 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_5), (&param_6), (&param_7), (&param_8), (&param_9));
-    let _e122 = texelSize;
-    let _e123 = offset;
-    let _e126 = (*shadowCoord_1);
-    param_10 = _e126;
-    param_11 = (_e122 * (_e123 + vec2<f32>(-1.5f, -1.5f)));
-    let _e127 = (*cascadeIndex_1);
-    param_12 = _e127;
-    let _e128 = (*depthBias_1);
-    param_13 = _e128;
-    let _e129 = (*useReverseDepth_1);
-    param_14 = _e129;
-    let _e130 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_10), (&param_11), (&param_12), (&param_13), (&param_14));
-    let _e132 = texelSize;
-    let _e133 = offset;
-    let _e136 = (*shadowCoord_1);
-    param_15 = _e136;
-    param_16 = (_e132 * (_e133 + vec2<f32>(0.5f, -1.5f)));
-    let _e137 = (*cascadeIndex_1);
-    param_17 = _e137;
-    let _e138 = (*depthBias_1);
-    param_18 = _e138;
-    let _e139 = (*useReverseDepth_1);
-    param_19 = _e139;
-    let _e140 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_15), (&param_16), (&param_17), (&param_18), (&param_19));
-    shadow_1 = ((((_e111 + _e120) + _e130) + _e140) * 0.25f);
-    let _e143 = shadow_1;
-    return _e143;
+    let _e100 = texelSize;
+    let _e101 = offset;
+    let _e104 = (*shadowCoord_1);
+    param = _e104;
+    param_1 = (_e100 * (_e101 + vec2<f32>(-1.5f, 0.5f)));
+    let _e105 = (*cascadeIndex_1);
+    param_2 = _e105;
+    let _e106 = (*depthBias_1);
+    param_3 = _e106;
+    let _e107 = (*useReverseDepth_1);
+    param_4 = _e107;
+    let _e108 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param), (&param_1), (&param_2), (&param_3), (&param_4));
+    let _e109 = texelSize;
+    let _e110 = offset;
+    let _e113 = (*shadowCoord_1);
+    param_5 = _e113;
+    param_6 = (_e109 * (_e110 + vec2<f32>(0.5f, 0.5f)));
+    let _e114 = (*cascadeIndex_1);
+    param_7 = _e114;
+    let _e115 = (*depthBias_1);
+    param_8 = _e115;
+    let _e116 = (*useReverseDepth_1);
+    param_9 = _e116;
+    let _e117 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_5), (&param_6), (&param_7), (&param_8), (&param_9));
+    let _e119 = texelSize;
+    let _e120 = offset;
+    let _e123 = (*shadowCoord_1);
+    param_10 = _e123;
+    param_11 = (_e119 * (_e120 + vec2<f32>(-1.5f, -1.5f)));
+    let _e124 = (*cascadeIndex_1);
+    param_12 = _e124;
+    let _e125 = (*depthBias_1);
+    param_13 = _e125;
+    let _e126 = (*useReverseDepth_1);
+    param_14 = _e126;
+    let _e127 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_10), (&param_11), (&param_12), (&param_13), (&param_14));
+    let _e129 = texelSize;
+    let _e130 = offset;
+    let _e133 = (*shadowCoord_1);
+    param_15 = _e133;
+    param_16 = (_e129 * (_e130 + vec2<f32>(0.5f, -1.5f)));
+    let _e134 = (*cascadeIndex_1);
+    param_17 = _e134;
+    let _e135 = (*depthBias_1);
+    param_18 = _e135;
+    let _e136 = (*useReverseDepth_1);
+    param_19 = _e136;
+    let _e137 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_1, depthSampler_1, (&param_15), (&param_16), (&param_17), (&param_18), (&param_19));
+    shadow_1 = ((((_e108 + _e117) + _e127) + _e137) * 0.25f);
+    let _e140 = shadow_1;
+    return _e140;
 }
 
 fn GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_2: texture_2d_array<f32>, depthSampler_2: sampler, shadowCoord_2: ptr<function, vec4<f32>>, cascadeIndex_2: ptr<function, u32>, depthBias_2: ptr<function, f32>, useReverseDepth_2: ptr<function, u32>) -> f32 {
@@ -289,31 +283,31 @@ fn GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(dept
 
     shadow_2 = 1f;
     if true {
-        let _e72 = (*shadowCoord_2);
-        param_20 = _e72;
-        let _e73 = (*cascadeIndex_2);
-        param_21 = _e73;
-        let _e74 = (*depthBias_2);
-        param_22 = _e74;
-        let _e75 = (*useReverseDepth_2);
-        param_23 = _e75;
-        let _e76 = GetShadowPCFInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_2, depthSampler_2, (&param_20), (&param_21), (&param_22), (&param_23));
-        shadow_2 = _e76;
+        let _e69 = (*shadowCoord_2);
+        param_20 = _e69;
+        let _e70 = (*cascadeIndex_2);
+        param_21 = _e70;
+        let _e71 = (*depthBias_2);
+        param_22 = _e71;
+        let _e72 = (*useReverseDepth_2);
+        param_23 = _e72;
+        let _e73 = GetShadowPCFInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_2, depthSampler_2, (&param_20), (&param_21), (&param_22), (&param_23));
+        shadow_2 = _e73;
     } else {
-        let _e77 = (*shadowCoord_2);
-        param_24 = _e77;
+        let _e74 = (*shadowCoord_2);
+        param_24 = _e74;
         param_25 = vec2<f32>(0f, 0f);
-        let _e78 = (*cascadeIndex_2);
-        param_26 = _e78;
-        let _e79 = (*depthBias_2);
-        param_27 = _e79;
-        let _e80 = (*useReverseDepth_2);
-        param_28 = _e80;
-        let _e81 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_2, depthSampler_2, (&param_24), (&param_25), (&param_26), (&param_27), (&param_28));
-        shadow_2 = _e81;
+        let _e75 = (*cascadeIndex_2);
+        param_26 = _e75;
+        let _e76 = (*depthBias_2);
+        param_27 = _e76;
+        let _e77 = (*useReverseDepth_2);
+        param_28 = _e77;
+        let _e78 = GetShadowRawInternal_u0028_tA21_u003b_p1_u003b_vf4_u003b_vf2_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_2, depthSampler_2, (&param_24), (&param_25), (&param_26), (&param_27), (&param_28));
+        shadow_2 = _e78;
     }
-    let _e82 = shadow_2;
-    return _e82;
+    let _e79 = shadow_2;
+    return _e79;
 }
 
 fn GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_ShadowsCascade_u002d_mf44_u002d_vf41_u005b_4_u005d_u002d_u1_u002d_u11_u003b_vf3_u003b_vf3_u003b_f1_u003b(depthTexture_3: texture_2d_array<f32>, depthSampler_3: sampler, shadows: ptr<function, Shadows>, viewPosition: ptr<function, vec3<f32>>, worldPosition: ptr<function, vec3<f32>>, depthBias_3: ptr<function, f32>) -> f32 {
@@ -329,88 +323,63 @@ fn GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_S
     var param_32: u32;
 
     shadow_3 = 1f;
-    let _e72 = (*depthBias_3);
-    bias = _e72;
-    let _e74 = (*shadows).enabled;
-    if (_e74 != 0u) {
+    let _e69 = (*depthBias_3);
+    bias = _e69;
+    let _e71 = (*shadows).enabled;
+    if (_e71 != 0u) {
         cascadeIndex_3 = 0u;
         i = 0u;
         loop {
-            let _e76 = i;
-            if (_e76 < 3u) {
-                let _e79 = (*viewPosition)[2u];
-                let _e80 = i;
-                let _e85 = (*shadows).cascades[_e80].split[0u];
-                if (_e79 < _e85) {
-                    let _e87 = i;
-                    cascadeIndex_3 = (_e87 + 1u);
-                    let _e89 = bias;
-                    bias = (_e89 / 1.5f);
+            let _e73 = i;
+            if (_e73 < 3u) {
+                let _e76 = (*viewPosition)[2u];
+                let _e77 = i;
+                let _e82 = (*shadows).cascades[_e77].split[0u];
+                if (_e76 < _e82) {
+                    let _e84 = i;
+                    cascadeIndex_3 = (_e84 + 1u);
+                    let _e86 = bias;
+                    bias = (_e86 / 1.5f);
                 }
                 continue;
             } else {
                 break;
             }
             continuing {
-                let _e91 = i;
-                i = (_e91 + bitcast<u32>(1i));
+                let _e88 = i;
+                i = (_e88 + bitcast<u32>(1i));
             }
         }
-        let _e94 = cascadeIndex_3;
-        let _e98 = (*shadows).cascades[_e94].viewProjectionMatrix;
-        let _e99 = (*worldPosition);
-        shadowCoord_3 = (_e98 * vec4<f32>(_e99.x, _e99.y, _e99.z, 1f));
-        let _e105 = shadowCoord_3;
-        let _e107 = shadowCoord_3[3u];
-        normalizedShadowCoord = (_e105 / vec4(_e107));
-        let _e110 = normalizedShadowCoord;
-        param_29 = _e110;
-        let _e111 = cascadeIndex_3;
-        param_30 = _e111;
-        let _e112 = bias;
-        param_31 = _e112;
-        let _e114 = (*shadows).useReverseDepth;
-        param_32 = _e114;
-        let _e115 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_29), (&param_30), (&param_31), (&param_32));
-        shadow_3 = _e115;
+        let _e91 = cascadeIndex_3;
+        let _e95 = (*shadows).cascades[_e91].viewProjectionMatrix;
+        let _e96 = (*worldPosition);
+        shadowCoord_3 = (_e95 * vec4<f32>(_e96.x, _e96.y, _e96.z, 1f));
+        let _e102 = shadowCoord_3;
+        let _e104 = shadowCoord_3[3u];
+        normalizedShadowCoord = (_e102 / vec4(_e104));
+        let _e107 = normalizedShadowCoord;
+        param_29 = _e107;
+        let _e108 = cascadeIndex_3;
+        param_30 = _e108;
+        let _e109 = bias;
+        param_31 = _e109;
+        let _e111 = (*shadows).useReverseDepth;
+        param_32 = _e111;
+        let _e112 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_29), (&param_30), (&param_31), (&param_32));
+        shadow_3 = _e112;
     }
-    let _e116 = shadow_3;
-    return _e116;
+    let _e113 = shadow_3;
+    return _e113;
 }
 
 fn sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b(idx: ptr<function, u32>, uv: ptr<function, vec2<f32>>, ddx: ptr<function, vec2<f32>>, ddy: ptr<function, vec2<f32>>) -> vec4<f32> {
-    let _e60 = (*idx);
-    if (_e60 == 0u) {
-        let _e62 = (*uv);
-        let _e63 = (*ddx);
-        let _e64 = (*ddy);
-        let _e65 = textureSampleGrad(colorTexture0_, colorSampler, _e62, _e63, _e64);
-        return _e65;
-    } else {
-        let _e66 = (*idx);
-        if (_e66 == 1u) {
-            let _e68 = (*uv);
-            let _e69 = (*ddx);
-            let _e70 = (*ddy);
-            let _e71 = textureSampleGrad(colorTexture1_, colorSampler, _e68, _e69, _e70);
-            return _e71;
-        } else {
-            let _e72 = (*idx);
-            if (_e72 == 2u) {
-                let _e74 = (*uv);
-                let _e75 = (*ddx);
-                let _e76 = (*ddy);
-                let _e77 = textureSampleGrad(colorTexture2_, colorSampler, _e74, _e75, _e76);
-                return _e77;
-            } else {
-                let _e78 = (*uv);
-                let _e79 = (*ddx);
-                let _e80 = (*ddy);
-                let _e81 = textureSampleGrad(colorTexture3_, colorSampler, _e78, _e79, _e80);
-                return _e81;
-            }
-        }
-    }
+    let _e57 = (*uv);
+    let _e58 = (*idx);
+    let _e62 = vec3<f32>(_e57.x, _e57.y, f32(_e58));
+    let _e63 = (*ddx);
+    let _e64 = (*ddy);
+    let _e70 = textureSampleGrad(colorTextures, colorSampler, vec2<f32>(_e62.x, _e62.y), i32(_e62.z), _e63, _e64);
+    return _e70;
 }
 
 fn main_1() {
@@ -475,147 +444,147 @@ fn main_1() {
     var param_65: f32;
     var baseResultColor: vec4<f32>;
     var resultColor: vec4<f32>;
-    var phi_578_: bool;
+    var phi_538_: bool;
 
-    let _e117 = inToLightVector0_1;
-    let _e118 = inToLightVector1_1;
-    let _e119 = inToLightVector2_1;
-    let _e120 = inToLightVector3_1;
-    inToLightVector_arr = array<vec3<f32>, 4>(_e117, _e118, _e119, _e120);
-    let _e122 = inClipDistance_1;
-    if (_e122 < 0f) {
+    let _e114 = inToLightVector0_1;
+    let _e115 = inToLightVector1_1;
+    let _e116 = inToLightVector2_1;
+    let _e117 = inToLightVector3_1;
+    inToLightVector_arr = array<vec3<f32>, 4>(_e114, _e115, _e116, _e117);
+    let _e119 = inClipDistance_1;
+    if (_e119 < 0f) {
         discard;
     }
-    let _e125 = uboFS.maxHeight;
-    let _e128 = uboFS.minHeight;
-    heightRange = (abs(_e125) + abs(_e128));
-    let _e132 = inWorldPosition_1[1u];
-    let _e134 = uboFS.minHeight;
-    let _e137 = heightRange;
-    normalizedHeight = ((_e132 + abs(_e134)) / _e137);
+    let _e122 = uboFS.maxHeight;
+    let _e125 = uboFS.minHeight;
+    heightRange = (abs(_e122) + abs(_e125));
+    let _e129 = inWorldPosition_1[1u];
+    let _e131 = uboFS.minHeight;
+    let _e134 = heightRange;
+    normalizedHeight = ((_e129 + abs(_e131)) / _e134);
     textureColor = vec4<f32>(1f, 1f, 0f, 1f);
     shineDamper_1 = 1f;
     reflectivity_1 = 1f;
-    let _e139 = inTextureCoord_1;
-    let _e140 = dpdx(_e139);
-    ddx_1 = _e140;
-    let _e141 = inTextureCoord_1;
-    let _e142 = dpdy(_e141);
-    ddy_1 = _e142;
+    let _e136 = inTextureCoord_1;
+    let _e137 = dpdx(_e136);
+    ddx_1 = _e137;
+    let _e138 = inTextureCoord_1;
+    let _e139 = dpdy(_e138);
+    ddy_1 = _e139;
     i_1 = 0u;
     loop {
-        let _e143 = i_1;
-        if (_e143 < 4u) {
-            let _e145 = i_1;
-            if (_e145 < 3u) {
-                let _e147 = normalizedHeight;
-                let _e148 = i_1;
-                let _e152 = uboFS.heightSteps[_e148][0u];
-                let _e154 = uboFS.heightTransitionRange;
-                let _e156 = (_e147 > (_e152 - _e154));
-                phi_578_ = _e156;
-                if _e156 {
-                    let _e157 = normalizedHeight;
-                    let _e158 = i_1;
-                    let _e162 = uboFS.heightSteps[_e158][0u];
-                    let _e164 = uboFS.heightTransitionRange;
-                    phi_578_ = (_e157 < (_e162 + _e164));
+        let _e140 = i_1;
+        if (_e140 < 4u) {
+            let _e142 = i_1;
+            if (_e142 < 3u) {
+                let _e144 = normalizedHeight;
+                let _e145 = i_1;
+                let _e149 = uboFS.heightSteps[_e145][0u];
+                let _e151 = uboFS.heightTransitionRange;
+                let _e153 = (_e144 > (_e149 - _e151));
+                phi_538_ = _e153;
+                if _e153 {
+                    let _e154 = normalizedHeight;
+                    let _e155 = i_1;
+                    let _e159 = uboFS.heightSteps[_e155][0u];
+                    let _e161 = uboFS.heightTransitionRange;
+                    phi_538_ = (_e154 < (_e159 + _e161));
                 }
-                let _e168 = phi_578_;
-                if _e168 {
-                    let _e169 = normalizedHeight;
-                    let _e170 = i_1;
-                    let _e174 = uboFS.heightSteps[_e170][0u];
+                let _e165 = phi_538_;
+                if _e165 {
+                    let _e166 = normalizedHeight;
+                    let _e167 = i_1;
+                    let _e171 = uboFS.heightSteps[_e167][0u];
+                    let _e174 = uboFS.heightTransitionRange;
                     let _e177 = uboFS.heightTransitionRange;
-                    let _e180 = uboFS.heightTransitionRange;
-                    ratio = (((_e169 - _e174) + _e177) / (2f * _e180));
-                    let _e183 = i_1;
-                    param_33 = _e183;
-                    let _e184 = inTextureCoord_1;
-                    param_34 = _e184;
-                    let _e185 = ddx_1;
-                    param_35 = _e185;
-                    let _e186 = ddy_1;
-                    param_36 = _e186;
-                    let _e187 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_33), (&param_34), (&param_35), (&param_36));
-                    color1_ = _e187;
-                    let _e188 = i_1;
-                    param_37 = (_e188 + 1u);
-                    let _e190 = inTextureCoord_1;
-                    param_38 = _e190;
-                    let _e191 = ddx_1;
-                    param_39 = _e191;
-                    let _e192 = ddy_1;
-                    param_40 = _e192;
-                    let _e193 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_37), (&param_38), (&param_39), (&param_40));
-                    color2_ = _e193;
-                    let _e194 = color1_;
-                    let _e195 = color2_;
-                    let _e196 = ratio;
-                    textureColor = mix(_e194, _e195, vec4(_e196));
-                    let _e199 = i_1;
-                    let _e203 = uboFS.material[_e199].shineDamper;
-                    shineDamper1_ = _e203;
-                    let _e204 = i_1;
-                    let _e209 = uboFS.material[(_e204 + 1u)].shineDamper;
-                    shineDamper2_ = _e209;
-                    let _e210 = shineDamper1_;
-                    let _e211 = shineDamper2_;
-                    let _e212 = ratio;
-                    shineDamper_1 = mix(_e210, _e211, _e212);
-                    let _e214 = i_1;
-                    let _e218 = uboFS.material[_e214].reflectivity;
-                    reflectivity1_ = _e218;
-                    let _e219 = i_1;
-                    let _e224 = uboFS.material[(_e219 + 1u)].reflectivity;
-                    reflectivity2_ = _e224;
-                    let _e225 = reflectivity1_;
-                    let _e226 = reflectivity2_;
-                    let _e227 = ratio;
-                    reflectivity_1 = mix(_e225, _e226, _e227);
+                    ratio = (((_e166 - _e171) + _e174) / (2f * _e177));
+                    let _e180 = i_1;
+                    param_33 = _e180;
+                    let _e181 = inTextureCoord_1;
+                    param_34 = _e181;
+                    let _e182 = ddx_1;
+                    param_35 = _e182;
+                    let _e183 = ddy_1;
+                    param_36 = _e183;
+                    let _e184 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_33), (&param_34), (&param_35), (&param_36));
+                    color1_ = _e184;
+                    let _e185 = i_1;
+                    param_37 = (_e185 + 1u);
+                    let _e187 = inTextureCoord_1;
+                    param_38 = _e187;
+                    let _e188 = ddx_1;
+                    param_39 = _e188;
+                    let _e189 = ddy_1;
+                    param_40 = _e189;
+                    let _e190 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_37), (&param_38), (&param_39), (&param_40));
+                    color2_ = _e190;
+                    let _e191 = color1_;
+                    let _e192 = color2_;
+                    let _e193 = ratio;
+                    textureColor = mix(_e191, _e192, vec4(_e193));
+                    let _e196 = i_1;
+                    let _e200 = uboFS.material[_e196].shineDamper;
+                    shineDamper1_ = _e200;
+                    let _e201 = i_1;
+                    let _e206 = uboFS.material[(_e201 + 1u)].shineDamper;
+                    shineDamper2_ = _e206;
+                    let _e207 = shineDamper1_;
+                    let _e208 = shineDamper2_;
+                    let _e209 = ratio;
+                    shineDamper_1 = mix(_e207, _e208, _e209);
+                    let _e211 = i_1;
+                    let _e215 = uboFS.material[_e211].reflectivity;
+                    reflectivity1_ = _e215;
+                    let _e216 = i_1;
+                    let _e221 = uboFS.material[(_e216 + 1u)].reflectivity;
+                    reflectivity2_ = _e221;
+                    let _e222 = reflectivity1_;
+                    let _e223 = reflectivity2_;
+                    let _e224 = ratio;
+                    reflectivity_1 = mix(_e222, _e223, _e224);
                     break;
                 } else {
-                    let _e229 = normalizedHeight;
-                    let _e230 = i_1;
-                    let _e234 = uboFS.heightSteps[_e230][0u];
-                    let _e236 = uboFS.heightTransitionRange;
-                    if (_e229 < (_e234 - _e236)) {
-                        let _e239 = i_1;
-                        param_41 = _e239;
-                        let _e240 = inTextureCoord_1;
-                        param_42 = _e240;
-                        let _e241 = ddx_1;
-                        param_43 = _e241;
-                        let _e242 = ddy_1;
-                        param_44 = _e242;
-                        let _e243 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_41), (&param_42), (&param_43), (&param_44));
-                        textureColor = _e243;
-                        let _e244 = i_1;
-                        let _e248 = uboFS.material[_e244].shineDamper;
-                        shineDamper_1 = _e248;
-                        let _e249 = i_1;
-                        let _e253 = uboFS.material[_e249].reflectivity;
-                        reflectivity_1 = _e253;
+                    let _e226 = normalizedHeight;
+                    let _e227 = i_1;
+                    let _e231 = uboFS.heightSteps[_e227][0u];
+                    let _e233 = uboFS.heightTransitionRange;
+                    if (_e226 < (_e231 - _e233)) {
+                        let _e236 = i_1;
+                        param_41 = _e236;
+                        let _e237 = inTextureCoord_1;
+                        param_42 = _e237;
+                        let _e238 = ddx_1;
+                        param_43 = _e238;
+                        let _e239 = ddy_1;
+                        param_44 = _e239;
+                        let _e240 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_41), (&param_42), (&param_43), (&param_44));
+                        textureColor = _e240;
+                        let _e241 = i_1;
+                        let _e245 = uboFS.material[_e241].shineDamper;
+                        shineDamper_1 = _e245;
+                        let _e246 = i_1;
+                        let _e250 = uboFS.material[_e246].reflectivity;
+                        reflectivity_1 = _e250;
                         break;
                     }
                 }
             } else {
-                let _e254 = i_1;
-                param_45 = _e254;
-                let _e255 = inTextureCoord_1;
-                param_46 = _e255;
-                let _e256 = ddx_1;
-                param_47 = _e256;
-                let _e257 = ddy_1;
-                param_48 = _e257;
-                let _e258 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_45), (&param_46), (&param_47), (&param_48));
-                textureColor = _e258;
-                let _e259 = i_1;
-                let _e263 = uboFS.material[_e259].shineDamper;
-                shineDamper_1 = _e263;
-                let _e264 = i_1;
-                let _e268 = uboFS.material[_e264].reflectivity;
-                reflectivity_1 = _e268;
+                let _e251 = i_1;
+                param_45 = _e251;
+                let _e252 = inTextureCoord_1;
+                param_46 = _e252;
+                let _e253 = ddx_1;
+                param_47 = _e253;
+                let _e254 = ddy_1;
+                param_48 = _e254;
+                let _e255 = sampleColorTexture_u0028_u1_u003b_vf2_u003b_vf2_u003b_vf2_u003b((&param_45), (&param_46), (&param_47), (&param_48));
+                textureColor = _e255;
+                let _e256 = i_1;
+                let _e260 = uboFS.material[_e256].shineDamper;
+                shineDamper_1 = _e260;
+                let _e261 = i_1;
+                let _e265 = uboFS.material[_e261].reflectivity;
+                reflectivity_1 = _e265;
                 break;
             }
             continue;
@@ -623,120 +592,120 @@ fn main_1() {
             break;
         }
         continuing {
-            let _e269 = i_1;
-            i_1 = (_e269 + bitcast<u32>(1i));
+            let _e266 = i_1;
+            i_1 = (_e266 + bitcast<u32>(1i));
         }
     }
     shadow_4 = 1f;
-    let _e273 = uboFS.castedByShadows;
-    if (_e273 != 0u) {
-        let _e276 = uboFS.shadows;
-        param_49.cascades[0i].viewProjectionMatrix = _e276.cascades[0].viewProjectionMatrix;
-        param_49.cascades[0i].split = _e276.cascades[0].split;
-        param_49.cascades[1i].viewProjectionMatrix = _e276.cascades[1].viewProjectionMatrix;
-        param_49.cascades[1i].split = _e276.cascades[1].split;
-        param_49.cascades[2i].viewProjectionMatrix = _e276.cascades[2].viewProjectionMatrix;
-        param_49.cascades[2i].split = _e276.cascades[2].split;
-        param_49.cascades[3i].viewProjectionMatrix = _e276.cascades[3].viewProjectionMatrix;
-        param_49.cascades[3i].split = _e276.cascades[3].split;
-        param_49.enabled = _e276.enabled;
-        param_49.useReverseDepth = _e276.useReverseDepth;
-        let _e307 = inViewPosition_1;
-        param_50 = _e307;
-        let _e308 = inWorldPosition_1;
-        param_51 = _e308;
+    let _e270 = uboFS.castedByShadows;
+    if (_e270 != 0u) {
+        let _e273 = uboFS.shadows;
+        param_49.cascades[0i].viewProjectionMatrix = _e273.cascades[0].viewProjectionMatrix;
+        param_49.cascades[0i].split = _e273.cascades[0].split;
+        param_49.cascades[1i].viewProjectionMatrix = _e273.cascades[1].viewProjectionMatrix;
+        param_49.cascades[1i].split = _e273.cascades[1].split;
+        param_49.cascades[2i].viewProjectionMatrix = _e273.cascades[2].viewProjectionMatrix;
+        param_49.cascades[2i].split = _e273.cascades[2].split;
+        param_49.cascades[3i].viewProjectionMatrix = _e273.cascades[3].viewProjectionMatrix;
+        param_49.cascades[3i].split = _e273.cascades[3].split;
+        param_49.enabled = _e273.enabled;
+        param_49.useReverseDepth = _e273.useReverseDepth;
+        let _e304 = inViewPosition_1;
+        param_50 = _e304;
+        let _e305 = inWorldPosition_1;
+        param_51 = _e305;
         param_52 = 0.02f;
-        let _e309 = GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_ShadowsCascade_u002d_mf44_u002d_vf41_u005b_4_u005d_u002d_u1_u002d_u11_u003b_vf3_u003b_vf3_u003b_f1_u003b(depthTexture_4, depthSampler_4, (&param_49), (&param_50), (&param_51), (&param_52));
-        shadow_4 = _e309;
+        let _e306 = GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_ShadowsCascade_u002d_mf44_u002d_vf41_u005b_4_u005d_u002d_u1_u002d_u11_u003b_vf3_u003b_vf3_u003b_f1_u003b(depthTexture_4, depthSampler_4, (&param_49), (&param_50), (&param_51), (&param_52));
+        shadow_4 = _e306;
     }
-    let _e310 = inNormal_1;
-    unitNormal = normalize(_e310);
-    let _e312 = inToCameraVector_1;
-    unitToCameraVector = normalize(_e312);
+    let _e307 = inNormal_1;
+    unitNormal = normalize(_e307);
+    let _e309 = inToCameraVector_1;
+    unitToCameraVector = normalize(_e309);
     totalDiffuse = vec3<f32>(0f, 0f, 0f);
     totalSpecular = vec3<f32>(0f, 0f, 0f);
     i_2 = 0u;
     loop {
-        let _e314 = i_2;
-        let _e317 = uboFS.lightning.realCountOfLights;
-        if (_e314 < _e317) {
-            let _e319 = i_2;
-            let _e323 = uboFS.lightning.lights[_e319];
-            light.position = _e323.position;
-            light.color = _e323.color;
-            light.attenuation = _e323.attenuation;
-            let _e330 = i_2;
-            let _e332 = inToLightVector_arr[_e330];
-            toLightVector_3 = _e332;
-            let _e333 = toLightVector_3;
-            unitToLightVector = normalize(_e333);
-            let _e336 = light.attenuation;
-            param_53 = _e336.xyz;
-            let _e338 = toLightVector_3;
-            param_54 = _e338;
-            let _e339 = GetAttenuationFactor_u0028_vf3_u003b_vf3_u003b((&param_53), (&param_54));
-            attenuationFactor_3 = _e339;
-            let _e340 = unitNormal;
-            param_55 = _e340;
-            let _e341 = unitToLightVector;
-            param_56 = _e341;
-            let _e343 = light.color;
-            param_57 = _e343.xyz;
-            let _e345 = attenuationFactor_3;
-            param_58 = _e345;
-            let _e346 = GetDiffuseColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b((&param_55), (&param_56), (&param_57), (&param_58));
-            let _e347 = totalDiffuse;
-            totalDiffuse = (_e347 + _e346);
-            let _e349 = unitNormal;
-            param_59 = _e349;
-            let _e350 = unitToLightVector;
-            param_60 = _e350;
-            let _e351 = unitToCameraVector;
-            param_61 = _e351;
-            let _e353 = light.color;
-            param_62 = _e353.xyz;
-            let _e355 = attenuationFactor_3;
-            param_63 = _e355;
-            let _e356 = shineDamper_1;
-            param_64 = _e356;
-            let _e357 = reflectivity_1;
-            param_65 = _e357;
-            let _e358 = GetSpecularColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_f1_u003b_f1_u003b((&param_59), (&param_60), (&param_61), (&param_62), (&param_63), (&param_64), (&param_65));
-            let _e359 = totalSpecular;
-            totalSpecular = (_e359 + _e358);
+        let _e311 = i_2;
+        let _e314 = uboFS.lightning.realCountOfLights;
+        if (_e311 < _e314) {
+            let _e316 = i_2;
+            let _e320 = uboFS.lightning.lights[_e316];
+            light.position = _e320.position;
+            light.color = _e320.color;
+            light.attenuation = _e320.attenuation;
+            let _e327 = i_2;
+            let _e329 = inToLightVector_arr[_e327];
+            toLightVector_3 = _e329;
+            let _e330 = toLightVector_3;
+            unitToLightVector = normalize(_e330);
+            let _e333 = light.attenuation;
+            param_53 = _e333.xyz;
+            let _e335 = toLightVector_3;
+            param_54 = _e335;
+            let _e336 = GetAttenuationFactor_u0028_vf3_u003b_vf3_u003b((&param_53), (&param_54));
+            attenuationFactor_3 = _e336;
+            let _e337 = unitNormal;
+            param_55 = _e337;
+            let _e338 = unitToLightVector;
+            param_56 = _e338;
+            let _e340 = light.color;
+            param_57 = _e340.xyz;
+            let _e342 = attenuationFactor_3;
+            param_58 = _e342;
+            let _e343 = GetDiffuseColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b((&param_55), (&param_56), (&param_57), (&param_58));
+            let _e344 = totalDiffuse;
+            totalDiffuse = (_e344 + _e343);
+            let _e346 = unitNormal;
+            param_59 = _e346;
+            let _e347 = unitToLightVector;
+            param_60 = _e347;
+            let _e348 = unitToCameraVector;
+            param_61 = _e348;
+            let _e350 = light.color;
+            param_62 = _e350.xyz;
+            let _e352 = attenuationFactor_3;
+            param_63 = _e352;
+            let _e353 = shineDamper_1;
+            param_64 = _e353;
+            let _e354 = reflectivity_1;
+            param_65 = _e354;
+            let _e355 = GetSpecularColor_u0028_vf3_u003b_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_f1_u003b_f1_u003b((&param_59), (&param_60), (&param_61), (&param_62), (&param_63), (&param_64), (&param_65));
+            let _e356 = totalSpecular;
+            totalSpecular = (_e356 + _e355);
             continue;
         } else {
             break;
         }
         continuing {
-            let _e361 = i_2;
-            i_2 = (_e361 + bitcast<u32>(1i));
+            let _e358 = i_2;
+            i_2 = (_e358 + bitcast<u32>(1i));
         }
     }
-    let _e364 = totalDiffuse;
-    let _e365 = shadow_4;
-    let _e369 = uboFS.lightning.ambientFactor;
-    totalDiffuse = ((_e364 * _e365) + vec3(_e369));
-    let _e372 = totalSpecular;
-    let _e373 = shadow_4;
-    totalSpecular = (_e372 * _e373);
-    let _e375 = totalDiffuse;
-    let _e380 = textureColor;
-    let _e382 = totalSpecular;
-    baseResultColor = ((vec4<f32>(_e375.x, _e375.y, _e375.z, 1f) * _e380) + vec4<f32>(_e382.x, _e382.y, _e382.z, 0f));
-    let _e389 = uboFS.fogColor;
-    let _e390 = _e389.xyz;
-    let _e395 = baseResultColor;
-    let _e396 = inVisibility_1;
-    resultColor = mix(vec4<f32>(_e390.x, _e390.y, _e390.z, 1f), _e395, vec4(_e396));
-    let _e400 = uboFS.selected;
-    if (_e400 != 0u) {
-        let _e402 = resultColor;
-        let _e404 = uboFS.selectedColor;
-        resultColor = mix(_e402, _e404, vec4(0.5f));
+    let _e361 = totalDiffuse;
+    let _e362 = shadow_4;
+    let _e366 = uboFS.lightning.ambientFactor;
+    totalDiffuse = ((_e361 * _e362) + vec3(_e366));
+    let _e369 = totalSpecular;
+    let _e370 = shadow_4;
+    totalSpecular = (_e369 * _e370);
+    let _e372 = totalDiffuse;
+    let _e377 = textureColor;
+    let _e379 = totalSpecular;
+    baseResultColor = ((vec4<f32>(_e372.x, _e372.y, _e372.z, 1f) * _e377) + vec4<f32>(_e379.x, _e379.y, _e379.z, 0f));
+    let _e386 = uboFS.fogColor;
+    let _e387 = _e386.xyz;
+    let _e392 = baseResultColor;
+    let _e393 = inVisibility_1;
+    resultColor = mix(vec4<f32>(_e387.x, _e387.y, _e387.z, 1f), _e392, vec4(_e393));
+    let _e397 = uboFS.selected;
+    if (_e397 != 0u) {
+        let _e399 = resultColor;
+        let _e401 = uboFS.selectedColor;
+        resultColor = mix(_e399, _e401, vec4(0.5f));
     }
-    let _e407 = resultColor;
-    outColor = _e407;
+    let _e404 = resultColor;
+    outColor = _e404;
     return;
 }
 

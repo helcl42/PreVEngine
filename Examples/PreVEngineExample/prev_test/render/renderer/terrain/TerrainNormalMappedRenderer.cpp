@@ -12,7 +12,6 @@
 #include "../../../component/transform/ITransformComponent.h"
 
 #include <prev/render/buffer/BufferPoolBuilder.h>
-#include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -52,18 +51,12 @@ void TerrainNormalMappedRenderer::Init()
         .AddDescriptorSets({
             { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
             { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture0", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture1", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture2", 4, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture3", 5, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorSampler", 6, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalTexture0", 7, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalTexture1", 8, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalTexture2", 9, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalTexture3", 10, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "normalSampler", 11, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 12, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 13, GFX_SHADER_STAGE_FRAGMENT, true)
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("colorTextures", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY),
+            { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("normalTextures", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY),
+            { "normalSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 7, GFX_SHADER_STAGE_FRAGMENT, true)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -117,15 +110,6 @@ void TerrainNormalMappedRenderer::Init()
                          .Build();
 
     LOGI("Terrain Normal Mapped Samplers created");
-
-    m_nullImage = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                      .SetExtent({ 1, 1, 1 })
-                      .SetType(GFX_TEXTURE_TYPE_2D)
-                      .SetFormat(GFX_FORMAT_R8G8B8A8_UNORM)
-                      .SetSampleCount(GFX_SAMPLE_COUNT_1)
-                      .SetUsageFlags(GFX_TEXTURE_USAGE_TEXTURE_BINDING)
-                      .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
-                      .Build();
 }
 
 void TerrainNormalMappedRenderer::BeforeRender(const NormalRenderContext& renderContext)
@@ -224,12 +208,9 @@ void TerrainNormalMappedRenderer::Render(const NormalRenderContext& renderContex
 
     uboFS.Write(uniformsFS);
 
-    for (size_t i = 0; i < terrainComponent->GetMaterials().size(); ++i) {
-        const auto material{ terrainComponent->GetMaterials().at(i) };
-        m_shader->Bind("colorTexture" + std::to_string(i), material->GetImageBuffer(COLOR_INDEX)->GetTextureView());
-        m_shader->Bind("normalTexture" + std::to_string(i), material->HasImageBuffer(NORMAL_INDEX) ? material->GetImageBuffer(NORMAL_INDEX)->GetTextureView() : m_nullImage->GetTextureView());
-    }
+    m_shader->Bind("colorTextures", terrainComponent->GetTextureArray(COLOR_INDEX)->GetTextureView());
     m_shader->Bind("colorSampler", *m_colorSampler);
+    m_shader->Bind("normalTextures", terrainComponent->GetTextureArray(NORMAL_INDEX)->GetTextureView());
     m_shader->Bind("normalSampler", *m_normalSampler);
     m_shader->Bind("depthTexture", shadowsComponent->GetImageBuffer()->GetTextureView());
     m_shader->Bind("depthSampler", *m_depthSampler);
@@ -256,8 +237,6 @@ void TerrainNormalMappedRenderer::AfterRender(const NormalRenderContext& renderC
 
 void TerrainNormalMappedRenderer::ShutDown()
 {
-    m_nullImage = {};
-
     m_depthSampler = {};
     m_normalSampler = {};
     m_colorSampler = {};

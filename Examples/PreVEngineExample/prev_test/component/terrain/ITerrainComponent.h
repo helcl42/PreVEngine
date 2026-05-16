@@ -6,6 +6,7 @@
 
 #include "HeightMapInfo.h"
 
+#include <prev/render/buffer/ImageBuffer.h>
 #include <prev/scene/component/IComponent.h>
 
 namespace prev_test::component::terrain {
@@ -14,6 +15,8 @@ public:
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
     virtual std::vector<std::shared_ptr<prev_test::render::IMaterial>> GetMaterials() const = 0; // TODO make pack of materials controlled by height
+
+    virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetTextureArray(uint32_t index) const = 0;
 
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 
