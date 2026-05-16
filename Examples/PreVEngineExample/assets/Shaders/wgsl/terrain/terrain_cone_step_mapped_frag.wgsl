@@ -525,7 +525,6 @@ fn sampleRelaxedConeStepMapping_u0028_u1_u003b_f1_u003b_u1_u003b_vf2_u003b_vf2_u
     var rayRatio: f32;
     var pos: vec3<f32>;
     var i_1: u32;
-    var samplePoint: vec3<f32>;
     var heightAndCone: vec2<f32>;
     var coneRatio: f32;
     var height_1: f32;
@@ -537,157 +536,152 @@ fn sampleRelaxedConeStepMapping_u0028_u1_u003b_f1_u003b_u1_u003b_vf2_u003b_vf2_u
     var heightAndCone_1: vec2<f32>;
     var param_36: f32;
 
-    let _e98 = (*uv_2);
-    rayPos = vec3<f32>(_e98.x, _e98.y, 0f);
-    let _e102 = (*texDir3D);
-    param_33 = _e102;
-    let _e103 = (*heightScale_1);
-    param_34 = _e103;
-    let _e104 = GetRayDirection_u0028_vf3_u003b_f1_u003b((&param_33), (&param_34));
-    rayDir = _e104;
-    let _e106 = rayDir[2u];
-    let _e107 = rayDir;
-    rayDir = (_e107 / vec3(_e106));
-    let _e110 = rayDir;
-    rayRatio = length(_e110.xy);
-    let _e113 = rayPos;
-    pos = _e113;
+    let _e97 = (*uv_2);
+    rayPos = vec3<f32>(_e97.x, _e97.y, 0f);
+    let _e101 = (*texDir3D);
+    param_33 = _e101;
+    let _e102 = (*heightScale_1);
+    param_34 = _e102;
+    let _e103 = GetRayDirection_u0028_vf3_u003b_f1_u003b((&param_33), (&param_34));
+    rayDir = _e103;
+    let _e105 = rayDir[2u];
+    let _e106 = rayDir;
+    rayDir = (_e106 / vec3(_e105));
+    let _e109 = rayDir;
+    rayRatio = length(_e109.xy);
+    let _e112 = rayPos;
+    pos = _e112;
     i_1 = 0u;
     loop {
-        let _e114 = i_1;
-        let _e115 = (*numLayers);
-        if (_e114 < _e115) {
-            let _e117 = (*uv_2);
-            let _e118 = (*heightScale_1);
-            let _e122 = (*texDir3D);
-            let _e124 = pos[2u];
-            samplePoint = (vec3<f32>(_e117.x, _e117.y, _e118) + (_e122 * _e124));
-            let _e127 = (*idx_2);
-            if (_e127 == 0u) {
-                let _e129 = samplePoint;
-                let _e131 = (*ddx_2);
-                let _e132 = (*ddy_2);
-                let _e133 = textureSampleGrad(heightTexture0_, heightSampler, _e129.xy, _e131, _e132);
-                heightAndCone = clamp(_e133.xy, vec2(0f), vec2(1f));
+        let _e113 = i_1;
+        let _e114 = (*numLayers);
+        if (_e113 < _e114) {
+            let _e116 = (*idx_2);
+            if (_e116 == 0u) {
+                let _e118 = pos;
+                let _e120 = (*ddx_2);
+                let _e121 = (*ddy_2);
+                let _e122 = textureSampleGrad(heightTexture0_, heightSampler, _e118.xy, _e120, _e121);
+                heightAndCone = clamp(_e122.xy, vec2(0f), vec2(1f));
             } else {
-                let _e138 = (*idx_2);
-                if (_e138 == 1u) {
-                    let _e140 = samplePoint;
-                    let _e142 = (*ddx_2);
-                    let _e143 = (*ddy_2);
-                    let _e144 = textureSampleGrad(heightTexture1_, heightSampler, _e140.xy, _e142, _e143);
-                    heightAndCone = clamp(_e144.xy, vec2(0f), vec2(1f));
+                let _e127 = (*idx_2);
+                if (_e127 == 1u) {
+                    let _e129 = pos;
+                    let _e131 = (*ddx_2);
+                    let _e132 = (*ddy_2);
+                    let _e133 = textureSampleGrad(heightTexture1_, heightSampler, _e129.xy, _e131, _e132);
+                    heightAndCone = clamp(_e133.xy, vec2(0f), vec2(1f));
                 } else {
-                    let _e149 = (*idx_2);
-                    if (_e149 == 2u) {
-                        let _e151 = samplePoint;
-                        let _e153 = (*ddx_2);
-                        let _e154 = (*ddy_2);
-                        let _e155 = textureSampleGrad(heightTexture2_, heightSampler, _e151.xy, _e153, _e154);
-                        heightAndCone = clamp(_e155.xy, vec2(0f), vec2(1f));
+                    let _e138 = (*idx_2);
+                    if (_e138 == 2u) {
+                        let _e140 = pos;
+                        let _e142 = (*ddx_2);
+                        let _e143 = (*ddy_2);
+                        let _e144 = textureSampleGrad(heightTexture2_, heightSampler, _e140.xy, _e142, _e143);
+                        heightAndCone = clamp(_e144.xy, vec2(0f), vec2(1f));
                     } else {
-                        let _e160 = samplePoint;
-                        let _e162 = (*ddx_2);
-                        let _e163 = (*ddy_2);
-                        let _e164 = textureSampleGrad(heightTexture3_, heightSampler, _e160.xy, _e162, _e163);
-                        heightAndCone = clamp(_e164.xy, vec2(0f), vec2(1f));
+                        let _e149 = pos;
+                        let _e151 = (*ddx_2);
+                        let _e152 = (*ddy_2);
+                        let _e153 = textureSampleGrad(heightTexture3_, heightSampler, _e149.xy, _e151, _e152);
+                        heightAndCone = clamp(_e153.xy, vec2(0f), vec2(1f));
                     }
                 }
             }
-            let _e170 = heightAndCone[1u];
-            let _e172 = heightAndCone[1u];
-            coneRatio = (_e170 * _e172);
-            let _e175 = heightAndCone[0u];
-            param_35 = _e175;
-            let _e176 = GetInverseHeight_u0028_f1_u003b((&param_35));
-            let _e178 = pos[2u];
-            height_1 = (_e176 - _e178);
-            let _e180 = coneRatio;
-            let _e181 = height_1;
-            let _e183 = rayRatio;
-            let _e184 = coneRatio;
-            d = ((_e180 * _e181) / (_e183 + _e184));
-            let _e187 = rayDir;
-            let _e188 = d;
-            let _e190 = pos;
-            pos = (_e190 + (_e187 * _e188));
+            let _e159 = heightAndCone[1u];
+            let _e161 = heightAndCone[1u];
+            coneRatio = (_e159 * _e161);
+            let _e164 = heightAndCone[0u];
+            param_35 = _e164;
+            let _e165 = GetInverseHeight_u0028_f1_u003b((&param_35));
+            let _e167 = pos[2u];
+            height_1 = (_e165 - _e167);
+            let _e169 = coneRatio;
+            let _e170 = height_1;
+            let _e172 = rayRatio;
+            let _e173 = coneRatio;
+            d = ((_e169 * _e170) / (_e172 + _e173));
+            let _e176 = rayDir;
+            let _e177 = d;
+            let _e179 = pos;
+            pos = (_e179 + (_e176 * _e177));
             continue;
         } else {
             break;
         }
         continuing {
-            let _e192 = i_1;
-            i_1 = (_e192 + bitcast<u32>(1i));
+            let _e181 = i_1;
+            i_1 = (_e181 + bitcast<u32>(1i));
         }
     }
-    let _e195 = rayDir;
-    let _e198 = pos[2u];
-    bsRange = ((_e195 * 0.5f) * _e198);
-    let _e200 = rayPos;
-    let _e201 = bsRange;
-    bsPosition = (_e200 + _e201);
+    let _e184 = rayDir;
+    let _e187 = pos[2u];
+    bsRange = ((_e184 * 0.5f) * _e187);
+    let _e189 = rayPos;
+    let _e190 = bsRange;
+    bsPosition = (_e189 + _e190);
     i_2 = 0u;
     loop {
-        let _e203 = i_2;
-        if (_e203 < 6u) {
-            let _e205 = (*idx_2);
-            if (_e205 == 0u) {
-                let _e207 = pos;
-                let _e209 = (*ddx_2);
-                let _e210 = (*ddy_2);
-                let _e211 = textureSampleGrad(heightTexture0_, heightSampler, _e207.xy, _e209, _e210);
-                heightAndCone_1 = clamp(_e211.xy, vec2(0f), vec2(1f));
+        let _e192 = i_2;
+        if (_e192 < 6u) {
+            let _e194 = (*idx_2);
+            if (_e194 == 0u) {
+                let _e196 = pos;
+                let _e198 = (*ddx_2);
+                let _e199 = (*ddy_2);
+                let _e200 = textureSampleGrad(heightTexture0_, heightSampler, _e196.xy, _e198, _e199);
+                heightAndCone_1 = clamp(_e200.xy, vec2(0f), vec2(1f));
             } else {
-                let _e216 = (*idx_2);
-                if (_e216 == 1u) {
-                    let _e218 = pos;
-                    let _e220 = (*ddx_2);
-                    let _e221 = (*ddy_2);
-                    let _e222 = textureSampleGrad(heightTexture1_, heightSampler, _e218.xy, _e220, _e221);
-                    heightAndCone_1 = clamp(_e222.xy, vec2(0f), vec2(1f));
+                let _e205 = (*idx_2);
+                if (_e205 == 1u) {
+                    let _e207 = pos;
+                    let _e209 = (*ddx_2);
+                    let _e210 = (*ddy_2);
+                    let _e211 = textureSampleGrad(heightTexture1_, heightSampler, _e207.xy, _e209, _e210);
+                    heightAndCone_1 = clamp(_e211.xy, vec2(0f), vec2(1f));
                 } else {
-                    let _e227 = (*idx_2);
-                    if (_e227 == 2u) {
-                        let _e229 = pos;
-                        let _e231 = (*ddx_2);
-                        let _e232 = (*ddy_2);
-                        let _e233 = textureSampleGrad(heightTexture2_, heightSampler, _e229.xy, _e231, _e232);
-                        heightAndCone_1 = clamp(_e233.xy, vec2(0f), vec2(1f));
+                    let _e216 = (*idx_2);
+                    if (_e216 == 2u) {
+                        let _e218 = pos;
+                        let _e220 = (*ddx_2);
+                        let _e221 = (*ddy_2);
+                        let _e222 = textureSampleGrad(heightTexture2_, heightSampler, _e218.xy, _e220, _e221);
+                        heightAndCone_1 = clamp(_e222.xy, vec2(0f), vec2(1f));
                     } else {
-                        let _e238 = pos;
-                        let _e240 = (*ddx_2);
-                        let _e241 = (*ddy_2);
-                        let _e242 = textureSampleGrad(heightTexture3_, heightSampler, _e238.xy, _e240, _e241);
-                        heightAndCone_1 = clamp(_e242.xy, vec2(0f), vec2(1f));
+                        let _e227 = pos;
+                        let _e229 = (*ddx_2);
+                        let _e230 = (*ddy_2);
+                        let _e231 = textureSampleGrad(heightTexture3_, heightSampler, _e227.xy, _e229, _e230);
+                        heightAndCone_1 = clamp(_e231.xy, vec2(0f), vec2(1f));
                     }
                 }
             }
-            let _e247 = bsRange;
-            bsRange = (_e247 * 0.5f);
-            let _e250 = bsPosition[2u];
-            let _e252 = heightAndCone_1[0u];
-            param_36 = _e252;
-            let _e253 = GetInverseHeight_u0028_f1_u003b((&param_36));
-            if (_e250 < _e253) {
-                let _e255 = bsRange;
-                let _e256 = bsPosition;
-                bsPosition = (_e256 + _e255);
+            let _e236 = bsRange;
+            bsRange = (_e236 * 0.5f);
+            let _e239 = bsPosition[2u];
+            let _e241 = heightAndCone_1[0u];
+            param_36 = _e241;
+            let _e242 = GetInverseHeight_u0028_f1_u003b((&param_36));
+            if (_e239 < _e242) {
+                let _e244 = bsRange;
+                let _e245 = bsPosition;
+                bsPosition = (_e245 + _e244);
             } else {
-                let _e258 = bsRange;
-                let _e259 = bsPosition;
-                bsPosition = (_e259 - _e258);
+                let _e247 = bsRange;
+                let _e248 = bsPosition;
+                bsPosition = (_e248 - _e247);
             }
             continue;
         } else {
             break;
         }
         continuing {
-            let _e261 = i_2;
-            i_2 = (_e261 + bitcast<u32>(1i));
+            let _e250 = i_2;
+            i_2 = (_e250 + bitcast<u32>(1i));
         }
     }
-    let _e264 = bsPosition;
-    return _e264.xy;
+    let _e253 = bsPosition;
+    return _e253.xy;
 }
 
 fn main_1() {
@@ -803,7 +797,7 @@ fn main_1() {
     var param_113: f32;
     var baseResultColor: vec4<f32>;
     var resultColor: vec4<f32>;
-    var phi_966_: bool;
+    var phi_955_: bool;
 
     let _e185 = inToLightVectorTangentSpace0_1;
     let _e186 = inToLightVectorTangentSpace1_1;
@@ -844,15 +838,15 @@ fn main_1() {
                 let _e222 = uboFS.heightSteps[_e218][0u];
                 let _e224 = uboFS.heightTransitionRange;
                 let _e226 = (_e217 > (_e222 - _e224));
-                phi_966_ = _e226;
+                phi_955_ = _e226;
                 if _e226 {
                     let _e227 = normalizedHeight;
                     let _e228 = i_3;
                     let _e232 = uboFS.heightSteps[_e228][0u];
                     let _e234 = uboFS.heightTransitionRange;
-                    phi_966_ = (_e227 < (_e232 + _e234));
+                    phi_955_ = (_e227 < (_e232 + _e234));
                 }
-                let _e238 = phi_966_;
+                let _e238 = phi_955_;
                 if _e238 {
                     let _e239 = normalizedHeight;
                     let _e240 = i_3;
