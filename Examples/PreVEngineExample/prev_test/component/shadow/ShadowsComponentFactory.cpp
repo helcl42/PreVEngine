@@ -5,6 +5,7 @@
 #include <prev/render/pass/RenderPassBuilder.h>
 
 #include <memory>
+#include <stdexcept>
 
 namespace prev_test::component::shadow {
 ShadowsComponentFactory::ShadowsComponentFactory(prev::core::device::Device& device)

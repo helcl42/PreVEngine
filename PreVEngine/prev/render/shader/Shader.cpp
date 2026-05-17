@@ -2,6 +2,8 @@
 
 #include "../../common/Logger.h"
 
+#include <algorithm>
+
 namespace prev::render::shader {
 Shader::Shader(GfxDevice device,
     const std::map<GfxShaderStageFlags, GfxShader>& shaderModules,

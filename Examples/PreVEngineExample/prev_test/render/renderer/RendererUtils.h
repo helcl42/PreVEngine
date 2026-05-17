@@ -4,6 +4,7 @@
 #include <prev/scene/graph/ISceneNode.h>
 #include <prev/util/intersection/Frustum.h>
 
+#include <functional>
 #include <memory>
 
 namespace prev_test::render::renderer {
