@@ -248,6 +248,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         message(FATAL_ERROR "Unsupported Linux Window System.")
     endif()
 
+    # gfx library auto-detects Wayland and publicly defines GFX_HAS_WAYLAND
+    # even when XCB is selected. Add the platform/wayland include so the
+    # guarded WaylandWindowImpl header can find xdg-shell.h.
+    find_package(Wayland QUIET)
+    if(WAYLAND_CLIENT_FOUND)
+        include_directories("platform/wayland")
+    endif()
+
     target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 elseif(ANDROID)
