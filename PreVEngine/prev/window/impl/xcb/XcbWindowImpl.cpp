@@ -233,7 +233,11 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
 
 GfxPlatformWindowHandle XcbWindowImpl::GetNativeWindowHandle() const
 {
+#ifdef ENABLE_XLIB_HANDLE
+    return gfxPlatformWindowHandleFromXlib(m_display, static_cast<unsigned long>(m_xcbWindow));
+#else
     return gfxPlatformWindowHandleFromXCB(m_xcbConnection, static_cast<uint32_t>(m_xcbWindow));
+#endif
 }
 
 //---------------------------------------------------------------------------

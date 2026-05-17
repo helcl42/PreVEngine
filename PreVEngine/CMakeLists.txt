@@ -194,8 +194,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    option(ENABLE_XCB "Enable XCB support" ON)
+    option(ENABLE_XCB "Enable XCB support" OFF)
     option(ENABLE_WAYLAND "Enable Wayland support" OFF)
+    option(ENABLE_XLIB "Enable Xlib support" ON)
     
     if (ENABLE_XCB)
         add_definitions(-DTARGET_PLATFORM_XCB)
@@ -220,6 +221,10 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         find_package(X11_XCB REQUIRED)
         include_directories(${X11_XCB_INCLUDE_DIR})
         target_link_libraries(${PROJECT_NAME} ${X11_XCB_LIBRARIES})
+        #---Xlib native handle---
+        if (ENABLE_XLIB)
+            add_definitions(-DENABLE_XLIB_HANDLE)
+        endif()
         #---XInput--- (MultiTouch)
         if (ENABLE_MULTITOUCH)               #adds 8.5KB to exe size
             target_link_libraries(${PROJECT_NAME} ${X11_Xinput_LIB})
