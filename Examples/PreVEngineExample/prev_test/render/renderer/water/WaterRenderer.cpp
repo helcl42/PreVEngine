@@ -47,21 +47,21 @@ void WaterRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-{ "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
-{ "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true),
-prev::render::shader::ShaderBuilder::DescriptorSet::Texture("reflectionTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-{ "reflectionSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-prev::render::shader::ShaderBuilder::DescriptorSet::Texture("refractionTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-{ "refractionSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthMapTexture", 8, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthMapSampler", 9, GFX_SHADER_STAGE_FRAGMENT, true),
-{ "dudvMapTexture", 10, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "dudvMapSampler", 11, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-{ "normalMapTexture", 12, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "normalMapSampler", 13, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
-})
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("reflectionTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("reflectionSampler", 5, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("refractionTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("refractionSampler", 7, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthMapTexture", 8, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthMapSampler", 9, GFX_SHADER_STAGE_FRAGMENT, true),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("dudvMapTexture", 10, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("dudvMapSampler", 11, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("normalMapTexture", 12, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("normalMapSampler", 13, GFX_SHADER_STAGE_FRAGMENT)
+        })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
