@@ -1,4 +1,4 @@
-name: Windows - CI Build/Test
+name: Windows OpenXR - CI Build/Test
 
 on:
   push:
@@ -64,7 +64,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 ' --force_compile_all
 
     - name: Configure CMake
       run: >
@@ -73,6 +73,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DENABLE_XR=ON
         -S ${{ github.workspace }}
 
     - name: Build
@@ -80,21 +81,19 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.dll build-win32
+        mkdir build-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe build-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.dll build-win32-openxr
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-win32
-        path: build-win32
+        name: build-win32-openxr
+        path: build-win32-openxr
         retention-days: 7
 
     - name: Run Tests
       run: |
         cd ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTests
         .\PreVEngineTests.exe
-
-
