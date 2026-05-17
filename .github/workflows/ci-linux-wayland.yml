@@ -44,12 +44,6 @@ jobs:
         sudo apt update
         sudo apt-get install -y vulkan-sdk libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
 
-    - name: Install PreVEngine dependencies
-      run: |
-        python3 -m pip install -U pip
-        pip3 install requests
-        python3 Scripts/download_dependencies.py
-
     - name: Set reusable strings
       id: strings
       shell: bash
@@ -58,7 +52,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+        python3 Scripts/compile_shaders.py --spirv --max-view-count 1
 
     - name: Configure CMake
       run: |
