@@ -54,17 +54,17 @@ void AnimationConeStepMappedRenderer::Init()
         .AddVertexInputBindings({
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("colorTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("colorSampler", 3, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("normalTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("normalSampler", 5, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("heightTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("heightSampler", 7, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 8, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 9, GFX_SHADER_STAGE_FRAGMENT, true)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("colorSampler", 3, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("normalTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("normalSampler", 5, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("heightTexture", 6, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("heightSampler", 7, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTexture", 8, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 9, GFX_SHADER_STAGE_FRAGMENT, true)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();

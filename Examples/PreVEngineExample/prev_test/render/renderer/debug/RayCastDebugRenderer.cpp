@@ -36,10 +36,10 @@ void RayCastDebugRenderer::Init()
         .AddVertexInputBindings({
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboGS", 1, GFX_SHADER_STAGE_VERTEX),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 2, GFX_SHADER_STAGE_FRAGMENT)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboGS", 1, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboFS", 2, GFX_SHADER_STAGE_FRAGMENT)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();

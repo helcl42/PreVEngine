@@ -26,8 +26,8 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
         .AddShaderStagePaths({
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/clouds_perlin_worley_noise_3d_comp") }
         })
-        .AddDescriptorSets({
-            { "outVolumeTexture", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY }
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outVolumeTexture", 0, GFX_SHADER_STAGE_COMPUTE, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D)
         })
 	    .SetBindGroupCapacity(1)
         .Build();

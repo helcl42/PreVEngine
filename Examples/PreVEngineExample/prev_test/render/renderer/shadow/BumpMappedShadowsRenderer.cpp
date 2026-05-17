@@ -38,8 +38,8 @@ void BumpMappedShadowsRenderer::Init()
         .AddVertexInputBindings({
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();

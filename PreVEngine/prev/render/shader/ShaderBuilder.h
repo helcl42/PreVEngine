@@ -10,7 +10,7 @@
 namespace prev::render::shader {
 class ShaderBuilder final {
 public:
-    struct DescriptorSet {
+    struct BindGroupEntry {
         std::string name{};
         uint32_t binding{};
         GfxBindingType bindingType{};
@@ -24,28 +24,51 @@ public:
         GfxTextureSampleType textureSampleType{ GFX_TEXTURE_SAMPLE_TYPE_FLOAT };
         bool samplerNonFiltering{};
 
-        static DescriptorSet Texture(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, GfxTextureViewType viewDimension, uint32_t count = 1, GfxTextureSampleType sampleType = GFX_TEXTURE_SAMPLE_TYPE_FLOAT)
+        static BindGroupEntry Buffer(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags)
         {
-            DescriptorSet ds{};
-            ds.name = name;
-            ds.binding = binding;
-            ds.bindingType = GFX_BINDING_TYPE_TEXTURE;
-            ds.stageFlags = stageFlags;
-            ds.count = count;
-            ds.textureViewDimension = viewDimension;
-            ds.textureSampleType = sampleType;
-            return ds;
+            BindGroupEntry bge{};
+            bge.name = name;
+            bge.binding = binding;
+            bge.bindingType = GFX_BINDING_TYPE_BUFFER;
+            bge.stageFlags = stageFlags;
+            return bge;
         }
 
-        static DescriptorSet Sampler(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, bool nonFiltering = false)
+        static BindGroupEntry Texture(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, GfxTextureViewType viewDimension, uint32_t count = 1, GfxTextureSampleType sampleType = GFX_TEXTURE_SAMPLE_TYPE_FLOAT)
         {
-            DescriptorSet ds{};
-            ds.name = name;
-            ds.binding = binding;
-            ds.bindingType = GFX_BINDING_TYPE_SAMPLER;
-            ds.stageFlags = stageFlags;
-            ds.samplerNonFiltering = nonFiltering;
-            return ds;
+            BindGroupEntry bge{};
+            bge.name = name;
+            bge.binding = binding;
+            bge.bindingType = GFX_BINDING_TYPE_TEXTURE;
+            bge.stageFlags = stageFlags;
+            bge.count = count;
+            bge.textureViewDimension = viewDimension;
+            bge.textureSampleType = sampleType;
+            return bge;
+        }
+
+        static BindGroupEntry Sampler(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, bool nonFiltering = false)
+        {
+            BindGroupEntry bge{};
+            bge.name = name;
+            bge.binding = binding;
+            bge.bindingType = GFX_BINDING_TYPE_SAMPLER;
+            bge.stageFlags = stageFlags;
+            bge.samplerNonFiltering = nonFiltering;
+            return bge;
+        }
+
+        static BindGroupEntry StorageTexture(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, GfxFormat format, GfxTextureViewType viewDimension = GFX_TEXTURE_VIEW_TYPE_2D, GfxStorageTextureAccess access = GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY)
+        {
+            BindGroupEntry bge{};
+            bge.name = name;
+            bge.binding = binding;
+            bge.bindingType = GFX_BINDING_TYPE_STORAGE_TEXTURE;
+            bge.stageFlags = stageFlags;
+            bge.storageTextureFormat = format;
+            bge.storageTextureViewDimension = viewDimension;
+            bge.storageTextureAccess = access;
+            return bge;
         }
     };
 
@@ -71,9 +94,9 @@ public:
 
     ShaderBuilder& AddVertexInputAttributes(const std::vector<VertexInputAttribute>& descs);
 
-    ShaderBuilder& AddDescriptorSet(const DescriptorSet& descriptorSet);
+    ShaderBuilder& AddBindGroupEntry(const BindGroupEntry& entry);
 
-    ShaderBuilder& AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets);
+    ShaderBuilder& AddBindGroupEntries(const std::vector<BindGroupEntry>& entries);
 
     ShaderBuilder& SetBindGroupCapacity(uint32_t size);
 
@@ -97,7 +120,7 @@ private:
 
     std::vector<VertexInputAttribute> m_vertexInputAttributes;
 
-    std::vector<DescriptorSet> m_descriptorSets;
+    std::vector<BindGroupEntry> m_bindGroupEntries;
 
     uint32_t m_bindGroupCapacity{};
 

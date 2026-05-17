@@ -90,16 +90,16 @@ ShaderBuilder& ShaderBuilder::AddVertexInputAttributes(const std::vector<VertexI
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddDescriptorSet(const DescriptorSet& descriptorSet)
+ShaderBuilder& ShaderBuilder::AddBindGroupEntry(const BindGroupEntry& entry)
 {
-    m_descriptorSets.push_back(descriptorSet);
+    m_bindGroupEntries.push_back(entry);
     return *this;
 }
 
-ShaderBuilder& ShaderBuilder::AddDescriptorSets(const std::vector<DescriptorSet>& descriptorSets)
+ShaderBuilder& ShaderBuilder::AddBindGroupEntries(const std::vector<BindGroupEntry>& entries)
 {
-    for (const auto& ds : descriptorSets) {
-        AddDescriptorSet(ds);
+    for (const auto& ds : entries) {
+        AddBindGroupEntry(ds);
     }
     return *this;
 }
@@ -138,7 +138,7 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
 
     // Build binding infos
     std::map<std::string, Shader::BindingInfo> bindingInfos;
-    for (const auto& ds : m_descriptorSets) {
+    for (const auto& ds : m_bindGroupEntries) {
         const auto entryType = ToBindGroupEntryType(ds.bindingType);
 
         if (ds.count > 1) {
@@ -197,7 +197,7 @@ GfxShader ShaderBuilder::CreateShaderModule(const std::vector<char>& code, GfxSh
 GfxBindGroupLayout ShaderBuilder::CreateBindGroupLayout() const
 {
     std::vector<GfxBindGroupLayoutEntry> entries;
-    for (const auto& ds : m_descriptorSets) {
+    for (const auto& ds : m_bindGroupEntries) {
         GfxBindGroupLayoutEntry entry{};
         entry.binding = ds.binding;
         entry.visibility = ds.stageFlags;

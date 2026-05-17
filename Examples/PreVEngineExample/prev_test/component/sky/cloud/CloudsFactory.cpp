@@ -34,9 +34,9 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         .AddShaderStagePaths({
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/clouds_comp") }
         })
-        .AddDescriptorSets({
-            { "uboCS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE },
-            { "outWeatherTexture", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, GFX_FORMAT_R8G8B8A8_UNORM, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY }
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 0, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outWeatherTexture", 1, GFX_SHADER_STAGE_COMPUTE, GFX_FORMAT_R8G8B8A8_UNORM)
         })
 	    .SetBindGroupCapacity(1)
         .Build();
