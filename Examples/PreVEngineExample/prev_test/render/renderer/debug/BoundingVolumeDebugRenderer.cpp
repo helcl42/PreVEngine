@@ -37,8 +37,8 @@ void BoundingVolumeDebugRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
-            { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -85,7 +85,7 @@ void BoundingVolumeDebugRenderer::BeforeRender(const NormalRenderContext& render
 
 void BoundingVolumeDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -126,9 +126,9 @@ void BoundingVolumeDebugRenderer::Render(const NormalRenderContext& renderContex
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        const uint64_t vertexOffset = 0;
-        const uint64_t vertexRange = boundingVolumeComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *boundingVolumeComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = boundingVolumeComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *boundingVolumeComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *boundingVolumeComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, boundingVolumeComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

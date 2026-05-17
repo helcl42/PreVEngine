@@ -44,10 +44,10 @@ void DefaultRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
-            { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "colorSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("colorTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("colorSampler", 3, GFX_SHADER_STAGE_FRAGMENT),
             prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 5, GFX_SHADER_STAGE_FRAGMENT, true)
         })

@@ -41,7 +41,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3, VertexLayoutComponent::IVEC4, VertexLayoutComponent::VEC4, VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "ubo", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();

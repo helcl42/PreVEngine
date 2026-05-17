@@ -31,15 +31,15 @@ void SkyRenderer::Init()
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_comp") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
-            { "outBloom", 1, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
-            { "outAlphaness", 2, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
-            { "outCloudDistance", 3, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, DEPTH_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
+            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outBloom", 1, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outAlphaness", 2, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outCloudDistance", 3, GFX_SHADER_STAGE_COMPUTE, DEPTH_FORMAT),
             prev::render::shader::ShaderBuilder::DescriptorSet::Texture("perlinNoiseTex", 4, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_3D),
-            { "perlinNoiseSampler", 5, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
-            { "weatherTex", 6, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "weatherSampler", 7, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
-            { "uboCS", 8, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("perlinNoiseSampler", 5, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("weatherTex", 6, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("weatherSampler", 7, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboCS", 8, GFX_SHADER_STAGE_COMPUTE)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -69,12 +69,12 @@ void SkyRenderer::Init()
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_post_process_comp") }
         })
         .AddDescriptorSets({
-            { "outFragColor", 0, GFX_BINDING_TYPE_STORAGE_TEXTURE, GFX_SHADER_STAGE_COMPUTE, false, 1, COLOR_FORMAT, GFX_TEXTURE_VIEW_TYPE_2D, GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY },
-            { "skyTex", 1, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "skySampler", 2, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
-            { "bloomTex", 3, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_COMPUTE },
-            { "bloomSampler", 4, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_COMPUTE },
-            { "uboCS", 5, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_COMPUTE }
+            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("skyTex", 1, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("skySampler", 2, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("bloomTex", 3, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("bloomSampler", 4, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboCS", 5, GFX_SHADER_STAGE_COMPUTE)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -113,11 +113,11 @@ void SkyRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-{ "colorTex", 0, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-{ "colorSampler", 1, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT },
-prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
-})
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("colorSampler", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
+        })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on

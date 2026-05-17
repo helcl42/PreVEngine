@@ -37,7 +37,7 @@ void DefaultShadowsRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "ubo", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -76,7 +76,7 @@ void DefaultShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderCont
 
 void DefaultShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);

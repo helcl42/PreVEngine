@@ -36,10 +36,10 @@ void Font3dRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "uboVS", 0, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_VERTEX },
-            { "uboFS", 1, GFX_BINDING_TYPE_BUFFER, GFX_SHADER_STAGE_FRAGMENT },
-            { "alphaTexture", 2, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "alphaSampler", 3, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("alphaTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("alphaSampler", 3, GFX_SHADER_STAGE_FRAGMENT)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -91,7 +91,7 @@ void Font3dRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
 void Font3dRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);

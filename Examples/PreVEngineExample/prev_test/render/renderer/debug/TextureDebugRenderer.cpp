@@ -37,8 +37,8 @@ void TextureDebugRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddDescriptorSets({
-            { "imageTexture", 0, GFX_BINDING_TYPE_TEXTURE, GFX_SHADER_STAGE_FRAGMENT },
-            { "imageSampler", 1, GFX_BINDING_TYPE_SAMPLER, GFX_SHADER_STAGE_FRAGMENT }
+            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("imageTexture", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("imageSampler", 1, GFX_SHADER_STAGE_FRAGMENT)
         })
 	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
