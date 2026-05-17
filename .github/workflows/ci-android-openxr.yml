@@ -1,4 +1,4 @@
-name: Android - CI Build
+name: Android OpenXR - CI Build
 
 on:
   push:
@@ -63,31 +63,34 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
+        python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=2 ' --compiler_args '-DENABLE_XR=1 ' --force_compile_all
 
     - name: Configure CMake
       run: |
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -DANDROID=ON \
         -DANDROID_ABI=arm64-v8a \
+        -DENABLE_XR=ON \
         -S ${{ github.workspace }}
 
     - name: Build
       run: |
         cd Examples/PreVEngineExample/platform/android
+        sed -i "s/'-DANDROID_STL=c++_static'/'-DANDROID_STL=c++_static','-DENABLE_XR=ON'/g" app/build.gradle
         chmod a+x gradlew
         ./gradlew clean assembleDebug
 
     - name: Create Artifact
       run: |
-        mkdir build-android-arm64-v8a
-        cp Examples/PreVEngineExample/platform/android/app/build/outputs/apk/debug/app-debug.apk build-android-arm64-v8a
+        mkdir build-android-openxr-arm64-v8a
+        cp Examples/PreVEngineExample/platform/android/app/build/outputs/apk/debug/app-debug.apk build-android-openxr-arm64-v8a
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-android-arm64-v8a
-        path: build-android-arm64-v8a
+        name: build-android-openxr-arm64-v8a
+        path: build-android-openxr-arm64-v8a
         retention-days: 7
-

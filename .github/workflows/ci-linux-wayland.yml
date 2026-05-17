@@ -1,4 +1,4 @@
-name: Android - CI Build
+name: Linux (Wayland) - CI Build/Test
 
 on:
   push:
@@ -17,7 +17,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug]
+        build_type: [Release]
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            c_compiler: gcc
+            cpp_compiler: g++
+          - compiler: clang
+            c_compiler: clang
+            cpp_compiler: clang++
 
     steps:
     - uses: actions/checkout@v4
@@ -29,25 +37,12 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Setup Android SDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Setup Android NDK
-      uses: nttld/setup-ndk@v1
-      id: setup-ndk
-      with:
-        ndk-version: r27
-        link-to-sdk: true
-
     - name: Install dependencies
       run: |
         wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
         sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
         sudo apt update
-        sudo apt-get install -y vulkan-sdk
+        sudo apt-get install -y vulkan-sdk libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
 
     - name: Install PreVEngine dependencies
       run: |
@@ -68,26 +63,32 @@ jobs:
     - name: Configure CMake
       run: |
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+        -G Ninja \
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DANDROID=ON \
-        -DANDROID_ABI=arm64-v8a \
+        -DENABLE_XCB=OFF \
+        -DENABLE_WAYLAND=ON \
         -S ${{ github.workspace }}
 
     - name: Build
-      run: |
-        cd Examples/PreVEngineExample/platform/android
-        chmod a+x gradlew
-        ./gradlew clean assembleDebug
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Create Artifact
       run: |
-        mkdir build-android-arm64-v8a
-        cp Examples/PreVEngineExample/platform/android/app/build/outputs/apk/debug/app-debug.apk build-android-arm64-v8a
+        mkdir build-linux-wayland-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-linux-wayland-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-linux-wayland-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.so build-linux-wayland-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-android-arm64-v8a
-        path: build-android-arm64-v8a
+        name: build-linux-wayland-${{ matrix.compiler }}
+        path: build-linux-wayland-${{ matrix.compiler }}
         retention-days: 7
 
+    - name: Run Tests
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTests
+        ./PreVEngineTests

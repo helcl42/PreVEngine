@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "master" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: 'true'
+        submodules: true
 
     - name: Install Python
       uses: actions/setup-python@v5
@@ -42,9 +46,9 @@ jobs:
         python3 Scripts/compile_shaders.py --input_folder Examples/PreVEngineExample/assets/Shaders/ --output_folder ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets/Shaders/ --compile_serial --compiler_args '-DMAX_VIEW_COUNT=1 ' --force_compile_all
 
     - name: Configure CMake
-      run: >
-        emcmake cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_BUILD_TYPE=Release
+      run: |
+        emcmake cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+        -DCMAKE_BUILD_TYPE=Release \
         -S ${{ github.workspace }}
 
     - name: Build
