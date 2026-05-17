@@ -30,16 +30,16 @@ void SkyRenderer::Init()
         .AddShaderStagePaths({
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_comp") }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outBloom", 1, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outAlphaness", 2, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outCloudDistance", 3, GFX_SHADER_STAGE_COMPUTE, DEPTH_FORMAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("perlinNoiseTex", 4, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_3D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("perlinNoiseSampler", 5, GFX_SHADER_STAGE_COMPUTE),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("weatherTex", 6, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("weatherSampler", 7, GFX_SHADER_STAGE_COMPUTE),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboCS", 8, GFX_SHADER_STAGE_COMPUTE)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outBloom", 1, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outAlphaness", 2, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outCloudDistance", 3, GFX_SHADER_STAGE_COMPUTE, DEPTH_FORMAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("perlinNoiseTex", 4, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_3D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("perlinNoiseSampler", 5, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("weatherTex", 6, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("weatherSampler", 7, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 8, GFX_SHADER_STAGE_COMPUTE)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -68,13 +68,13 @@ void SkyRenderer::Init()
         .AddShaderStagePaths({
             { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_post_process_comp") }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("skyTex", 1, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("skySampler", 2, GFX_SHADER_STAGE_COMPUTE),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("bloomTex", 3, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("bloomSampler", 4, GFX_SHADER_STAGE_COMPUTE),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Buffer("uboCS", 5, GFX_SHADER_STAGE_COMPUTE)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("skyTex", 1, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("skySampler", 2, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("bloomTex", 3, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("bloomSampler", 4, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 5, GFX_SHADER_STAGE_COMPUTE)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -112,11 +112,11 @@ void SkyRenderer::Init()
         .AddVertexInputBindings({
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
-        .AddDescriptorSets({
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("colorSampler", 1, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
-            prev::render::shader::ShaderBuilder::DescriptorSet::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
+        .AddBindGroupEntries({
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("colorSampler", 1, GFX_SHADER_STAGE_FRAGMENT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
