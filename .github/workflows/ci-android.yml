@@ -24,6 +24,9 @@ jobs:
       with:
         submodules: true
 
+    - name: Init Dawn submodule
+      run: git -C PreVEngine/external/gfx submodule update --init third_party/dawn
+
     - name: Install Python
       uses: actions/setup-python@v5
       with:
