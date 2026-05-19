@@ -49,6 +49,7 @@ jobs:
         Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$ver/windows/vulkansdk-windows-X64-$ver.exe" -OutFile VulkanSDK.exe
         echo Downloaded
         .\VulkanSDK.exe --root C:\VulkanSDK --accept-licenses --default-answer --confirm-command install
+        echo "C:\VulkanSDK\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Setup MSVC environment
       uses: ilammy/msvc-dev-cmd@v1
@@ -80,7 +81,6 @@ jobs:
         mkdir build-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.dll build-win32
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4

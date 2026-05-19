@@ -18,9 +18,6 @@ jobs:
       fail-fast: false
       matrix:
         build_type: [Release]
-        include:
-          - c_compiler: clang
-            cpp_compiler: clang++
 
     env:
       VULKAN_VERSION: 1.3.290.0
@@ -46,7 +43,7 @@ jobs:
         wget "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/mac/vulkansdk-macos-$VULKAN_VERSION.dmg?Human=true" -O vulkansdk.dmg
         hdiutil attach vulkansdk.dmg
         sudo /Volumes/vulkansdk-macos-$VULKAN_VERSION/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION --accept-licenses --default-answer --confirm-command install com.lunarg.vulkan.core com.lunarg.vulkan.usr com.lunarg.vulkan.ios
-        hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
+        hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION 2>/dev/null || true
         echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
         echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
 
@@ -64,12 +61,10 @@ jobs:
       run: |
         cmake -B ${{ steps.strings.outputs.build-output-dir }} \
         -G Ninja \
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -DCMAKE_SYSTEM_NAME=iOS \
         -DCMAKE_OSX_SYSROOT=iphonesimulator \
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=16.3 \
         -DCMAKE_OSX_ARCHITECTURES="arm64" \
         -DENABLE_VK_LOADER=OFF \
         -S ${{ github.workspace }}

@@ -76,7 +76,6 @@ jobs:
         mkdir build-linux-xcb-${{ matrix.compiler }}
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-linux-xcb-${{ matrix.compiler }}
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.so build-linux-xcb-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4

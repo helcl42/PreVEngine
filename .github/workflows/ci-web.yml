@@ -2,12 +2,17 @@ name: Web - CI Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "gfx" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "gfx" ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
@@ -69,3 +74,26 @@ jobs:
         name: build-web
         path: build-web
         retention-days: 7
+
+    - name: Prepare Pages
+      run: |
+        mkdir -p public
+        cp build-web/* public/
+        cp public/PreVEngineExample.html public/index.html
+
+    - name: Upload Pages Artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './public'
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
