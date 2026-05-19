@@ -100,11 +100,26 @@ if(EMSCRIPTEN)
     add_definitions(-DWORM_HOLES_SINGLE_THREADED)
 endif()
 
+if(IOS OR ANDROID OR ENABLE_XR)
+    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported on mobile and XR" FORCE)
+endIf()
+
 # Add gfx as a subdirectory — it manages its own sources, backends, and Dawn
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_CPP_WRAPPER OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+# Propagate windowing system selection to gfx
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
+    if(ENABLE_WAYLAND AND NOT ENABLE_XCB)
+        set(GFX_ENABLE_X11 OFF CACHE BOOL "" FORCE)
+        set(GFX_ENABLE_XCB OFF CACHE BOOL "" FORCE)
+    elseif(ENABLE_XCB AND NOT ENABLE_WAYLAND)
+        set(GFX_ENABLE_WAYLAND OFF CACHE BOOL "" FORCE)
+    endif()
+endif()
+
 add_subdirectory(external/gfx)
 
 include_directories("external/worm_holes/WormHoles")

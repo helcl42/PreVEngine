@@ -54,11 +54,11 @@ class ShaderCompiler:
         # Find glslc
         glslc = self._find_executable("glslc")
         if not glslc:
-            print(f"❌ glslc not found. Install VulkanSDK to compile shaders.")
+            print(f"[ERROR] glslc not found. Install VulkanSDK to compile shaders.")
             return False
         
         try:
-            print(f"🔨 Compiling: {rel_path} → {spirv_file.relative_to(self.shader_dir)}")
+            print(f"Compiling: {rel_path} -> {spirv_file.relative_to(self.shader_dir)}")
             cmd = [
                 glslc,
                 f"-DMAX_VIEW_COUNT={self.max_view_count}",
@@ -70,7 +70,7 @@ class ShaderCompiler:
                           check=True, capture_output=True)
             return True
         except subprocess.CalledProcessError as e:
-            print(f"❌ Failed: {e.stderr.decode()}")
+            print(f"[ERROR] Failed: {e.stderr.decode()}")
             return False
     
     def convert_spirv_to_wgsl(self, spirv_file: Path) -> bool:
@@ -83,17 +83,17 @@ class ShaderCompiler:
         # Find naga
         naga = self._find_executable("naga")
         if not naga:
-            print(f"⚠️  naga not found - skipping WGSL generation. "
+            print(f"[WARN] naga not found - skipping WGSL generation. "
                   f"Install: cargo install naga-cli")
             return False
         
         try:
-            print(f"🔄 Converting: {rel_path} → {wgsl_file.relative_to(self.shader_dir)}")
+            print(f"Converting: {rel_path} -> {wgsl_file.relative_to(self.shader_dir)}")
             subprocess.run([naga, str(spirv_file), str(wgsl_file)], 
                           check=True, capture_output=True)
             return True
         except subprocess.CalledProcessError as e:
-            print(f"⚠️  Conversion failed (non-critical): {e.stderr.decode()[:100]}")
+            print(f"[WARN] Conversion failed (non-critical): {e.stderr.decode()[:100]}")
             return False
     
     def compile_all_spirv(self) -> bool:
@@ -103,13 +103,13 @@ class ShaderCompiler:
             print("No GLSL files found in src/")
             return False
         
-        print(f"📦 Found {len(glsl_files)} shader(s)")
+        print(f"Found {len(glsl_files)} shader(s)")
         success_count = 0
         for glsl_file in glsl_files:
             if self.compile_glsl_to_spirv(glsl_file):
                 success_count += 1
         
-        print(f"✅ Compiled {success_count}/{len(glsl_files)} shaders")
+        print(f"Compiled {success_count}/{len(glsl_files)} shaders")
         return success_count == len(glsl_files)
     
     def convert_all_wgsl(self) -> bool:
@@ -119,13 +119,13 @@ class ShaderCompiler:
             print("No SPIR-V files found - compile GLSL first")
             return False
         
-        print(f"📦 Found {len(spirv_files)} SPIR-V file(s)")
+        print(f"Found {len(spirv_files)} SPIR-V file(s)")
         success_count = 0
         for spirv_file in spirv_files:
             if self.convert_spirv_to_wgsl(spirv_file):
                 success_count += 1
         
-        print(f"✅ Converted {success_count}/{len(spirv_files)} shaders (non-critical failures ignored)")
+        print(f"Converted {success_count}/{len(spirv_files)} shaders (non-critical failures ignored)")
         return True
     
     def clean(self):
@@ -184,7 +184,7 @@ def main():
         shader_dir = script_dir / "assets" / "Shaders"
     
     if not shader_dir.exists():
-        print(f"❌ Shader directory not found: {shader_dir}")
+        print(f"[ERROR] Shader directory not found: {shader_dir}")
         sys.exit(1)
     
     compiler = ShaderCompiler(shader_dir, args.max_view_count, args.enable_xr)

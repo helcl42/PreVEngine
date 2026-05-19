@@ -46,7 +46,7 @@ jobs:
         wget "https://sdk.lunarg.com/sdk/download/$VULKAN_VERSION/mac/vulkansdk-macos-$VULKAN_VERSION.dmg?Human=true" -O vulkansdk.dmg
         hdiutil attach vulkansdk.dmg
         sudo /Volumes/vulkansdk-macos-$VULKAN_VERSION/InstallVulkan.app/Contents/MacOS/InstallVulkan --root $GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION --accept-licenses --default-answer --confirm-command install
-        hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION
+        hdiutil detach /Volumes/vulkansdk-macos-$VULKAN_VERSION 2>/dev/null || true
         echo "VULKAN_SDK_PATH=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION" >> $GITHUB_ENV
         echo "VULKAN_SDK=$GITHUB_WORKSPACE/vulkansdk-macos-$VULKAN_VERSION/macOS" >> $GITHUB_ENV
 
@@ -77,7 +77,6 @@ jobs:
         mkdir build-macos
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-macos
         cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-macos
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/*.dylib build-macos
         cp -r $VULKAN_SDK/lib/libvulkan*.dylib build-macos
 
     - name: Publish Artifact
