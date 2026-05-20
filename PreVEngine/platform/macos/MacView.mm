@@ -46,4 +46,14 @@
 {
     return YES;
 }
+
+- (void)keyDown:(NSEvent *)event
+{
+    // Override to prevent system beep on key press
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+    // Override to prevent system beep on key release
+}
 @end

@@ -66,26 +66,6 @@ NSPoint ConvertPointFromScreenToView(NSWindow* window, NSView* view, NSPoint scr
     return viewPoint;
 }
 
-NSPoint ConvertPointFromViewToScreen(NSWindow* window, NSView* view, NSPoint viewPoint)
-{
-    NSPoint point = [view convertPoint:viewPoint toView:nil];
-    NSPoint screenPoint = [window convertRectToScreen:MakeRectFromPoint(point)].origin;
-    return screenPoint;
-}
-
-NSRect GetCurrentScreenResolution()
-{
-    NSRect screenRect;
-    NSArray *screens = [NSScreen screens];
-    uint32_t screenCount = static_cast<uint32_t>([screens count]);
-    for (uint32_t i = 0; i < screenCount; ++i)
-    {
-        NSScreen *screen = [screens objectAtIndex:i];
-        screenRect = [screen frame];
-    }
-    return screenRect;
-}
-
 MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
     : WindowImpl()
 {
@@ -147,8 +127,10 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
     m_state = std::make_unique<MacState>(window, view, layer);
     m_info = windowInfo;
 
+    // Report size in pixels (backing store) for correct Retina support
+    NSSize backingSize = [view convertSizeToBacking:[view bounds].size];
     m_eventQueue.Push(OnInitEvent());
-    m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
+    m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(backingSize.width), static_cast<uint32_t>(backingSize.height)));
     m_eventQueue.Push(OnFocusEvent(true));
 }
 
@@ -166,6 +148,8 @@ bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
     }
 
     @autoreleasepool {
+        const CGFloat scaleFactor = [m_state->window backingScaleFactor];
+
         for (;;)
         {
             NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
@@ -178,28 +162,41 @@ bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 
             NSPoint screenMouseLocation = [NSEvent mouseLocation];
             NSPoint mouseLocation = ConvertPointFromScreenToView(m_state->window, m_state->view, screenMouseLocation);
-            if(NSPointInRect(mouseLocation, [m_state->view bounds])) { // ignore mouse moves outisde window/view
-                if (m_hasFocus && m_mouseLocked) {
-                    NSRect resolutionRect = GetCurrentScreenResolution();
-                    NSRect frame = m_state->window.frame;
-                    NSPoint viewCenterPoint = NSMakePoint(frame.size.width / 2.0f, frame.size.height / 2.0);
-                    NSPoint origin = NSMakePoint(frame.origin.x, (resolutionRect.origin.y + resolutionRect.size.height) - (frame.origin.y + frame.size.height));
-                   
-                    CGAssociateMouseAndMouseCursorPosition(false);
-                    CGWarpMouseCursorPosition(CGPointMake(origin.x + viewCenterPoint.x, origin.y + viewCenterPoint.y));
-                    CGAssociateMouseAndMouseCursorPosition(true);
-                    
-                    mouseLocation.x -= viewCenterPoint.x;
-                    mouseLocation.y -= viewCenterPoint.y;
-                } else {
-                    mouseLocation = NSMakePoint(mouseLocation.x, m_info.size.height - mouseLocation.y);
+            bool insideView = NSPointInRect(mouseLocation, [m_state->view bounds]);
+
+            if (m_hasFocus && m_mouseLocked) {
+                // Use raw deltas for locked mouse - unaffected by cursor warping
+                switch([event type])
+                {
+                    case NSEventTypeMouseMoved:
+                    case NSEventTypeLeftMouseDragged:
+                    case NSEventTypeRightMouseDragged:
+                    case NSEventTypeOtherMouseDragged:
+                    {
+                        CGFloat dx = [event deltaX] * scaleFactor;
+                        CGFloat dy = [event deltaY] * scaleFactor;
+                        m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(dx), static_cast<int32_t>(dy), ButtonType::NONE));
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                
-                m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
+            } else if (insideView) {
+                mouseLocation = NSMakePoint(mouseLocation.x * scaleFactor, (m_info.size.height - mouseLocation.y * scaleFactor));
             }
 
             switch([event type])
             {
+                case NSEventTypeMouseMoved:
+                case NSEventTypeLeftMouseDragged:
+                case NSEventTypeRightMouseDragged:
+                case NSEventTypeOtherMouseDragged:
+                {
+                    if (!m_mouseLocked && insideView) {
+                        m_eventQueue.Push(OnMouseEvent(ActionType::MOVE, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::NONE));
+                    }
+                    break;
+                }
                 case NSEventTypeLeftMouseDown:
                 {
                     m_eventQueue.Push(OnMouseEvent(ActionType::DOWN, static_cast<int32_t>(mouseLocation.x), static_cast<int32_t>(mouseLocation.y), ButtonType::LEFT));
@@ -257,7 +254,7 @@ bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         [NSApp updateWindows];
     } // autoreleasepool
     
-    NSSize size = [[m_state->window contentView] frame].size;
+    NSSize size = [m_state->view convertSizeToBacking:[[m_state->window contentView] frame].size];
     Size windowSize{ static_cast<uint32_t>(size.width), static_cast<uint32_t>(size.height) };
     if(m_info.size != windowSize) {
         m_eventQueue.Push(OnResizeEvent(windowSize.width, windowSize.height));
