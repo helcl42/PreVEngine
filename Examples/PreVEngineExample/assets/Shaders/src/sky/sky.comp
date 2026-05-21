@@ -106,8 +106,13 @@ bool RaySphereIntersection(in vec3 rayStartPosition, in vec3 rayDirection, in ve
 		return false;
 	}
 
-	float t = max(0.0, (-b + sqrt(discr)) / 2);
-	if(t == 0.0)
+	float sqrtDiscr = sqrt(discr);
+	float t1 = (-b - sqrtDiscr) / (2.0 * a);
+	float t2 = (-b + sqrtDiscr) / (2.0 * a);
+
+	// Pick nearest positive root; if inside sphere t1 < 0 so use t2
+	float t = (t1 > 0.0) ? t1 : t2;
+	if(t <= 0.0)
 	{
 		return false;
 	}
@@ -164,7 +169,7 @@ float SampleCloudDensity(in vec3 inPos, in bool expensive, in float lod)
 	float baseCloud = Remap(lowFrequencyNoise.r, -(1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
 
 	float density = GetDensityForCloud(heightFraction, 1.0);
-	baseCloud *= (density / heightFraction);
+	baseCloud *= density / max(heightFraction, 0.001);
 
 	vec3 weatherData = texture(sampler2D(weatherTex, weatherSampler), movingUV).rgb;
 	float cloudCoverage = weatherData.r * uboCS.coverageFactor;
@@ -365,19 +370,28 @@ void main()
 
 	// compute raymarching starting and ending point
 	vec3 startPos, endPos, fogRay;
-	if(uboCS.cameraPosition.y < uboCS.sphereInnerRadius - uboCS.earthRadius)
+	float camDistFromCenter = length(uboCS.cameraPosition.xyz - sphereCenter);
+	if(camDistFromCenter < uboCS.sphereInnerRadius)
 	{
 		RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, startPos);
 		RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
 		fogRay = startPos;
 	}
-	else if(uboCS.cameraPosition.y > uboCS.sphereInnerRadius - uboCS.earthRadius && uboCS.cameraPosition.y < uboCS.sphereOuterRadius - uboCS.earthRadius)
+	else if(camDistFromCenter >= uboCS.sphereInnerRadius && camDistFromCenter < uboCS.sphereOuterRadius)
 	{
 		startPos = uboCS.cameraPosition.xyz;
-		RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
-		bool hit = RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, fogRay);
-		if(!hit)
+		vec3 innerHit;
+		bool hitInner = RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, innerHit);
+		if(hitInner)
 		{
+			// Ray hits inner sphere (looking down into the shell) - end at inner sphere
+			endPos = innerHit;
+			fogRay = innerHit;
+		}
+		else
+		{
+			// Ray goes outward (looking up) - end at outer sphere
+			RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
 			fogRay = startPos;
 		}
 	}
