@@ -39,8 +39,12 @@ private:
 
     static EM_BOOL FullscreenChangeCallback(int eventType, const EmscriptenFullscreenChangeEvent* fullscreenEvent, void* userData);
 
+    static EM_BOOL TouchCallback(int eventType, const EmscriptenTouchEvent* touchEvent, void* userData);
+
 private:
     std::string m_canvasSelector{ "#canvas" };
+
+    MultiTouch m_MTouch{};
 };
 } // namespace prev::window::impl::emscripten
 
