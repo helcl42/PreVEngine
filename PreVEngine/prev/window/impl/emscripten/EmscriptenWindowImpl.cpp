@@ -62,6 +62,10 @@ EmscriptenWindowImpl::EmscriptenWindowImpl(const WindowInfo& windowInfo)
     emscripten_set_blur_callback(m_canvasSelector.c_str(), this, true, FocusCallback);
     emscripten_set_focus_callback(m_canvasSelector.c_str(), this, true, FocusCallback);
     emscripten_set_fullscreenchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, this, true, FullscreenChangeCallback);
+    emscripten_set_touchstart_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
+    emscripten_set_touchmove_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
+    emscripten_set_touchend_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
+    emscripten_set_touchcancel_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
 
     // Push initial events
     m_eventQueue.Push(OnInitEvent());
@@ -189,6 +193,45 @@ EM_BOOL EmscriptenWindowImpl::FullscreenChangeCallback(int eventType, const Emsc
     }
     self->m_eventQueue.Push(self->OnFocusEvent(true));
     self->m_eventQueue.Push(self->OnResizeEvent(self->m_info.size.width, self->m_info.size.height));
+    return EM_TRUE;
+}
+
+EM_BOOL EmscriptenWindowImpl::TouchCallback(int eventType, const EmscriptenTouchEvent* touchEvent, void* userData)
+{
+    auto* self = static_cast<EmscriptenWindowImpl*>(userData);
+
+    const float w = static_cast<float>(self->m_info.size.width);
+    const float h = static_cast<float>(self->m_info.size.height);
+
+    switch (eventType) {
+    case EMSCRIPTEN_EVENT_TOUCHSTART:
+        for (int i = 0; i < touchEvent->numTouches; ++i) {
+            const auto& touch = touchEvent->touches[i];
+            if (touch.isChanged) {
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::DOWN, static_cast<float>(touch.targetX), static_cast<float>(touch.targetY), static_cast<uint32_t>(touch.identifier), w, h));
+            }
+        }
+        break;
+    case EMSCRIPTEN_EVENT_TOUCHMOVE:
+        for (int i = 0; i < touchEvent->numTouches; ++i) {
+            const auto& touch = touchEvent->touches[i];
+            if (touch.isChanged) {
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::MOVE, static_cast<float>(touch.targetX), static_cast<float>(touch.targetY), static_cast<uint32_t>(touch.identifier), w, h));
+            }
+        }
+        break;
+    case EMSCRIPTEN_EVENT_TOUCHEND:
+        for (int i = 0; i < touchEvent->numTouches; ++i) {
+            const auto& touch = touchEvent->touches[i];
+            if (touch.isChanged) {
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::UP, static_cast<float>(touch.targetX), static_cast<float>(touch.targetY), static_cast<uint32_t>(touch.identifier), w, h));
+            }
+        }
+        break;
+    case EMSCRIPTEN_EVENT_TOUCHCANCEL:
+        self->m_MTouch.Reset();
+        break;
+    }
     return EM_TRUE;
 }
 } // namespace prev::window::impl::emscripten
