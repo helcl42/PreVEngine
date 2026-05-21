@@ -100,10 +100,21 @@ float GetShadow(in texture2DArray depthTexture, in sampler depthSampler, in Shad
 		uint cascadeIndex = 0;
 		for(uint i = 0; i < SHADOW_MAP_CASCADE_COUNT - 1; i++)
 		{
-			if(viewPosition.z < shadows.cascades[i].split.x)
+			if(shadows.useReverseDepth != 0)
 			{
-				cascadeIndex = i + 1;
-				bias /= cascadeBiasDamper;
+				if(viewPosition.z > shadows.cascades[i].split.x)
+				{
+					cascadeIndex = i + 1;
+					bias /= cascadeBiasDamper;
+				}
+			}
+			else
+			{
+				if(viewPosition.z < shadows.cascades[i].split.x)
+				{
+					cascadeIndex = i + 1;
+					bias /= cascadeBiasDamper;
+				}
 			}
 		}
 	    vec4 shadowCoord = shadows.cascades[cascadeIndex].viewProjectionMatrix * vec4(worldPosition, 1.0);
