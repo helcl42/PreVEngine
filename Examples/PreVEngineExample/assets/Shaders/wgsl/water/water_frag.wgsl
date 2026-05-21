@@ -333,44 +333,57 @@ fn GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_S
         loop {
             let _e82 = i;
             if (_e82 < 3u) {
-                let _e85 = (*viewPosition)[2u];
-                let _e86 = i;
-                let _e91 = (*shadows).cascades[_e86].split[0u];
-                if (_e85 < _e91) {
-                    let _e93 = i;
-                    cascadeIndex_3 = (_e93 + 1u);
-                    let _e95 = bias;
-                    bias = (_e95 / 1.5f);
+                let _e85 = (*shadows).useReverseDepth;
+                if (_e85 != 0u) {
+                    let _e88 = (*viewPosition)[2u];
+                    let _e89 = i;
+                    let _e94 = (*shadows).cascades[_e89].split[0u];
+                    if (_e88 > _e94) {
+                        let _e96 = i;
+                        cascadeIndex_3 = (_e96 + 1u);
+                        let _e98 = bias;
+                        bias = (_e98 / 1.5f);
+                    }
+                } else {
+                    let _e101 = (*viewPosition)[2u];
+                    let _e102 = i;
+                    let _e107 = (*shadows).cascades[_e102].split[0u];
+                    if (_e101 < _e107) {
+                        let _e109 = i;
+                        cascadeIndex_3 = (_e109 + 1u);
+                        let _e111 = bias;
+                        bias = (_e111 / 1.5f);
+                    }
                 }
                 continue;
             } else {
                 break;
             }
             continuing {
-                let _e97 = i;
-                i = (_e97 + bitcast<u32>(1i));
+                let _e113 = i;
+                i = (_e113 + bitcast<u32>(1i));
             }
         }
-        let _e100 = cascadeIndex_3;
-        let _e104 = (*shadows).cascades[_e100].viewProjectionMatrix;
-        let _e105 = (*worldPosition);
-        shadowCoord_3 = (_e104 * vec4<f32>(_e105.x, _e105.y, _e105.z, 1f));
-        let _e111 = shadowCoord_3;
-        let _e113 = shadowCoord_3[3u];
-        normalizedShadowCoord = (_e111 / vec4(_e113));
-        let _e116 = normalizedShadowCoord;
-        param_36 = _e116;
-        let _e117 = cascadeIndex_3;
-        param_37 = _e117;
-        let _e118 = bias;
-        param_38 = _e118;
-        let _e120 = (*shadows).useReverseDepth;
-        param_39 = _e120;
-        let _e121 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_36), (&param_37), (&param_38), (&param_39));
-        shadow_3 = _e121;
+        let _e116 = cascadeIndex_3;
+        let _e120 = (*shadows).cascades[_e116].viewProjectionMatrix;
+        let _e121 = (*worldPosition);
+        shadowCoord_3 = (_e120 * vec4<f32>(_e121.x, _e121.y, _e121.z, 1f));
+        let _e127 = shadowCoord_3;
+        let _e129 = shadowCoord_3[3u];
+        normalizedShadowCoord = (_e127 / vec4(_e129));
+        let _e132 = normalizedShadowCoord;
+        param_36 = _e132;
+        let _e133 = cascadeIndex_3;
+        param_37 = _e133;
+        let _e134 = bias;
+        param_38 = _e134;
+        let _e136 = (*shadows).useReverseDepth;
+        param_39 = _e136;
+        let _e137 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_36), (&param_37), (&param_38), (&param_39));
+        shadow_3 = _e137;
     }
-    let _e122 = shadow_3;
-    return _e122;
+    let _e138 = shadow_3;
+    return _e138;
 }
 
 fn main_1() {

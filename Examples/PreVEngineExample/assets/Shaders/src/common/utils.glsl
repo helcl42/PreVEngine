@@ -93,7 +93,7 @@ float VecMaxElement(in vec2 v)
 
 float VecMaxElement(in vec3 v)
 {
-    return max(min(v.x, v.y), v.z);
+    return max(max(v.x, v.y), v.z);
 }
 
 float VecMaxElement(in vec4 v)

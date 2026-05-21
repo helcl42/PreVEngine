@@ -45,6 +45,11 @@ float ViewFrustum::GetHorizontalFov() const
     return std::abs(m_angleFovRight) + std::abs(m_angleFovLeft);
 }
 
+float ViewFrustum::GetAspectRatio() const
+{
+    return std::tan(GetHorizontalFov() * 0.5f) / std::tan(GetVerticalFov() * 0.5f);
+}
+
 float ViewFrustum::GetNearClippingPlane() const
 {
     return m_nearClippingPlane;

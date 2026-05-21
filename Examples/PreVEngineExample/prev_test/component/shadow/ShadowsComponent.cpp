@@ -1,6 +1,8 @@
 #include "ShadowsComponent.h"
 #include "ShadowsCommon.h"
 
+#include <cmath>
+
 #include <prev/util/MathUtils.h>
 #include <prev/util/intersection/AABB.h>
 #include <prev/util/intersection/Frustum.h>
@@ -39,7 +41,7 @@ void ShadowsComponent::Update(const glm::vec3& lightDirection, const prev_test::
 
         const float splitNearClippingPlane{ viewFrustum.GetNearClippingPlane() + clippingRange * nearSplitDistance };
         const float splitFarClippingPlane{ viewFrustum.GetNearClippingPlane() + clippingRange * farSplitDistance };
-        const prev_test::render::ViewFrustum splitViewFrustum{ viewFrustum.GetVerticalFov(), 1.0f, splitNearClippingPlane, splitFarClippingPlane };
+        const prev_test::render::ViewFrustum splitViewFrustum{ viewFrustum.GetVerticalFov(), viewFrustum.GetAspectRatio(), splitNearClippingPlane, splitFarClippingPlane };
 
         UpdateCascadeFrameData(lightDirection, splitViewFrustum, viewMatrix, m_cascadesFrameData[i]);
 
@@ -105,7 +107,36 @@ void ShadowsComponent::UpdateCascadeFrameData(const glm::vec3& lightDirection, c
     const prev::util::intersection::AABB aabb{ frustum.GetRadius() };
 
     const auto frustumCenter{ frustum.GetCenter().position };
-    const glm::mat4 cascadeLightViewMatrix{ glm::lookAt(frustumCenter - lightDirection * -aabb.minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f)) };
+    const glm::vec3 normalizedLightDirection{ glm::normalize(lightDirection) };
+
+    // Prevent lookAt degeneracy when light points almost parallel to world up.
+    const glm::vec3 worldUp{ 0.0f, 1.0f, 0.0f };
+    const glm::vec3 fallbackUp{ 0.0f, 0.0f, 1.0f };
+    const glm::vec3 lightUp{ std::abs(glm::dot(normalizedLightDirection, worldUp)) > 0.99f ? fallbackUp : worldUp };
+
+    const float lightDistance{ -aabb.minExtents.z };
+    glm::vec3 cascadeLightCenter{ frustumCenter };
+    glm::vec3 cascadeLightEye{ cascadeLightCenter - normalizedLightDirection * lightDistance };
+    glm::mat4 cascadeLightViewMatrix{ glm::lookAt(cascadeLightEye, cascadeLightCenter, lightUp) };
+
+    const float orthoWidth{ aabb.maxExtents.x - aabb.minExtents.x };
+    const float orthoHeight{ aabb.maxExtents.y - aabb.minExtents.y };
+    const float worldUnitsPerTexel{ std::max(orthoWidth, orthoHeight) / static_cast<float>(SHADOW_MAP_DIMENSIONS) };
+    const glm::vec3 centerInLightSpace{ cascadeLightViewMatrix * glm::vec4(cascadeLightCenter, 1.0f) };
+    const glm::vec2 snappedCenterXY{
+        std::floor(centerInLightSpace.x / worldUnitsPerTexel) * worldUnitsPerTexel,
+        std::floor(centerInLightSpace.y / worldUnitsPerTexel) * worldUnitsPerTexel,
+    };
+    const glm::vec2 lightSpaceSnapDelta{ snappedCenterXY - glm::vec2(centerInLightSpace) };
+
+    const glm::vec3 forward{ glm::normalize(cascadeLightCenter - cascadeLightEye) };
+    const glm::vec3 right{ glm::normalize(glm::cross(forward, lightUp)) };
+    const glm::vec3 up{ glm::normalize(glm::cross(right, forward)) };
+    const glm::vec3 worldSnapDelta{ right * lightSpaceSnapDelta.x + up * lightSpaceSnapDelta.y };
+
+    cascadeLightCenter += worldSnapDelta;
+    cascadeLightEye += worldSnapDelta;
+    cascadeLightViewMatrix = glm::lookAt(cascadeLightEye, cascadeLightCenter, lightUp);
 
     glm::mat4 cascadeLightOrthoProjectionMatrix;
     if constexpr (REVERSE_DEPTH) {

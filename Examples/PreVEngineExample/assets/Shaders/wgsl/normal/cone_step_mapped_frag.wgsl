@@ -349,44 +349,57 @@ fn GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_S
         loop {
             let _e78 = i;
             if (_e78 < 3u) {
-                let _e81 = (*viewPosition)[2u];
-                let _e82 = i;
-                let _e87 = (*shadows).cascades[_e82].split[0u];
-                if (_e81 < _e87) {
-                    let _e89 = i;
-                    cascadeIndex_3 = (_e89 + 1u);
-                    let _e91 = bias;
-                    bias = (_e91 / 1.5f);
+                let _e81 = (*shadows).useReverseDepth;
+                if (_e81 != 0u) {
+                    let _e84 = (*viewPosition)[2u];
+                    let _e85 = i;
+                    let _e90 = (*shadows).cascades[_e85].split[0u];
+                    if (_e84 > _e90) {
+                        let _e92 = i;
+                        cascadeIndex_3 = (_e92 + 1u);
+                        let _e94 = bias;
+                        bias = (_e94 / 1.5f);
+                    }
+                } else {
+                    let _e97 = (*viewPosition)[2u];
+                    let _e98 = i;
+                    let _e103 = (*shadows).cascades[_e98].split[0u];
+                    if (_e97 < _e103) {
+                        let _e105 = i;
+                        cascadeIndex_3 = (_e105 + 1u);
+                        let _e107 = bias;
+                        bias = (_e107 / 1.5f);
+                    }
                 }
                 continue;
             } else {
                 break;
             }
             continuing {
-                let _e93 = i;
-                i = (_e93 + bitcast<u32>(1i));
+                let _e109 = i;
+                i = (_e109 + bitcast<u32>(1i));
             }
         }
-        let _e96 = cascadeIndex_3;
-        let _e100 = (*shadows).cascades[_e96].viewProjectionMatrix;
-        let _e101 = (*worldPosition);
-        shadowCoord_3 = (_e100 * vec4<f32>(_e101.x, _e101.y, _e101.z, 1f));
-        let _e107 = shadowCoord_3;
-        let _e109 = shadowCoord_3[3u];
-        normalizedShadowCoord = (_e107 / vec4(_e109));
-        let _e112 = normalizedShadowCoord;
-        param_29 = _e112;
-        let _e113 = cascadeIndex_3;
-        param_30 = _e113;
-        let _e114 = bias;
-        param_31 = _e114;
-        let _e116 = (*shadows).useReverseDepth;
-        param_32 = _e116;
-        let _e117 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_29), (&param_30), (&param_31), (&param_32));
-        shadow_3 = _e117;
+        let _e112 = cascadeIndex_3;
+        let _e116 = (*shadows).cascades[_e112].viewProjectionMatrix;
+        let _e117 = (*worldPosition);
+        shadowCoord_3 = (_e116 * vec4<f32>(_e117.x, _e117.y, _e117.z, 1f));
+        let _e123 = shadowCoord_3;
+        let _e125 = shadowCoord_3[3u];
+        normalizedShadowCoord = (_e123 / vec4(_e125));
+        let _e128 = normalizedShadowCoord;
+        param_29 = _e128;
+        let _e129 = cascadeIndex_3;
+        param_30 = _e129;
+        let _e130 = bias;
+        param_31 = _e130;
+        let _e132 = (*shadows).useReverseDepth;
+        param_32 = _e132;
+        let _e133 = GetShadow_u0028_tA21_u003b_p1_u003b_vf4_u003b_u1_u003b_f1_u003b_u1_u003b(depthTexture_3, depthSampler_3, (&param_29), (&param_30), (&param_31), (&param_32));
+        shadow_3 = _e133;
     }
-    let _e118 = shadow_3;
-    return _e118;
+    let _e134 = shadow_3;
+    return _e134;
 }
 
 fn GetInverseHeight_u0028_f1_u003b(height: ptr<function, f32>) -> f32 {
@@ -647,7 +660,7 @@ fn main_1() {
         param_44 = _e166;
         let _e167 = inWorldPosition_1;
         param_45 = _e167;
-        param_46 = 0.02f;
+        param_46 = 0.005f;
         let _e168 = GetShadow_u0028_tA21_u003b_p1_u003b_struct_u002d_Shadows_u002d_struct_u002d_ShadowsCascade_u002d_mf44_u002d_vf41_u005b_4_u005d_u002d_u1_u002d_u11_u003b_vf3_u003b_vf3_u003b_f1_u003b(depthTexture_4, depthSampler_4, (&param_43), (&param_44), (&param_45), (&param_46));
         shadow_4 = _e168;
     }

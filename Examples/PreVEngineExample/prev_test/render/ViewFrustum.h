@@ -20,6 +20,8 @@ public:
 
     float GetHorizontalFov() const; // degs
 
+    float GetAspectRatio() const;
+
     float GetNearClippingPlane() const;
 
     float GetFarClippingPlane() const;

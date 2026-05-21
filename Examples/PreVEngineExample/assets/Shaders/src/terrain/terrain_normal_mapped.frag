@@ -135,7 +135,7 @@ void main()
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	}
 
 	vec3 totalDiffuse = vec3(0.0);

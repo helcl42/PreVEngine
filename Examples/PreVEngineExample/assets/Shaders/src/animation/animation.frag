@@ -52,7 +52,7 @@ vec4 textureColor = texture(sampler2D(colorTexture, colorSampler), inTextureCoor
 	float shadow = 1.0;
 	if(uboFS.castedByShadows != 0)
 	{
-		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.02);
+		shadow = GetShadow(depthTexture, depthSampler, uboFS.shadows, inViewPosition, inWorldPosition, 0.005);
 	}
 
 	const vec3 unitNormal = normalize(inNormal);
