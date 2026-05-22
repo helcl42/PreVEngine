@@ -104,7 +104,7 @@
 
     <div class="controls">
         <label>
-            <input type="checkbox" id="resize">
+            <input type="checkbox" id="resize" checked>
             Resize canvas
         </label>
         <label>
@@ -133,13 +133,18 @@
             print: function (text) {
                 console.log(text);
                 var output = document.getElementById('output');
-                output.innerHTML += text + '\n';
+                output.appendChild(document.createTextNode(text));
+                output.appendChild(document.createElement('br'));
                 output.scrollTop = output.scrollHeight;
             },
             printErr: function (text) {
                 console.error(text);
                 var output = document.getElementById('output');
-                output.innerHTML += '<span style="color: #ff6b6b;">' + text + '</span>\n';
+                var span = document.createElement('span');
+                span.style.color = '#ff6b6b';
+                span.appendChild(document.createTextNode(text));
+                output.appendChild(span);
+                output.appendChild(document.createElement('br'));
                 output.scrollTop = output.scrollHeight;
             },
             setStatus: function (text) {
