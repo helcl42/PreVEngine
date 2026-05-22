@@ -23,6 +23,12 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 
 ## 🌐 [Live Web Demo](https://helcl42.github.io/PreVEngine/)
 
+<p align="center">
+  <a href="https://helcl42.github.io/PreVEngine/">
+    <img src="Examples/PreVEngineExample/assets/Textures/screenshot.png" alt="Live Web Demo Screenshot" width="720" />
+  </a>
+</p>
+
 ## Features
 
 - **Multiple rendering backends**: Vulkan and WebGPU (via Dawn)
