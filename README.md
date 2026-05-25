@@ -118,6 +118,7 @@ python Scripts/compile_shaders.py --wgsl
 |--------|---------|-------------|
 | `ENABLE_XCB` | ON | XCB windowing (default on Linux) |
 | `ENABLE_WAYLAND` | OFF | Wayland windowing |
+| `ENABLE_XLIB` | OFF | Xlib windowing |
 
 ## Example Application
 
@@ -127,7 +128,7 @@ The example app supports command-line configuration:
 ./PreVEngineExample --width 1920 --height 1080 --fullscreen 1 --backend vulkan
 ```
 
-| Flag | Default | Description |
+| Option | Default | Description |
 |------|---------|-------------|
 | `--width` | 1600 | Window width |
 | `--height` | 900 | Window height |
