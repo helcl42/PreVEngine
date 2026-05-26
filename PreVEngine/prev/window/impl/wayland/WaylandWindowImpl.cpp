@@ -39,6 +39,10 @@ const wl_seat_listener WaylandWindowImpl::seatListener = {
     WaylandWindowImpl::OnSeatCapabilities,
 };
 
+const xdg_wm_base_listener WaylandWindowImpl::shellListener = {
+    WaylandWindowImpl::OnShellPing,
+};
+
 const xdg_surface_listener WaylandWindowImpl::shellSurfaceListener = {
     WaylandWindowImpl::OnConfigure,
 };
@@ -72,6 +76,21 @@ const wl_touch_listener WaylandWindowImpl::touchListener = {
 const xdg_toplevel_listener WaylandWindowImpl::toplevelListener = {
     WaylandWindowImpl::OnToplevelConfigure,
     WaylandWindowImpl::OnToplevelClose,
+};
+
+const wl_output_listener WaylandWindowImpl::outputListener = {
+    WaylandWindowImpl::OnOutputGeometry,
+    WaylandWindowImpl::OnOutputMode,
+    WaylandWindowImpl::OnOutputDone,
+    WaylandWindowImpl::OnOutputScale,
+};
+
+static void OnDecorationConfigure(void* data, zxdg_toplevel_decoration_v1* decoration, uint32_t mode)
+{
+}
+
+const zxdg_toplevel_decoration_v1_listener WaylandWindowImpl::decorationListener = {
+    OnDecorationConfigure,
 };
 
 WaylandWindowImpl::WaylandWindowImpl(const WindowInfo& windowInfo)
@@ -119,11 +138,26 @@ WaylandWindowImpl::WaylandWindowImpl(const WindowInfo& windowInfo)
     }
     xdg_toplevel_add_listener(m_topLevel, &toplevelListener, this);
 
+    // Request server-side decorations if the compositor supports it
+    if (m_decorationManager) {
+        m_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(m_decorationManager, m_topLevel);
+        zxdg_toplevel_decoration_v1_add_listener(m_decoration, &decorationListener, this);
+        zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+    }
+
     wl_surface_commit(m_surface);
     wl_display_roundtrip(m_display);
     wl_surface_commit(m_surface);
+    wl_display_roundtrip(m_display);
 
     SetTitle(windowInfo.title);
+
+    if (windowInfo.fullScreen) {
+        xdg_toplevel_set_fullscreen(m_topLevel, nullptr);
+        m_fullscreen = true;
+    }
+
+    m_info.size = { m_info.size.width * m_outputScale, m_info.size.height * m_outputScale };
 
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
@@ -146,6 +180,18 @@ WaylandWindowImpl::~WaylandWindowImpl()
 
     if (m_seat) {
         wl_seat_destroy(m_seat);
+    }
+
+    if (m_output) {
+        wl_output_destroy(m_output);
+    }
+
+    if (m_decoration) {
+        zxdg_toplevel_decoration_v1_destroy(m_decoration);
+    }
+
+    if (m_decorationManager) {
+        zxdg_decoration_manager_v1_destroy(m_decorationManager);
     }
 
     if (m_topLevel) {
@@ -206,6 +252,18 @@ void WaylandWindowImpl::SetSize(uint32_t w, uint32_t h)
 
 void WaylandWindowImpl::SetMouseCursorVisible(bool visible)
 {
+    m_mouseCursorVisible = visible;
+    if (m_pointer) {
+        if (!visible) {
+            wl_pointer_set_cursor(m_pointer, m_pointerSerial, nullptr, 0, 0);
+        } else {
+            // Setting cursor to default requires a cursor theme surface.
+            // Passing NULL surface with non-zero serial restores the default cursor
+            // on most compositors when followed by the pointer re-entering the surface.
+            // For a proper restore, a cursor theme (e.g., via wl_cursor_theme) would be needed.
+            wl_pointer_set_cursor(m_pointer, m_pointerSerial, nullptr, 0, 0);
+        }
+    }
 }
 
 GfxPlatformWindowHandle WaylandWindowImpl::GetNativeWindowHandle() const
@@ -219,12 +277,18 @@ void WaylandWindowImpl::OnRegistryAdd(void* data, wl_registry* registry, uint32_
     // pickup wayland objects when they appear
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
     if (strcmp(interface, wl_compositor_interface.name) == 0) {
-        impl->m_compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, 1));
+        impl->m_compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
     } else if (strcmp(interface, xdg_wm_base_interface.name) == 0) {
         impl->m_shell = static_cast<xdg_wm_base*>(wl_registry_bind(registry, id, &xdg_wm_base_interface, 1));
+        xdg_wm_base_add_listener(impl->m_shell, &shellListener, impl);
     } else if (strcmp(interface, wl_seat_interface.name) == 0) {
         impl->m_seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, 1));
         wl_seat_add_listener(impl->m_seat, &seatListener, impl);
+    } else if (strcmp(interface, wl_output_interface.name) == 0) {
+        impl->m_output = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+        wl_output_add_listener(impl->m_output, &outputListener, impl);
+    } else if (strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0) {
+        impl->m_decorationManager = static_cast<zxdg_decoration_manager_v1*>(wl_registry_bind(registry, id, &zxdg_decoration_manager_v1_interface, 1));
     }
 }
 
@@ -245,7 +309,7 @@ void WaylandWindowImpl::OnToplevelConfigure(void* data, xdg_toplevel* toplevel, 
 
     const Size newSize{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
     if (newSize != Size{ 0, 0 } && impl->m_info.size != newSize) {
-        impl->m_info.size = newSize;
+        impl->m_info.size = { newSize.width * impl->m_outputScale, newSize.height * impl->m_outputScale };
         impl->m_eventQueue.Push(impl->OnResizeEvent(impl->m_info.size.width, impl->m_info.size.height));
     }
 }
@@ -262,7 +326,13 @@ void WaylandWindowImpl::OnPointerEnter(void* data, wl_pointer* pointer, uint32_t
 {
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
+    impl->m_pointerSerial = serial;
     impl->m_lastMousePosition = { sx, sy };
+
+    // Re-apply cursor visibility state on enter
+    if (!impl->m_mouseCursorVisible) {
+        wl_pointer_set_cursor(pointer, serial, nullptr, 0, 0);
+    }
 }
 
 void WaylandWindowImpl::OnPointerLeave(void* data, wl_pointer* pointer, uint32_t serial, wl_surface* surface)
@@ -279,15 +349,12 @@ void WaylandWindowImpl::OnPointerMotion(void* data, wl_pointer* pointer, uint32_
     int32_t x{};
     int32_t y{};
     if (impl->m_hasFocus && impl->m_mouseLocked) {
-        x = impl->m_lastMousePosition.x - sx;
-        y = impl->m_lastMousePosition.y - sy;
+        x = wl_fixed_to_int(impl->m_lastMousePosition.x - sx);
+        y = wl_fixed_to_int(impl->m_lastMousePosition.y - sy);
     } else {
-        x = sx;
-        y = sy;
+        x = wl_fixed_to_int(sx);
+        y = wl_fixed_to_int(sy);
     }
-
-    x /= impl->ResolutionScaleFactor;
-    y /= impl->ResolutionScaleFactor;
 
     const auto btn{ impl->IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE : (impl->IsMouseButtonPressed(ButtonType::RIGHT) ? ButtonType::RIGHT : ButtonType::LEFT) };
 
@@ -311,7 +378,7 @@ void WaylandWindowImpl::OnPointerAxis(void* data, wl_pointer* pointer, uint32_t 
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
     const auto pos{ impl->GetMousePosition() };
-    const auto delta{ value / impl->ResolutionScaleFactor }; // TODO - magic number scalcce
+    const auto delta{ wl_fixed_to_int(value) };
 
     impl->m_eventQueue.Push(impl->OnMouseScrollEvent(delta, pos.x, pos.y));
 }
@@ -357,7 +424,7 @@ void WaylandWindowImpl::OnTouchDown(void* data, wl_touch* wl_touch, uint32_t ser
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
     const Size windowSize{ impl->m_info.size };
-    const Position normalizedCoord{ x / impl->ResolutionScaleFactor, y / impl->ResolutionScaleFactor };
+    const Position normalizedCoord{ wl_fixed_to_int(x), wl_fixed_to_int(y) };
     const uint8_t fingerId{ static_cast<uint8_t>(id) };
 
     impl->m_eventQueue.Push(impl->m_MTouch.OnEvent(ActionType::DOWN, normalizedCoord.x, normalizedCoord.y, fingerId, windowSize.width, windowSize.height));
@@ -381,7 +448,7 @@ void WaylandWindowImpl::OnTouchMotion(void* data, wl_touch* wl_touch, uint32_t t
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
     const Size windowSize{ impl->m_info.size };
-    const Position normalizedCoord{ x / impl->ResolutionScaleFactor, y / impl->ResolutionScaleFactor };
+    const Position normalizedCoord{ wl_fixed_to_int(x), wl_fixed_to_int(y) };
     const uint8_t fingerId{ static_cast<uint8_t>(id) };
 
     impl->m_eventQueue.Push(impl->m_MTouch.OnEvent(ActionType::MOVE, normalizedCoord.x, normalizedCoord.y, fingerId, windowSize.width, windowSize.height));
@@ -437,6 +504,40 @@ void WaylandWindowImpl::OnSeatCapabilities(void* data, wl_seat* seat, uint32_t c
         wl_touch_destroy(impl->m_touch);
         impl->m_touch = nullptr;
     }
+}
+
+// xdg_wm_base
+void WaylandWindowImpl::OnShellPing(void* data, xdg_wm_base* shell, uint32_t serial)
+{
+    xdg_wm_base_pong(shell, serial);
+}
+
+// output
+void WaylandWindowImpl::OnOutputGeometry(void* data, wl_output* output, int32_t x, int32_t y, int32_t physWidth, int32_t physHeight, int32_t subpixel, const char* make, const char* model, int32_t transform)
+{
+}
+
+void WaylandWindowImpl::OnOutputMode(void* data, wl_output* output, uint32_t flags, int32_t width, int32_t height, int32_t refresh)
+{
+}
+
+void WaylandWindowImpl::OnOutputDone(void* data, wl_output* output)
+{
+    WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
+
+    // Apply buffer scale once all output events have been received
+    if (impl->m_surface && impl->m_outputScale > 1) {
+        wl_surface_set_buffer_scale(impl->m_surface, impl->m_outputScale);
+        wl_surface_commit(impl->m_surface);
+    }
+}
+
+void WaylandWindowImpl::OnOutputScale(void* data, wl_output* output, int32_t factor)
+{
+    WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
+
+    LOGI("Wayland output scale factor: %d", factor);
+    impl->m_outputScale = factor;
 }
 
 } // namespace prev::window::impl::wayland
