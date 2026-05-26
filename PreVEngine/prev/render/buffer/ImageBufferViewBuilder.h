@@ -3,8 +3,6 @@
 
 #include "ImageBufferView.h"
 
-#include <gfx/gfx.h>
-
 #include <memory>
 
 namespace prev::render::buffer {

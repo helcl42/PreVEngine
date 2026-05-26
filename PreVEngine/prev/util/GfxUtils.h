@@ -1,7 +1,7 @@
 #ifndef __GFX_UTILS_H__
 #define __GFX_UTILS_H__
 
-#include <gfx/gfx.h>
+#include "../core/Core.h"
 
 #include <stdexcept>
 #include <string>

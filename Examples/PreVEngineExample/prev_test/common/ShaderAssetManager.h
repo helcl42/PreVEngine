@@ -3,7 +3,7 @@
 
 #include <prev/common/pattern/Singleton.h>
 
-#include <gfx/gfx.h>
+#include <prev/core/Core.h>
 
 #include <string>
 
