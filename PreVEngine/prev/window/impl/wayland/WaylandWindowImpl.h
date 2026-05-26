@@ -7,8 +7,8 @@
 
 #include <wayland-client.h>
 
-#include <xdg-shell.h>
 #include <xdg-decoration.h>
+#include <xdg-shell.h>
 
 namespace prev::window::impl::wayland {
 class WaylandWindowImpl final : public WindowImpl {

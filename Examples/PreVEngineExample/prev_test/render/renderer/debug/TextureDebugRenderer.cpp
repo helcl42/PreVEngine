@@ -1,12 +1,12 @@
 #include "TextureDebugRenderer.h"
 
 #include "../../../Tags.h"
-#include <prev/common/Logger.h>
 #include "../../../common/ShaderAssetManager.h"
 #include "../../../component/common/IOffScreenRenderPassComponent.h"
 #include "../../mesh/MeshFactory.h"
 #include "../../model/ModelFactory.h"
 
+#include <prev/common/Logger.h>
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
@@ -79,7 +79,7 @@ void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& rende
 
 void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -94,9 +94,9 @@ void TextureDebugRenderer::Render(const prev::render::RenderContext& renderConte
     m_shader->Bind("imageSampler", *m_colorSampler);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        const uint64_t vertexOffset = 0;
-        const uint64_t vertexRange = m_quadModel->GetVertexBuffer()->GetSize() - vertexOffset;
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), vertexOffset, vertexRange);
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = m_quadModel->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_quadModel->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_quadModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_quadModel->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

@@ -157,4 +157,3 @@ void RenderPassBuilder::Validate() const
     }
 }
 } // namespace prev::render::pass
-

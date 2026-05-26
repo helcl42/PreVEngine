@@ -4,7 +4,6 @@
 #include "IAnimationRenderComponent.h"
 #include "IRenderComponent.h"
 
-
 namespace prev_test::component::render {
 struct RenderComponentShadowsCreateInfo {
     bool castsShadows{};
@@ -71,7 +70,6 @@ public:
 
 private:
     prev::core::device::Device& m_device;
-
 };
 } // namespace prev_test::component::render
 

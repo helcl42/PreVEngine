@@ -70,6 +70,11 @@ inline constexpr T AlmostZero(T value1, T epsilon = T(1e-7))
     return AlmostEqual(value1, static_cast<T>(0.0), epsilon);
 }
 
+inline constexpr uint32_t DispatchSize(uint32_t val, uint32_t blockSize)
+{
+    return std::max((val + blockSize - 1) / blockSize, 1u);
+}
+
 template <typename T>
 bool HasAllFlagsSet(const T flags, const T value)
 {

@@ -92,7 +92,7 @@ void SelectionDebugRenderer::BeforeRender(const NormalRenderContext& renderConte
 
 void SelectionDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -131,10 +131,10 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
         m_shader->Bind("uboFS", uboFS);
 
         const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-                const uint64_t vertexOffset = 0;
-                const uint64_t vertexRange = m_selectionPointModel->GetVertexBuffer()->GetSize() - vertexOffset;
-                gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_selectionPointModel->GetVertexBuffer(), vertexOffset, vertexRange);
-    gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_selectionPointModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_selectionPointModel->GetIndexBuffer()->GetSize());
+        const uint64_t vertexOffset = 0;
+        const uint64_t vertexRange = m_selectionPointModel->GetVertexBuffer()->GetSize() - vertexOffset;
+        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *m_selectionPointModel->GetVertexBuffer(), vertexOffset, vertexRange);
+        gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *m_selectionPointModel->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, m_selectionPointModel->GetIndexBuffer()->GetSize());
         gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 
         gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, m_selectionPointModel->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);

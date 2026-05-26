@@ -35,7 +35,6 @@ private:
     static prev::util::intersection::Sphere OffsetSphere(const prev::util::intersection::Sphere& sphere, const glm::vec3& offset);
 
 private:
-
     const prev::core::device::Device& m_device;
 
     float m_scale;

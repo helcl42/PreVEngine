@@ -256,8 +256,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         gfxComputePassEncoderSetPipeline(computePassEncoder, *m_skyPipeline);
         gfxComputePassEncoderSetBindGroup(computePassEncoder, 0, descriptorSetCompute, nullptr, 0);
 
-        const uint32_t dispatchX = (extent.width + 16 - 1) / 16;
-        const uint32_t dispatchY = (extent.height + 16 - 1) / 16;
+        const uint32_t dispatchX = prev::util::math::DispatchSize(extent.width, 16);
+        const uint32_t dispatchY = prev::util::math::DispatchSize(extent.height, 16);
         gfxComputePassEncoderDispatch(computePassEncoder, dispatchX, dispatchY, 1);
         gfxComputePassEncoderEnd(computePassEncoder);
 
@@ -303,7 +303,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         gfxComputePassEncoderSetPipeline(computePassEncoderPost, *m_skyPostProcessPipeline);
         gfxComputePassEncoderSetBindGroup(computePassEncoderPost, 0, descriptorSetComputePost, nullptr, 0);
 
-        gfxComputePassEncoderDispatch(computePassEncoderPost, (extent.width + 16 - 1) / 16, (extent.height + 16 - 1) / 16, 1);
+        gfxComputePassEncoderDispatch(computePassEncoderPost, prev::util::math::DispatchSize(extent.width, 16), prev::util::math::DispatchSize(extent.height, 16), 1);
         gfxComputePassEncoderEnd(computePassEncoderPost);
 
         skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);

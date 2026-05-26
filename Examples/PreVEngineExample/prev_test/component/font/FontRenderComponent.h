@@ -80,7 +80,6 @@ public:
     }
 
 private:
-
     const prev::core::device::Device& m_device;
 
     std::shared_ptr<prev_test::render::font::FontMetadata> m_fontMetaData;

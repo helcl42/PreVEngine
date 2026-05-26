@@ -24,7 +24,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
     int m_x;
 
     int m_z;

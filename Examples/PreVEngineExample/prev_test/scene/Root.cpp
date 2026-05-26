@@ -26,8 +26,8 @@
 #include "../Tags.h"
 #include "../common/AssetManager.h"
 
-#include <prev/util/Utils.h>
 #include <prev/common/Logger.h>
+#include <prev/util/Utils.h>
 
 namespace prev_test::scene {
 Root::Root(prev::core::device::Device& device, uint32_t viewCount)

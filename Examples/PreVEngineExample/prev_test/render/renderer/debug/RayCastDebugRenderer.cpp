@@ -94,7 +94,7 @@ void RayCastDebugRenderer::BeforeRender(const NormalRenderContext& renderContext
 
 void RayCastDebugRenderer::PreRender(const NormalRenderContext& renderContext)
 {
-        const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
+    const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
@@ -142,9 +142,9 @@ void RayCastDebugRenderer::Render(const NormalRenderContext& renderContext, cons
     m_shader->Bind("uboFS", uboFS);
 
     const GfxBindGroup descriptorSet = m_shader->UpdateNextBindGroup();
-        const uint64_t vertexOffset = 0;
-        const uint64_t vertexRange = rayCastingComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
-        gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *rayCastingComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
+    const uint64_t vertexOffset = 0;
+    const uint64_t vertexRange = rayCastingComponent->GetModel()->GetVertexBuffer()->GetSize() - vertexOffset;
+    gfxRenderPassEncoderSetVertexBuffer(renderContext.renderPassEncoder, 0, *rayCastingComponent->GetModel()->GetVertexBuffer(), vertexOffset, vertexRange);
     gfxRenderPassEncoderSetIndexBuffer(renderContext.renderPassEncoder, *rayCastingComponent->GetModel()->GetIndexBuffer(), GFX_INDEX_FORMAT_UINT32, 0, rayCastingComponent->GetModel()->GetIndexBuffer()->GetSize());
     gfxRenderPassEncoderSetBindGroup(renderContext.renderPassEncoder, 0, descriptorSet, nullptr, 0);
 

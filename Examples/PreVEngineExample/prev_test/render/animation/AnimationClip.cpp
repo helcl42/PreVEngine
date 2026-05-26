@@ -175,4 +175,4 @@ void AnimationClip::UpdateNodeHeirarchy(const AnimationNode& node, const glm::ma
         UpdateNodeHeirarchy(child, globalTransform, animationTime);
     }
 }
-}
+} // namespace prev_test::render::animation

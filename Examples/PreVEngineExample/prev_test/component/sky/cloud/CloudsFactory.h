@@ -22,7 +22,6 @@ public:
 
 private:
     prev::core::device::Device& m_device;
-
 };
 } // namespace prev_test::component::sky::cloud
 

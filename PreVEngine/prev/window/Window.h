@@ -4,8 +4,8 @@
 #include "IWindow.h"
 #include "WindowCommon.h"
 #include "WindowEvents.h"
-
 #include "impl/WindowImpl.h"
+
 #include "../event/EventHandler.h"
 #include "../input/keyboard/KeyboardEvents.h"
 #include "../input/mouse/MouseEvents.h"
