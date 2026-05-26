@@ -349,11 +349,11 @@ void WaylandWindowImpl::OnPointerMotion(void* data, wl_pointer* pointer, uint32_
     int32_t x{};
     int32_t y{};
     if (impl->m_hasFocus && impl->m_mouseLocked) {
-        x = wl_fixed_to_int(impl->m_lastMousePosition.x - sx);
-        y = wl_fixed_to_int(impl->m_lastMousePosition.y - sy);
+        x = wl_fixed_to_int(impl->m_lastMousePosition.x - sx) * impl->m_outputScale;
+        y = wl_fixed_to_int(impl->m_lastMousePosition.y - sy) * impl->m_outputScale;
     } else {
-        x = wl_fixed_to_int(sx);
-        y = wl_fixed_to_int(sy);
+        x = wl_fixed_to_int(sx) * impl->m_outputScale;
+        y = wl_fixed_to_int(sy) * impl->m_outputScale;
     }
 
     const auto btn{ impl->IsMouseButtonPressed(ButtonType::MIDDLE) ? ButtonType::MIDDLE : (impl->IsMouseButtonPressed(ButtonType::RIGHT) ? ButtonType::RIGHT : ButtonType::LEFT) };
@@ -424,7 +424,7 @@ void WaylandWindowImpl::OnTouchDown(void* data, wl_touch* wl_touch, uint32_t ser
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
     const Size windowSize{ impl->m_info.size };
-    const Position normalizedCoord{ wl_fixed_to_int(x), wl_fixed_to_int(y) };
+    const Position normalizedCoord{ wl_fixed_to_int(x) * impl->m_outputScale, wl_fixed_to_int(y) * impl->m_outputScale };
     const uint8_t fingerId{ static_cast<uint8_t>(id) };
 
     impl->m_eventQueue.Push(impl->m_MTouch.OnEvent(ActionType::DOWN, normalizedCoord.x, normalizedCoord.y, fingerId, windowSize.width, windowSize.height));
@@ -448,7 +448,7 @@ void WaylandWindowImpl::OnTouchMotion(void* data, wl_touch* wl_touch, uint32_t t
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
     const Size windowSize{ impl->m_info.size };
-    const Position normalizedCoord{ wl_fixed_to_int(x), wl_fixed_to_int(y) };
+    const Position normalizedCoord{ wl_fixed_to_int(x) * impl->m_outputScale, wl_fixed_to_int(y) * impl->m_outputScale };
     const uint8_t fingerId{ static_cast<uint8_t>(id) };
 
     impl->m_eventQueue.Push(impl->m_MTouch.OnEvent(ActionType::MOVE, normalizedCoord.x, normalizedCoord.y, fingerId, windowSize.width, windowSize.height));
