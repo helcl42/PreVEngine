@@ -1,7 +1,7 @@
 #ifndef __IMAGE_BUFFER_VIEW_H__
 #define __IMAGE_BUFFER_VIEW_H__
 
-#include <gfx/gfx.h>
+#include "../../core/Core.h"
 
 namespace prev::render::buffer {
 
