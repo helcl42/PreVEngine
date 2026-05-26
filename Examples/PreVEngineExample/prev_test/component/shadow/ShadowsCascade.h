@@ -2,14 +2,16 @@
 #define __SHADOWS_CASCADE_H__
 
 #include <prev/core/Core.h>
+#include <prev/render/buffer/ImageBufferView.h>
+#include <prev/render/framebuffer/Framebuffer.h>
+
+#include <memory>
 
 namespace prev_test::component::shadow {
 struct ShadowsCascadeRenderData {
-    GfxFramebuffer frameBuffer{};
+    std::unique_ptr<prev::render::framebuffer::Framebuffer> framebuffer;
 
-    GfxTextureView textureView{};
-
-    void Destroy();
+    std::unique_ptr<prev::render::buffer::ImageBufferView> textureView;
 };
 
 struct ShadowsCascadeFrameData {

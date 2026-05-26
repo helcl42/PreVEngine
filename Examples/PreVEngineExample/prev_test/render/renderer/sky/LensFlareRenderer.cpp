@@ -166,13 +166,13 @@ void LensFlareRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void LensFlareRenderer::ShutDown()
 {
-    m_colorSampler = {};
+    m_colorSampler.reset();
 
-    m_uniformsPoolFS = {};
-    m_uniformsPoolVS = {};
+    m_uniformsPoolFS.reset();
+    m_uniformsPoolVS.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 
 void LensFlareRenderer::operator()(const prev_test::render::renderer::sky::SunVisibilityEvent& evt)

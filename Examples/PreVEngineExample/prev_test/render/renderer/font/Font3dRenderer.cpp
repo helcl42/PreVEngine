@@ -162,12 +162,12 @@ void Font3dRenderer::AfterRender(const NormalRenderContext& renderContext)
 
 void Font3dRenderer::ShutDown()
 {
-    m_alphaSampler = {};
+    m_alphaSampler.reset();
 
-    m_uniformsPoolFS = {};
-    m_uniformsPoolVS = {};
+    m_uniformsPoolFS.reset();
+    m_uniformsPoolVS.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::font

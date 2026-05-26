@@ -3,10 +3,16 @@
 
 #include "../ISwapchain.h"
 
+#include "../../buffer/ImageBuffer.h"
+#include "../../framebuffer/Framebuffer.h"
 #include "../../pass/RenderPass.h"
 
 #include "../../../core/device/Device.h"
+#include "../../../core/sync/Fence.h"
+#include "../../../core/sync/Semaphore.h"
 #include "../../../util/Utils.h"
+
+#include <memory>
 
 namespace prev::render::swapchain::presentable {
 class PresentableSwapchain final : public ISwapchain {
@@ -29,14 +35,14 @@ public:
 private:
     struct SwapchainBuffer {
         GfxTextureView view{};
-        GfxFramebuffer framebuffer{};
-        GfxSemaphore renderSemaphore{};
+        std::unique_ptr<prev::render::framebuffer::Framebuffer> framebuffer;
+        std::unique_ptr<core::sync::Semaphore> renderSemaphore;
     };
 
     struct FrameInFlight {
         GfxCommandEncoder commandEncoder{};
-        GfxSemaphore acquireSemaphore{};
-        GfxFence fence{};
+        std::unique_ptr<core::sync::Semaphore> acquireSemaphore;
+        std::unique_ptr<core::sync::Fence> fence;
     };
 
 private:
@@ -61,17 +67,11 @@ private:
 
     GfxExtent2D m_extent{};
 
-    GfxTexture m_depthTexture{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer;
 
-    GfxTextureView m_depthView{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer;
 
-    GfxTexture m_msaaColorTexture{};
-
-    GfxTextureView m_msaaColorView{};
-
-    GfxTexture m_msaaDepthTexture{};
-
-    GfxTextureView m_msaaDepthView{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer;
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 

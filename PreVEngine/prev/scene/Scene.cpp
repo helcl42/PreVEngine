@@ -19,7 +19,7 @@ void Scene::Update(float deltaTime)
 void Scene::ShutDown()
 {
     m_rootNode->ShutDown();
-    m_rootNode = nullptr;
+    m_rootNode.reset();
 }
 
 std::shared_ptr<prev::scene::graph::ISceneNode> Scene::GetRootNode() const

@@ -37,7 +37,7 @@ void WaterReflection::ShutDown()
 {
     SceneNode::ShutDown();
 
-    m_reflectionComponent = nullptr;
+    m_reflectionComponent.reset();
 }
 
 void WaterReflection::operator()(const prev::core::NewIterationEvent& newIterationEvent)

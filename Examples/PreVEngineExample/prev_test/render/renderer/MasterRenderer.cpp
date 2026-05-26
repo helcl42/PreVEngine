@@ -144,7 +144,7 @@ void MasterRenderer::InitDefault()
 void MasterRenderer::ShutDownDefault()
 {
 #ifdef PARALLEL_COMMAND_RECORDING
-    m_defaultCommandBuffersGroup = nullptr;
+    m_defaultCommandBuffersGroup.reset();
 #endif
 
     for (auto it = m_defaultRenderers.rbegin(); it != m_defaultRenderers.rend(); ++it) {
@@ -171,7 +171,7 @@ void MasterRenderer::InitDebug()
 void MasterRenderer::ShutDownDebug()
 {
 #ifdef PARALLEL_COMMAND_RECORDING
-    m_debugCommandBuffersGroup = nullptr;
+    m_debugCommandBuffersGroup.reset();
 #endif
 
     for (auto it = m_debugRenderers.rbegin(); it != m_debugRenderers.rend(); ++it) {
@@ -248,7 +248,7 @@ void MasterRenderer::InitReflection()
 void MasterRenderer::ShutDownReflection()
 {
 #ifdef PARALLEL_COMMAND_RECORDING
-    m_reflectionCommandBufferGroups = nullptr;
+    m_reflectionCommandBufferGroups.reset();
 #endif
 
     for (auto it = m_reflectionRenderers.rbegin(); it != m_reflectionRenderers.rend(); ++it) {
@@ -289,7 +289,7 @@ void MasterRenderer::InitRefraction()
 void MasterRenderer::ShutDownRefraction()
 {
 #ifdef PARALLEL_COMMAND_RECORDING
-    m_refractionCommandBufferGroups = nullptr;
+    m_refractionCommandBufferGroups.reset();
 #endif
 
     for (auto it = m_refractionRenderers.rbegin(); it != m_refractionRenderers.rend(); ++it) {
@@ -308,7 +308,7 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const auto& cascadeRenderData{ shadows->GetCascadeRenderData(cascadeIndex) };
         const auto& cascadeFrameData{ shadows->GetCascadeFrameData(cascadeIndex) };
 
-        const prev::render::RenderContext customRenderContextBase{ cascadeRenderData.frameBuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
+        const prev::render::RenderContext customRenderContextBase{ *cascadeRenderData.framebuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
         const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev::util::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
 
 #ifdef PARALLEL_COMMAND_RECORDING

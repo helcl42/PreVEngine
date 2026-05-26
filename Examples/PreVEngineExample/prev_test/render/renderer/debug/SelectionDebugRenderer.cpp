@@ -151,11 +151,11 @@ void SelectionDebugRenderer::AfterRender(const NormalRenderContext& renderContex
 
 void SelectionDebugRenderer::ShutDown()
 {
-    m_uniformsPoolFS = {};
-    m_uniformsPoolVS = {};
+    m_uniformsPoolFS.reset();
+    m_uniformsPoolVS.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::debug
 

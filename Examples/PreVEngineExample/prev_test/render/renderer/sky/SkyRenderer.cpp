@@ -367,7 +367,7 @@ void SkyRenderer::AfterRender(const NormalRenderContext& renderContext)
 void SkyRenderer::ShutDown()
 {
     for (auto& sampler : m_samplers) {
-        sampler = {};
+        sampler.reset();
     }
 
     for (uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
@@ -378,17 +378,17 @@ void SkyRenderer::ShutDown()
         m_skyColorImageBuffer[viewIndex] = {};
     }
 
-    m_uniformsPoolSkyPostProcessCS = {};
-    m_uniformsPoolSkyCS = {};
+    m_uniformsPoolSkyPostProcessCS.reset();
+    m_uniformsPoolSkyCS.reset();
 
-    m_compositePipeline = {};
-    m_compositeShader = {};
+    m_compositePipeline.reset();
+    m_compositeShader.reset();
 
-    m_skyPostProcessPipeline = {};
-    m_skyPostProcessShader = {};
+    m_skyPostProcessPipeline.reset();
+    m_skyPostProcessShader.reset();
 
-    m_skyPipeline = {};
-    m_skyShader = {};
+    m_skyPipeline.reset();
+    m_skyShader.reset();
 }
 
 void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer)

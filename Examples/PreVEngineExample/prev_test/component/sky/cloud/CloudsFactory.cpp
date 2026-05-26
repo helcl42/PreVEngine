@@ -98,8 +98,8 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         weatherImageBuffer->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, commandBuffer);
     });
 
-    pipeline = nullptr;
-    shader = nullptr;
+    pipeline.reset();
+    shader.reset();
 
     return { std::move(weatherImageBuffer) };
 }

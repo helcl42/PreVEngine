@@ -54,14 +54,14 @@ void WebEngineImpl::ShutDown()
         m_scene->ShutDown();
     }
 
-    m_rootRenderer = nullptr;
-    m_scene = nullptr;
+    m_rootRenderer.reset();
+    m_scene.reset();
 
-    m_swapchain = nullptr;
-    m_renderPass = nullptr;
-    m_surface = nullptr;
-    m_device = nullptr;
-    m_instance = nullptr;
+    m_swapchain.reset();
+    m_renderPass.reset();
+    m_surface.reset();
+    m_device.reset();
+    m_instance.reset();
 }
 
 bool WebEngineImpl::Update()

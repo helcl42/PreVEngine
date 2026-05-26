@@ -2,15 +2,20 @@
 #define __IMAGE_BUFFER_VIEW_BUILDER_H__
 
 #include "ImageBufferView.h"
-#include "ImageBuffer.h"
+
+#include <gfx/gfx.h>
 
 #include <memory>
 
 namespace prev::render::buffer {
 
+class ImageBuffer;
+
 class ImageBufferViewBuilder final {
 public:
     ImageBufferViewBuilder(const ImageBuffer& imageBuffer);
+
+    ImageBufferViewBuilder(GfxTexture texture, GfxTextureViewType viewType, GfxFormat format, uint32_t layerCount = 1);
 
     ~ImageBufferViewBuilder() = default;
 
@@ -26,7 +31,13 @@ public:
     std::unique_ptr<ImageBufferView> Build() const;
 
 private:
-    const ImageBuffer& m_imageBuffer;
+    GfxTexture m_texture{};
+
+    GfxTextureViewType m_viewType{};
+
+    GfxFormat m_format{};
+
+    uint32_t m_layerCount{ 1 };
 
     uint32_t m_baseMipLevel{ 0 };
 
@@ -34,7 +45,7 @@ private:
 
     uint32_t m_baseArrayLayer{ 0 };
 
-    uint32_t m_arrayLayerCount{ 0 }; // 0 means use imageBuffer's layer count
+    uint32_t m_arrayLayerCount{ 0 }; // 0 means use layer count from constructor
 };
 
 } // namespace prev::render::buffer

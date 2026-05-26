@@ -137,7 +137,7 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 MacOSWindowImpl::~MacOSWindowImpl()
 {
 
-    m_state = nullptr;
+    m_state.reset();
 }
 
 bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)

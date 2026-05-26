@@ -1,12 +1,6 @@
 #include "ShadowsCascade.h"
 
 namespace prev_test::component::shadow {
-void ShadowsCascadeRenderData::Destroy()
-{
-    gfxTextureViewDestroy(textureView);
-    gfxFramebufferDestroy(frameBuffer);
-}
-
 glm::mat4 ShadowsCascadeFrameData::GetBiasedViewProjectionMatrix() const
 {
     static const glm::mat4 biasMat(

@@ -3,6 +3,7 @@
 #include "OffScreenRenderPassComponent.h"
 
 #include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/framebuffer/FramebufferBuilder.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 
 #include <stdexcept>
@@ -65,31 +66,19 @@ std::unique_ptr<IOffScreenRenderPassComponent> OffScreenRenderPassComponentFacto
         colorBuffers.emplace_back(std::move(colorImageBuffer));
     }
 
-    // Create framebuffer using gfx API
-    GfxFramebufferAttachment depthAttachment{};
+    // Create framebuffer
+    prev::render::framebuffer::FramebufferBuilder framebufferBuilder{ m_device, *renderPass };
+    framebufferBuilder.SetExtent({ extent.width, extent.height });
+
     if (depthBuffer) {
-        depthAttachment.view = depthBuffer->GetTextureView();
+        framebufferBuilder.SetDepthStencilAttachment(depthBuffer->GetTextureView());
     }
-
-    std::vector<GfxFramebufferAttachment> colorAttachments;
     for (const auto& colorBuffer : colorBuffers) {
-        colorAttachments.push_back({ colorBuffer->GetTextureView(), {} });
+        framebufferBuilder.AddColorAttachment(colorBuffer->GetTextureView());
     }
 
-    GfxFramebufferDescriptor fbDesc{};
-    fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
-    fbDesc.pNext = nullptr;
-    fbDesc.renderPass = *renderPass;
-    fbDesc.colorAttachments = colorAttachments.empty() ? nullptr : colorAttachments.data();
-    fbDesc.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());
-    fbDesc.depthStencilAttachment = depthAttachment;
-    fbDesc.extent = { extent.width, extent.height };
+    auto frameBuffer = framebufferBuilder.Build();
 
-    GfxFramebuffer frameBuffer{};
-    if (gfxDeviceCreateFramebuffer(m_device, &fbDesc, &frameBuffer) != GFX_RESULT_SUCCESS) {
-        throw std::runtime_error("Failed to create off-screen framebuffer");
-    }
-
-    return std::make_unique<OffScreenRenderPassComponent>(m_device, extent, renderPass, depthBuffer, colorBuffers, frameBuffer);
+    return std::make_unique<OffScreenRenderPassComponent>(m_device, extent, renderPass, depthBuffer, colorBuffers, std::move(frameBuffer));
 }
 } // namespace prev_test::component::common

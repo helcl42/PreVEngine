@@ -162,9 +162,9 @@ void AnimationBumpMappedShadowsRenderer::AfterRender(const ShadowsRenderContext&
 
 void AnimationBumpMappedShadowsRenderer::ShutDown()
 {
-    m_uniformsPool = {};
+    m_uniformsPool.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::shadow

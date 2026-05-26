@@ -125,10 +125,10 @@ void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& rend
 
 void ShadowMapDebugRenderer::ShutDown()
 {
-    m_depthSampler = {};
+    m_depthSampler.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 
 void ShadowMapDebugRenderer::operator()(const prev::input::keyboard::KeyEvent& keyEvent)

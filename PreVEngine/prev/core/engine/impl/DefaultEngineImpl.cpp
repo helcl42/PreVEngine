@@ -54,14 +54,14 @@ void DefaultEngineImpl::ShutDown()
         m_scene->ShutDown();
     }
 
-    m_rootRenderer = nullptr;
-    m_scene = nullptr;
+    m_rootRenderer.reset();
+    m_scene.reset();
 
-    m_swapchain = nullptr;
-    m_renderPass = nullptr;
-    m_surface = nullptr; // Surface destructor calls gfxSurfaceDestroy
-    m_device = nullptr; // Device destructor calls gfxDeviceDestroy
-    m_instance = nullptr; // Instance destructor calls gfxInstanceDestroy
+    m_swapchain.reset();
+    m_renderPass.reset();
+    m_surface.reset(); // Surface destructor calls gfxSurfaceDestroy
+    m_device.reset(); // Device destructor calls gfxDeviceDestroy
+    m_instance.reset(); // Instance destructor calls gfxInstanceDestroy
 }
 
 bool DefaultEngineImpl::Update()
