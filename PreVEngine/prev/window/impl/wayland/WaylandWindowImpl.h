@@ -8,6 +8,7 @@
 #include <wayland-client.h>
 
 #include <xdg-shell.h>
+#include <xdg-decoration.h>
 
 namespace prev::window::impl::wayland {
 class WaylandWindowImpl final : public WindowImpl {
@@ -83,6 +84,18 @@ private:
     // seat
     static void OnSeatCapabilities(void* data, wl_seat* seat, uint32_t caps);
 
+    // xdg_wm_base
+    static void OnShellPing(void* data, xdg_wm_base* shell, uint32_t serial);
+
+    // output
+    static void OnOutputGeometry(void* data, wl_output* output, int32_t x, int32_t y, int32_t physWidth, int32_t physHeight, int32_t subpixel, const char* make, const char* model, int32_t transform);
+
+    static void OnOutputMode(void* data, wl_output* output, uint32_t flags, int32_t width, int32_t height, int32_t refresh);
+
+    static void OnOutputDone(void* data, wl_output* output);
+
+    static void OnOutputScale(void* data, wl_output* output, int32_t factor);
+
 private:
     wl_display* m_display{};
 
@@ -106,8 +119,18 @@ private:
 
     wl_touch* m_touch{};
 
+    wl_output* m_output{};
+
+    zxdg_decoration_manager_v1* m_decorationManager{};
+
+    zxdg_toplevel_decoration_v1* m_decoration{};
+
 private:
-    const int32_t ResolutionScaleFactor{ 256 }; // TODO - where does this scaler come from ??
+    int32_t m_outputScale{ 1 };
+
+    uint32_t m_pointerSerial{};
+
+    bool m_fullscreen{};
 
     Position m_lastMousePosition{};
 
@@ -127,6 +150,12 @@ private:
     static const wl_touch_listener touchListener;
 
     static const wl_seat_listener seatListener;
+
+    static const xdg_wm_base_listener shellListener;
+
+    static const wl_output_listener outputListener;
+
+    static const zxdg_toplevel_decoration_v1_listener decorationListener;
 };
 } // namespace prev::window::impl::wayland
 
