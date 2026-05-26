@@ -8,12 +8,12 @@
 #include <prev/util/intersection/Frustum.h>
 
 namespace prev_test::component::shadow {
-ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<ShadowsCascadeRenderData>& cascadesRenderData)
+ShadowsComponent::ShadowsComponent(prev::core::device::Device& device, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, std::vector<ShadowsCascadeRenderData> cascadesRenderData)
     : m_device{ device }
     , m_renderPass{ renderPass }
     , m_depthBuffer{ depthBuffer }
-    , m_cascadesRenderData{ cascadesRenderData }
-    , m_cascadesFrameData{ cascadesRenderData.size() }
+    , m_cascadesRenderData{ std::move(cascadesRenderData) }
+    , m_cascadesFrameData{ m_cascadesRenderData.size() }
 {
 }
 
@@ -21,13 +21,9 @@ ShadowsComponent::~ShadowsComponent()
 {
     m_device.WaitIdle();
 
-    m_renderPass = nullptr;
-
-    for (size_t i = 0; i < m_cascadesRenderData.size(); ++i) {
-        m_cascadesRenderData[i].Destroy();
-    }
-
-    m_depthBuffer = nullptr;
+    m_renderPass.reset();
+    m_cascadesRenderData.clear();
+    m_depthBuffer.reset();
 }
 
 void ShadowsComponent::Update(const glm::vec3& lightDirection, const prev_test::render::ViewFrustum& viewFrustum, const glm::mat4& viewMatrix)

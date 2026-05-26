@@ -1,5 +1,8 @@
 #include "PresentableSwapchain.h"
 
+#include "../../buffer/ImageBufferBuilder.h"
+#include "../../framebuffer/FramebufferBuilder.h"
+
 #include "../../../common/Logger.h"
 
 #include <vector>
@@ -56,84 +59,41 @@ void PresentableSwapchain::CreateResources()
     const GfxSampleCount sampleCount = m_renderPass.GetSampleCount();
     const GfxTextureViewType viewType = (m_viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
 
-    // Depth texture
-    {
-        GfxTextureDescriptor texDesc{};
-        texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-        texDesc.label = "PresentableDepth";
-        texDesc.type = GFX_TEXTURE_TYPE_2D;
-        texDesc.size = { m_extent.width, m_extent.height, 1 };
-        texDesc.arrayLayerCount = m_viewCount;
-        texDesc.mipLevelCount = 1;
-        texDesc.sampleCount = sampleCount;
-        texDesc.format = depthFormat;
-        texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-        GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_depthTexture));
+    const auto& graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
 
-        GfxTextureViewDescriptor viewDesc{};
-        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-        viewDesc.label = "PresentableDepthView";
-        viewDesc.viewType = viewType;
-        viewDesc.format = depthFormat;
-        viewDesc.baseMipLevel = 0;
-        viewDesc.mipLevelCount = 1;
-        viewDesc.baseArrayLayer = 0;
-        viewDesc.arrayLayerCount = m_viewCount;
-        GFXERRCHECK(gfxTextureCreateView(m_depthTexture, &viewDesc, &m_depthView));
-    }
+    // Depth texture
+    m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                        .SetExtent({ m_extent.width, m_extent.height, 1 })
+                        .SetFormat(depthFormat)
+                        .SetType(GFX_TEXTURE_TYPE_2D)
+                        .SetViewType(viewType)
+                        .SetSampleCount(sampleCount)
+                        .SetLayerCount(m_viewCount)
+                        .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                        .Build();
 
     if (sampleCount > GFX_SAMPLE_COUNT_1) {
         // MSAA color texture
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "PresentableMsaaColor";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = m_viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = sampleCount;
-            texDesc.format = colorFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaColorTexture));
-
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "PresentableMsaaColorView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = colorFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = m_viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaColorTexture, &viewDesc, &m_msaaColorView));
-        }
+        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(colorFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(sampleCount)
+                                .SetLayerCount(m_viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
 
         // MSAA depth texture
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "PresentableMsaaDepth";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = m_viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = sampleCount;
-            texDesc.format = depthFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaDepthTexture));
-
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "PresentableMsaaDepthView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = depthFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = m_viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaDepthTexture, &viewDesc, &m_msaaDepthView));
-        }
+        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(depthFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(sampleCount)
+                                .SetLayerCount(m_viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
     }
 
     // Per-swapchain-image resources
@@ -148,36 +108,25 @@ void PresentableSwapchain::CreateResources()
         // View is owned by the swapchain, do not destroy it
         GFXERRCHECK(gfxSwapchainGetTextureView(m_swapchain, i, &sb.view));
 
-        GfxFramebufferAttachment colorAttachment{};
-        GfxFramebufferAttachment depthAttachment{};
+        GfxTextureView colorView{};
+        GfxTextureView depthView{};
+        GfxTextureView colorResolve{};
         if (sampleCount > GFX_SAMPLE_COUNT_1) {
-            colorAttachment.view = m_msaaColorView;
-            colorAttachment.resolveTarget = sb.view;
-            depthAttachment.view = m_msaaDepthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = m_msaaColorBuffer->GetTextureView();
+            colorResolve = sb.view;
+            depthView = m_msaaDepthBuffer->GetTextureView();
         } else {
-            colorAttachment.view = sb.view;
-            colorAttachment.resolveTarget = nullptr;
-            depthAttachment.view = m_depthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = sb.view;
+            depthView = m_depthBuffer->GetTextureView();
         }
 
-        GfxFramebufferDescriptor fbDesc{};
-        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
-        fbDesc.label = "PresentableFramebuffer";
-        fbDesc.renderPass = m_renderPass;
-        fbDesc.colorAttachments = &colorAttachment;
-        fbDesc.colorAttachmentCount = 1;
-        fbDesc.depthStencilAttachment = depthAttachment;
-        fbDesc.extent = m_extent;
-        GFXERRCHECK(gfxDeviceCreateFramebuffer(m_device, &fbDesc, &sb.framebuffer));
+        sb.framebuffer = prev::render::framebuffer::FramebufferBuilder{ m_device, m_renderPass }
+                             .SetExtent(m_extent)
+                             .AddColorAttachment(colorView, colorResolve)
+                             .SetDepthStencilAttachment(depthView)
+                             .Build();
 
-        GfxSemaphoreDescriptor semDesc{};
-        semDesc.sType = GFX_STRUCTURE_TYPE_SEMAPHORE_DESCRIPTOR;
-        semDesc.label = "RenderSemaphore";
-        semDesc.type = GFX_SEMAPHORE_TYPE_BINARY;
-        semDesc.initialValue = 0;
-        GFXERRCHECK(gfxDeviceCreateSemaphore(m_device, &semDesc, &sb.renderSemaphore));
+        sb.renderSemaphore = std::make_unique<core::sync::Semaphore>(m_device, GFX_SEMAPHORE_TYPE_BINARY, 0, "RenderSemaphore");
     }
 
     // Per-frame-in-flight resources
@@ -191,45 +140,23 @@ void PresentableSwapchain::CreateResources()
         ceDesc.label = "SwapchainCommandEncoder";
         GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &f.commandEncoder));
 
-        GfxSemaphoreDescriptor semDesc{};
-        semDesc.sType = GFX_STRUCTURE_TYPE_SEMAPHORE_DESCRIPTOR;
-        semDesc.label = "AcquireSemaphore";
-        semDesc.type = GFX_SEMAPHORE_TYPE_BINARY;
-        semDesc.initialValue = 0;
-        GFXERRCHECK(gfxDeviceCreateSemaphore(m_device, &semDesc, &f.acquireSemaphore));
-
-        GfxFenceDescriptor fenceDesc{};
-        fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
-        fenceDesc.label = "FrameFence";
-        fenceDesc.signaled = true;
-        GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &f.fence));
+        f.acquireSemaphore = std::make_unique<core::sync::Semaphore>(m_device, GFX_SEMAPHORE_TYPE_BINARY, 0, "AcquireSemaphore");
+        f.fence = std::make_unique<core::sync::Fence>(m_device, true, "FrameFence");
     }
 }
 
 void PresentableSwapchain::DestroyResources()
 {
     for (auto& sb : m_swapchainBuffers) {
-        if (sb.renderSemaphore) {
-            gfxSemaphoreDestroy(sb.renderSemaphore);
-            sb.renderSemaphore = nullptr;
-        }
-        if (sb.framebuffer) {
-            gfxFramebufferDestroy(sb.framebuffer);
-            sb.framebuffer = nullptr;
-        }
+        sb.renderSemaphore.reset();
+        sb.framebuffer.reset();
         // sb.view is owned by the swapchain, do not destroy
     }
     m_swapchainBuffers.clear();
 
     for (auto& f : m_framesInFlight) {
-        if (f.fence) {
-            gfxFenceDestroy(f.fence);
-            f.fence = nullptr;
-        }
-        if (f.acquireSemaphore) {
-            gfxSemaphoreDestroy(f.acquireSemaphore);
-            f.acquireSemaphore = nullptr;
-        }
+        f.fence.reset();
+        f.acquireSemaphore.reset();
         if (f.commandEncoder) {
             gfxCommandEncoderDestroy(f.commandEncoder);
             f.commandEncoder = nullptr;
@@ -237,30 +164,9 @@ void PresentableSwapchain::DestroyResources()
     }
     m_framesInFlight.clear();
 
-    if (m_msaaDepthView) {
-        gfxTextureViewDestroy(m_msaaDepthView);
-        m_msaaDepthView = nullptr;
-    }
-    if (m_msaaDepthTexture) {
-        gfxTextureDestroy(m_msaaDepthTexture);
-        m_msaaDepthTexture = nullptr;
-    }
-    if (m_msaaColorView) {
-        gfxTextureViewDestroy(m_msaaColorView);
-        m_msaaColorView = nullptr;
-    }
-    if (m_msaaColorTexture) {
-        gfxTextureDestroy(m_msaaColorTexture);
-        m_msaaColorTexture = nullptr;
-    }
-    if (m_depthView) {
-        gfxTextureViewDestroy(m_depthView);
-        m_depthView = nullptr;
-    }
-    if (m_depthTexture) {
-        gfxTextureDestroy(m_depthTexture);
-        m_depthTexture = nullptr;
-    }
+    m_msaaDepthBuffer.reset();
+    m_msaaColorBuffer.reset();
+    m_depthBuffer.reset();
 }
 
 bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
@@ -269,11 +175,11 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
 
     auto& frameInFlight = m_framesInFlight[m_frameIndex];
 
-    GFXERRCHECK(gfxFenceWait(frameInFlight.fence, UINT64_MAX));
-    GFXERRCHECK(gfxFenceReset(frameInFlight.fence));
+    frameInFlight.fence->Wait();
+    frameInFlight.fence->Reset();
 
     uint32_t acquireIndex{};
-    const GfxResult result = gfxSwapchainAcquireNextImage(m_swapchain, UINT64_MAX, frameInFlight.acquireSemaphore, nullptr, &acquireIndex);
+    const GfxResult result = gfxSwapchainAcquireNextImage(m_swapchain, UINT64_MAX, *frameInFlight.acquireSemaphore, nullptr, &acquireIndex);
     if (result == GFX_RESULT_ERROR_OUT_OF_DATE || result == GFX_RESULT_ERROR_SURFACE_LOST) {
         return false;
     }
@@ -284,7 +190,7 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
 
     GFXERRCHECK(gfxCommandEncoderBegin(frameInFlight.commandEncoder));
 
-    outContext.frameBuffer = m_swapchainBuffers[m_acquiredIndex].framebuffer;
+    outContext.frameBuffer = *m_swapchainBuffers[m_acquiredIndex].framebuffer;
     outContext.commandEncoder = frameInFlight.commandEncoder;
     outContext.index = m_frameIndex;
     return true;
@@ -300,8 +206,8 @@ void PresentableSwapchain::EndFrame()
     GFXERRCHECK(gfxCommandEncoderEnd(frameInFlight.commandEncoder));
 
     GfxCommandEncoder encoders[] = { frameInFlight.commandEncoder };
-    GfxSemaphore waitSems[] = { frameInFlight.acquireSemaphore };
-    GfxSemaphore signalSems[] = { swapchainBuffer.renderSemaphore };
+    GfxSemaphore waitSems[] = { *frameInFlight.acquireSemaphore };
+    GfxSemaphore signalSems[] = { *swapchainBuffer.renderSemaphore };
 
     GfxSubmitDescriptor submitDesc{};
     submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
@@ -311,10 +217,10 @@ void PresentableSwapchain::EndFrame()
     submitDesc.waitSemaphoreCount = 1;
     submitDesc.signalSemaphores = signalSems;
     submitDesc.signalSemaphoreCount = 1;
-    submitDesc.signalFence = frameInFlight.fence;
+    submitDesc.signalFence = *frameInFlight.fence;
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 
-    GfxSemaphore presentWaitSems[] = { swapchainBuffer.renderSemaphore };
+    GfxSemaphore presentWaitSems[] = { *swapchainBuffer.renderSemaphore };
     GfxPresentDescriptor presentDesc{};
     presentDesc.sType = GFX_STRUCTURE_TYPE_PRESENT_DESCRIPTOR;
     presentDesc.waitSemaphores = presentWaitSems;

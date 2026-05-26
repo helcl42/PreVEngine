@@ -54,14 +54,14 @@ void XrEngineImpl::ShutDown()
         m_scene->ShutDown();
     }
 
-    m_rootRenderer = nullptr;
-    m_scene = nullptr;
+    m_rootRenderer.reset();
+    m_scene.reset();
 
-    m_swapchain = nullptr; // destroy swapchain before XR session (it references XR-owned textures)
+    m_swapchain.reset(); // destroy swapchain before XR session (it references XR-owned textures)
 
     if (m_xr) {
         m_xr->DestroySession();
-        m_xr = nullptr;
+        m_xr.reset();
     }
 }
 

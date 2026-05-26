@@ -6,13 +6,14 @@
 #include <prev/common/Common.h>
 #include <prev/core/device/Device.h>
 #include <prev/render/buffer/ImageBuffer.h>
+#include <prev/render/framebuffer/Framebuffer.h>
 
 #include <vector>
 
 namespace prev_test::component::common {
 class OffScreenRenderPassComponent final : public IOffScreenRenderPassComponent {
 public:
-    OffScreenRenderPassComponent(prev::core::device::Device& device, const GfxExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const GfxFramebuffer frameBuffer);
+    OffScreenRenderPassComponent(prev::core::device::Device& device, const GfxExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, std::unique_ptr<prev::render::framebuffer::Framebuffer> frameBuffer);
 
     ~OffScreenRenderPassComponent();
 
@@ -38,7 +39,7 @@ private:
 
     std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>> m_colorBuffers{};
 
-    GfxFramebuffer m_frameBuffer{};
+    std::unique_ptr<prev::render::framebuffer::Framebuffer> m_frameBuffer;
 };
 
 } // namespace prev_test::component::common

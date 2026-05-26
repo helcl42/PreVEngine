@@ -2,6 +2,7 @@
 #define __COMMANDS_EXECUTOR_H__
 
 #include "device/Device.h"
+#include "sync/Fence.h"
 
 #include "../core/Core.h"
 
@@ -24,7 +25,7 @@ private:
 
     GfxCommandEncoder m_commandEncoder{};
 
-    GfxFence m_fence{};
+    std::unique_ptr<sync::Fence> m_fence;
 };
 } // namespace prev::core
 

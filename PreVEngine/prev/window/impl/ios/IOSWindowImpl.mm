@@ -72,7 +72,7 @@ IOSWindowImpl::IOSWindowImpl(const WindowInfo& windowInfo)
 IOSWindowImpl::~IOSWindowImpl()
 {
 
-    m_state = nullptr;
+    m_state.reset();
 }
 
 bool IOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)

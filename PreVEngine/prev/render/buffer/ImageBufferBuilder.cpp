@@ -102,13 +102,14 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     const auto viewType{ m_viewType == GFX_TEXTURE_VIEW_TYPE_MAX_ENUM ? DeduceViewTypeFromTextureType(m_type) : m_viewType };
     const auto mipLevels{ m_mipMapEnabled ? prev::util::math::Log2(std::max(m_extent.width, m_extent.height)) + 1 : 1 };
 
-    GfxTextureUsageFlags usageFlags{ m_usageFlags | GFX_TEXTURE_USAGE_COPY_DST };
+    GfxTextureUsageFlags usageFlags{ m_usageFlags };
+    if (!m_layersData.empty()) {
+        usageFlags |= GFX_TEXTURE_USAGE_COPY_DST;
+    }
     if (mipLevels > 1) {
         usageFlags |= GFX_TEXTURE_USAGE_COPY_SRC;
-        usageFlags |= GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-    }
-    if (!m_hostMapped) {
-        usageFlags |= GFX_TEXTURE_USAGE_TEXTURE_BINDING;
+        usageFlags |= GFX_TEXTURE_USAGE_COPY_DST;
+        usageFlags |= GFX_TEXTURE_USAGE_RENDER_ATTACHMENT; // WebGPU backend generates mipmaps via render passes
     }
 
     GfxTextureDescriptor texDesc{};
@@ -147,8 +148,8 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     imageBuffer->m_usageFlags = usageFlags;
     imageBuffer->m_layout = m_layersData.empty() ? GFX_TEXTURE_LAYOUT_UNDEFINED : GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY;
 
-    // Create default texture view (not for host-mapped) via the view builder.
-    // Keep full mip coverage to preserve existing behavior.
+    // Create default texture view via the view builder.
+    // Skip for host-mapped textures (they use mapped data directly).
     if (!m_hostMapped) {
         auto defaultView = ImageBufferViewBuilder{ *imageBuffer }
                                .SetMipLevelCount(mipLevels)
@@ -160,13 +161,14 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     // Transition to requested layout and optionally generate mipmaps.
     // Only generate mipmaps during build when data was uploaded; otherwise the caller
     // is responsible (e.g. after a compute pass fills the texture).
+    // Skip transition entirely if layout is UNDEFINED (e.g. render attachments).
     if (mipLevels > 1 && !m_layersData.empty()) {
         prev::core::CommandsExecutor cmds{ m_device, m_queue };
         cmds.ExecuteImmediate([&](GfxCommandEncoder enc) {
             imageBuffer->GenerateMipMaps(enc);
             imageBuffer->UpdateLayout(m_layout, enc);
         });
-    } else if (imageBuffer->m_layout != m_layout) {
+    } else if (m_layout != GFX_TEXTURE_LAYOUT_UNDEFINED && imageBuffer->m_layout != m_layout) {
         prev::core::CommandsExecutor cmds{ m_device, m_queue };
         cmds.ExecuteImmediate([&](GfxCommandEncoder enc) {
             imageBuffer->UpdateLayout(m_layout, enc);
@@ -184,10 +186,6 @@ void ImageBufferBuilder::Validate() const
 
     if (m_format == GFX_FORMAT_UNDEFINED) {
         throw std::runtime_error("Invalid image format - undefined.");
-    }
-
-    if (m_layout == GFX_TEXTURE_LAYOUT_UNDEFINED) {
-        throw std::runtime_error("Invalid image layout - undefined.");
     }
 
     if (m_type == GFX_TEXTURE_TYPE_MAX_ENUM) {

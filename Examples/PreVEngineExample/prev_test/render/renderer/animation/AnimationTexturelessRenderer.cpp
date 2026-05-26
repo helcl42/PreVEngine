@@ -234,12 +234,12 @@ void AnimationTexturelessRenderer::AfterRender(const NormalRenderContext& render
 
 void AnimationTexturelessRenderer::ShutDown()
 {
-    m_depthSampler = {};
+    m_depthSampler.reset();
 
-    m_uniformsPoolFS = {};
-    m_uniformsPoolVS = {};
+    m_uniformsPoolFS.reset();
+    m_uniformsPoolVS.reset();
 
-    m_pipeline = nullptr;
-    m_shader = nullptr;
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::animation

@@ -3,13 +3,13 @@
 #include <stdexcept>
 
 namespace prev_test::component::common {
-OffScreenRenderPassComponent::OffScreenRenderPassComponent(prev::core::device::Device& device, const GfxExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, const GfxFramebuffer frameBuffer)
+OffScreenRenderPassComponent::OffScreenRenderPassComponent(prev::core::device::Device& device, const GfxExtent2D& extent, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>& colorBuffers, std::unique_ptr<prev::render::framebuffer::Framebuffer> frameBuffer)
     : m_device{ device }
     , m_extent{ extent }
     , m_renderPass{ renderPass }
     , m_depthBuffer{ depthBuffer }
     , m_colorBuffers{ colorBuffers }
-    , m_frameBuffer{ frameBuffer }
+    , m_frameBuffer{ std::move(frameBuffer) }
 {
 }
 
@@ -17,14 +17,13 @@ OffScreenRenderPassComponent::~OffScreenRenderPassComponent()
 {
     m_device.WaitIdle();
 
-    gfxFramebufferDestroy(m_frameBuffer);
-    m_frameBuffer = {};
+    m_frameBuffer.reset();
 
-    m_depthBuffer = nullptr;
+    m_depthBuffer.reset();
 
     m_colorBuffers.clear();
 
-    m_renderPass = nullptr;
+    m_renderPass.reset();
 }
 
 std::shared_ptr<prev::render::pass::RenderPass> OffScreenRenderPassComponent::GetRenderPass() const
@@ -55,6 +54,6 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> OffScreenRenderPassComponent:
 
 GfxFramebuffer OffScreenRenderPassComponent::GetFrameBuffer() const
 {
-    return m_frameBuffer;
+    return *m_frameBuffer;
 }
 } // namespace prev_test::component::common

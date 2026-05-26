@@ -105,19 +105,20 @@ int PreVMain(int argc, char** argv)
         return 1;
     }
 
-#ifdef __EMSCRIPTEN__
     // On Emscripten, try/catch around Asyncify code is broken:
     // C++ exceptions thrown after an Asyncify suspend/resume cannot be caught
     // by a try/catch that was established before the suspension.
+#ifndef __EMSCRIPTEN__
     try {
 #endif
         prev_test::TestApp app{ config };
         app.Init();
         app.Run();
         app.ShutDown();
-#ifdef __EMSCRIPTEN__
-    } catch (const std::runtime_error& err) {
-        LOGE("Unhandled error: %s", err.what());
+#ifndef __EMSCRIPTEN__
+    } catch (const std::exception& err) {
+        LOGE("Fatal error: %s", err.what());
+        return 1;
     }
 #endif
 

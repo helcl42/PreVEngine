@@ -37,7 +37,7 @@ void WaterRefraction::ShutDown()
 {
     SceneNode::ShutDown();
 
-    m_refractionComponent = nullptr;
+    m_refractionComponent.reset();
 }
 
 void WaterRefraction::operator()(const prev::core::NewIterationEvent& newIterationEvent)

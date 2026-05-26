@@ -5,11 +5,17 @@
 
 #include "IXr.h"
 
+#include "../render/buffer/ImageBuffer.h"
+#include "../render/buffer/ImageBufferView.h"
+#include "../render/framebuffer/Framebuffer.h"
 #include "../render/pass/RenderPass.h"
 #include "../render/swapchain/ISwapchain.h"
 
 #include "../core/device/Device.h"
+#include "../core/sync/Fence.h"
 #include "../util/Utils.h"
+
+#include <memory>
 
 namespace prev::xr {
 class XrSwapchain final : public prev::render::swapchain::ISwapchain {
@@ -32,12 +38,12 @@ public:
 private:
     struct SwapchainBuffer {
         GfxTexture colorTexture{};
-        GfxTextureView colorView{};
+        std::unique_ptr<prev::render::buffer::ImageBufferView> colorView;
         GfxTexture depthTexture{};
-        GfxTextureView depthView{};
-        GfxFramebuffer framebuffer{};
+        std::unique_ptr<prev::render::buffer::ImageBufferView> depthView;
+        std::unique_ptr<prev::render::framebuffer::Framebuffer> framebuffer;
         GfxCommandEncoder commandEncoder{};
-        GfxFence fence{};
+        std::unique_ptr<prev::core::sync::Fence> fence;
     };
 
 private:
@@ -59,10 +65,11 @@ private:
     GfxExtent2D m_extent{};
 
     // MSAA resources (shared across all frames)
-    GfxTexture m_msaaColorTexture{};
-    GfxTextureView m_msaaColorView{};
-    GfxTexture m_msaaDepthTexture{};
-    GfxTextureView m_msaaDepthView{};
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer;
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer;
+
+    // Owned depth buffer (when XR doesn't provide depth images)
+    std::unique_ptr<prev::render::buffer::ImageBuffer> m_ownedDepthBuffer;
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 

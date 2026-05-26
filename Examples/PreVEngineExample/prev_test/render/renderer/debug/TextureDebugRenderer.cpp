@@ -113,9 +113,9 @@ void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& render
 
 void TextureDebugRenderer::ShutDown()
 {
-    m_colorSampler = {};
+    m_colorSampler.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::debug

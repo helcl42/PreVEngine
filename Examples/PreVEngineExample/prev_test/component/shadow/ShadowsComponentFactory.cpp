@@ -2,6 +2,8 @@
 #include "ShadowsComponent.h"
 
 #include <prev/render/buffer/ImageBufferBuilder.h>
+#include <prev/render/buffer/ImageBufferViewBuilder.h>
+#include <prev/render/framebuffer/FramebufferBuilder.h>
 #include <prev/render/pass/RenderPassBuilder.h>
 
 #include <memory>
@@ -19,8 +21,8 @@ std::unique_ptr<IShadowsComponent> ShadowsComponentFactory::Create() const
 
     std::shared_ptr<prev::render::pass::RenderPass> renderPass{ CreateRenderPass() };
     std::shared_ptr<prev::render::buffer::ImageBuffer> depthBuffer{ CreateDepthBuffer(extent, CASCADES_COUNT) };
-    const auto cascadesRenderData{ CreateCascadesRenderData(extent, CASCADES_COUNT, *depthBuffer, *renderPass) };
-    auto result{ std::make_unique<ShadowsComponent>(m_device, renderPass, depthBuffer, cascadesRenderData) };
+    auto cascadesRenderData{ CreateCascadesRenderData(extent, CASCADES_COUNT, *depthBuffer, *renderPass) };
+    auto result{ std::make_unique<ShadowsComponent>(m_device, renderPass, depthBuffer, std::move(cascadesRenderData)) };
     return result;
 }
 
@@ -49,37 +51,24 @@ std::unique_ptr<prev::render::buffer::ImageBuffer> ShadowsComponentFactory::Crea
 
 std::vector<ShadowsCascadeRenderData> ShadowsComponentFactory::CreateCascadesRenderData(const GfxExtent2D& extent, const uint32_t cascadesCount, const prev::render::buffer::ImageBuffer& depthBuffer, const prev::render::pass::RenderPass& renderPass) const
 {
-    std::vector<ShadowsCascadeRenderData> cascades(cascadesCount);
+    std::vector<ShadowsCascadeRenderData> cascades;
+    cascades.reserve(cascadesCount);
     for (uint32_t i = 0; i < cascadesCount; ++i) {
-        GfxTextureViewDescriptor viewDesc{};
-        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-        viewDesc.viewType = GFX_TEXTURE_VIEW_TYPE_2D_ARRAY;
-        viewDesc.format = depthBuffer.GetFormat();
-        viewDesc.baseMipLevel = 0;
-        viewDesc.mipLevelCount = depthBuffer.GetMipLevels();
-        viewDesc.baseArrayLayer = i;
-        viewDesc.arrayLayerCount = 1;
+        auto view = prev::render::buffer::ImageBufferViewBuilder{ depthBuffer.GetTexture(), GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, depthBuffer.GetFormat(), 1 }
+                        .SetMipLevelCount(depthBuffer.GetMipLevels())
+                        .SetBaseArrayLayer(i)
+                        .SetArrayLayerCount(1)
+                        .Build();
 
-        GfxTextureView textureView{};
-        if (gfxTextureCreateView(depthBuffer.GetTexture(), &viewDesc, &textureView) != GFX_RESULT_SUCCESS) {
-            throw std::runtime_error("Failed to create shadow cascade texture view");
-        }
+        auto framebuffer = prev::render::framebuffer::FramebufferBuilder{ m_device, renderPass }
+                               .SetExtent({ extent.width, extent.height })
+                               .SetDepthStencilAttachment(*view)
+                               .Build();
 
-        GfxFramebufferAttachment depthAttachment{};
-        depthAttachment.view = textureView;
-
-        GfxFramebufferDescriptor fbDesc{};
-        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
-        fbDesc.renderPass = renderPass;
-        fbDesc.depthStencilAttachment = depthAttachment;
-        fbDesc.extent = { extent.width, extent.height };
-
-        GfxFramebuffer frameBuffer{};
-        if (gfxDeviceCreateFramebuffer(m_device, &fbDesc, &frameBuffer) != GFX_RESULT_SUCCESS) {
-            throw std::runtime_error("Failed to create shadow cascade framebuffer");
-        }
-
-        cascades[i] = ShadowsCascadeRenderData{ frameBuffer, textureView };
+        ShadowsCascadeRenderData renderData;
+        renderData.framebuffer = std::move(framebuffer);
+        renderData.textureView = std::move(view);
+        cascades.emplace_back(std::move(renderData));
     }
     return cascades;
 }

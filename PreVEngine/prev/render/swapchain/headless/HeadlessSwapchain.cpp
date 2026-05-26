@@ -1,5 +1,8 @@
 #include "HeadlessSwapchain.h"
 
+#include "../../buffer/ImageBufferBuilder.h"
+#include "../../framebuffer/FramebufferBuilder.h"
+
 #include "../../../common/Logger.h"
 
 namespace prev::render::swapchain::headless {
@@ -29,84 +32,41 @@ void HeadlessSwapchain::CreateResources()
     const GfxSampleCount sampleCount = m_renderPass.GetSampleCount();
     const GfxTextureViewType viewType = (m_viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
 
-    // Shared depth texture
-    {
-        GfxTextureDescriptor texDesc{};
-        texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-        texDesc.label = "HeadlessDepth";
-        texDesc.type = GFX_TEXTURE_TYPE_2D;
-        texDesc.size = { m_extent.width, m_extent.height, 1 };
-        texDesc.arrayLayerCount = m_viewCount;
-        texDesc.mipLevelCount = 1;
-        texDesc.sampleCount = sampleCount;
-        texDesc.format = depthFormat;
-        texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-        GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_depthTexture));
+    const auto& graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
 
-        GfxTextureViewDescriptor viewDesc{};
-        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-        viewDesc.label = "HeadlessDepthView";
-        viewDesc.viewType = viewType;
-        viewDesc.format = depthFormat;
-        viewDesc.baseMipLevel = 0;
-        viewDesc.mipLevelCount = 1;
-        viewDesc.baseArrayLayer = 0;
-        viewDesc.arrayLayerCount = m_viewCount;
-        GFXERRCHECK(gfxTextureCreateView(m_depthTexture, &viewDesc, &m_depthView));
-    }
+    // Shared depth texture
+    m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                        .SetExtent({ m_extent.width, m_extent.height, 1 })
+                        .SetFormat(depthFormat)
+                        .SetType(GFX_TEXTURE_TYPE_2D)
+                        .SetViewType(viewType)
+                        .SetSampleCount(sampleCount)
+                        .SetLayerCount(m_viewCount)
+                        .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                        .Build();
 
     if (sampleCount > GFX_SAMPLE_COUNT_1) {
         // MSAA color
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "HeadlessMsaaColor";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = m_viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = sampleCount;
-            texDesc.format = colorFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaColorTexture));
-
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "HeadlessMsaaColorView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = colorFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = m_viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaColorTexture, &viewDesc, &m_msaaColorView));
-        }
+        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(colorFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(sampleCount)
+                                .SetLayerCount(m_viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
 
         // MSAA depth
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "HeadlessMsaaDepth";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = m_viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = sampleCount;
-            texDesc.format = depthFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaDepthTexture));
-
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "HeadlessMsaaDepthView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = depthFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = m_viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaDepthTexture, &viewDesc, &m_msaaDepthView));
-        }
+        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(depthFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(sampleCount)
+                                .SetLayerCount(m_viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
     }
 
     const uint32_t imageCount = m_frameIndex.GetCount();
@@ -115,118 +75,59 @@ void HeadlessSwapchain::CreateResources()
         auto& sb = m_swapchainBuffers[i];
 
         // Per-frame color texture (resolve target if MSAA, otherwise primary)
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "HeadlessColor";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = m_viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = GFX_SAMPLE_COUNT_1;
-            texDesc.format = colorFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &sb.colorTexture));
+        sb.colorBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                             .SetExtent({ m_extent.width, m_extent.height, 1 })
+                             .SetFormat(colorFormat)
+                             .SetType(GFX_TEXTURE_TYPE_2D)
+                             .SetViewType(viewType)
+                             .SetSampleCount(GFX_SAMPLE_COUNT_1)
+                             .SetLayerCount(m_viewCount)
+                             .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                             .Build();
 
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "HeadlessColorView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = colorFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = m_viewCount;
-            GFXERRCHECK(gfxTextureCreateView(sb.colorTexture, &viewDesc, &sb.colorView));
-        }
-
-        GfxFramebufferAttachment colorAttachment{};
-        GfxFramebufferAttachment depthAttachment{};
+        GfxTextureView colorView{};
+        GfxTextureView depthView{};
+        GfxTextureView colorResolve{};
         if (sampleCount > GFX_SAMPLE_COUNT_1) {
-            colorAttachment.view = m_msaaColorView;
-            colorAttachment.resolveTarget = sb.colorView;
-            depthAttachment.view = m_msaaDepthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = m_msaaColorBuffer->GetTextureView();
+            colorResolve = sb.colorBuffer->GetTextureView();
+            depthView = m_msaaDepthBuffer->GetTextureView();
         } else {
-            colorAttachment.view = sb.colorView;
-            colorAttachment.resolveTarget = nullptr;
-            depthAttachment.view = m_depthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = sb.colorBuffer->GetTextureView();
+            depthView = m_depthBuffer->GetTextureView();
         }
 
-        GfxFramebufferDescriptor fbDesc{};
-        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
-        fbDesc.label = "HeadlessFramebuffer";
-        fbDesc.renderPass = m_renderPass;
-        fbDesc.colorAttachments = &colorAttachment;
-        fbDesc.colorAttachmentCount = 1;
-        fbDesc.depthStencilAttachment = depthAttachment;
-        fbDesc.extent = m_extent;
-        GFXERRCHECK(gfxDeviceCreateFramebuffer(m_device, &fbDesc, &sb.framebuffer));
+        sb.framebuffer = prev::render::framebuffer::FramebufferBuilder{ m_device, m_renderPass }
+                             .SetExtent(m_extent)
+                             .AddColorAttachment(colorView, colorResolve)
+                             .SetDepthStencilAttachment(depthView)
+                             .Build();
 
         GfxCommandEncoderDescriptor ceDesc{};
         ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
         ceDesc.label = "HeadlessCommandEncoder";
         GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &sb.commandEncoder));
 
-        GfxFenceDescriptor fenceDesc{};
-        fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
-        fenceDesc.label = "HeadlessFence";
-        fenceDesc.signaled = true;
-        GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &sb.fence));
+        sb.fence = std::make_unique<core::sync::Fence>(m_device, true, "HeadlessFence");
     }
 }
 
 void HeadlessSwapchain::DestroyResources()
 {
     for (auto& sb : m_swapchainBuffers) {
-        if (sb.fence) {
-            gfxFenceDestroy(sb.fence);
-            sb.fence = nullptr;
-        }
+        sb.fence.reset();
         if (sb.commandEncoder) {
             gfxCommandEncoderDestroy(sb.commandEncoder);
             sb.commandEncoder = nullptr;
         }
-        if (sb.framebuffer) {
-            gfxFramebufferDestroy(sb.framebuffer);
-            sb.framebuffer = nullptr;
-        }
-        if (sb.colorView) {
-            gfxTextureViewDestroy(sb.colorView);
-            sb.colorView = nullptr;
-        }
-        if (sb.colorTexture) {
-            gfxTextureDestroy(sb.colorTexture);
-            sb.colorTexture = nullptr;
-        }
+        sb.framebuffer.reset();
+        sb.colorBuffer.reset();
     }
     m_swapchainBuffers.clear();
 
-    if (m_msaaDepthView) {
-        gfxTextureViewDestroy(m_msaaDepthView);
-        m_msaaDepthView = nullptr;
-    }
-    if (m_msaaDepthTexture) {
-        gfxTextureDestroy(m_msaaDepthTexture);
-        m_msaaDepthTexture = nullptr;
-    }
-    if (m_msaaColorView) {
-        gfxTextureViewDestroy(m_msaaColorView);
-        m_msaaColorView = nullptr;
-    }
-    if (m_msaaColorTexture) {
-        gfxTextureDestroy(m_msaaColorTexture);
-        m_msaaColorTexture = nullptr;
-    }
-    if (m_depthView) {
-        gfxTextureViewDestroy(m_depthView);
-        m_depthView = nullptr;
-    }
-    if (m_depthTexture) {
-        gfxTextureDestroy(m_depthTexture);
-        m_depthTexture = nullptr;
-    }
+    m_msaaDepthBuffer.reset();
+    m_msaaColorBuffer.reset();
+    m_depthBuffer.reset();
 }
 
 bool HeadlessSwapchain::BeginFrame(FrameContext& outContext)
@@ -235,14 +136,14 @@ bool HeadlessSwapchain::BeginFrame(FrameContext& outContext)
 
     auto& sb = m_swapchainBuffers[m_frameIndex];
 
-    GFXERRCHECK(gfxFenceWait(sb.fence, UINT64_MAX));
-    GFXERRCHECK(gfxFenceReset(sb.fence));
+    sb.fence->Wait();
+    sb.fence->Reset();
 
     m_isAcquired = true;
 
     GFXERRCHECK(gfxCommandEncoderBegin(sb.commandEncoder));
 
-    outContext.frameBuffer = sb.framebuffer;
+    outContext.frameBuffer = *sb.framebuffer;
     outContext.commandEncoder = sb.commandEncoder;
     outContext.index = m_frameIndex;
     return true;
@@ -262,7 +163,7 @@ void HeadlessSwapchain::EndFrame()
     submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
     submitDesc.commandEncoders = encoders;
     submitDesc.commandEncoderCount = 1;
-    submitDesc.signalFence = sb.fence;
+    submitDesc.signalFence = *sb.fence;
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 
     ++m_frameIndex;

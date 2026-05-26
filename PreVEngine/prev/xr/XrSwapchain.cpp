@@ -2,6 +2,10 @@
 
 #ifdef ENABLE_XR
 
+#include "../render/buffer/ImageBufferBuilder.h"
+#include "../render/buffer/ImageBufferViewBuilder.h"
+#include "../render/framebuffer/FramebufferBuilder.h"
+
 #include "../common/Logger.h"
 
 namespace prev::xr {
@@ -31,59 +35,29 @@ void XrSwapchain::CreateResources()
     const uint32_t viewCount = m_xr.GetViewCount();
     const GfxTextureViewType viewType = (viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
 
+    const auto& graphicsQueue = m_device.GetQueue(prev::core::device::QueueType::GRAPHICS);
+
     // MSAA resources (shared across all frames)
     if (m_sampleCount > GFX_SAMPLE_COUNT_1) {
-        // MSAA color
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "XrMsaaColor";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = m_sampleCount;
-            texDesc.format = colorFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaColorTexture));
+        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(colorFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(m_sampleCount)
+                                .SetLayerCount(viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
 
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "XrMsaaColorView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = colorFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaColorTexture, &viewDesc, &m_msaaColorView));
-        }
-
-        // MSAA depth
-        {
-            GfxTextureDescriptor texDesc{};
-            texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-            texDesc.label = "XrMsaaDepth";
-            texDesc.type = GFX_TEXTURE_TYPE_2D;
-            texDesc.size = { m_extent.width, m_extent.height, 1 };
-            texDesc.arrayLayerCount = viewCount;
-            texDesc.mipLevelCount = 1;
-            texDesc.sampleCount = m_sampleCount;
-            texDesc.format = depthFormat;
-            texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-            GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &m_msaaDepthTexture));
-
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "XrMsaaDepthView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = depthFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = viewCount;
-            GFXERRCHECK(gfxTextureCreateView(m_msaaDepthTexture, &viewDesc, &m_msaaDepthView));
-        }
+        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                .SetFormat(depthFormat)
+                                .SetType(GFX_TEXTURE_TYPE_2D)
+                                .SetViewType(viewType)
+                                .SetSampleCount(m_sampleCount)
+                                .SetLayerCount(viewCount)
+                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                .Build();
     }
 
     // Get pre-imported OpenXR color textures
@@ -93,35 +67,21 @@ void XrSwapchain::CreateResources()
     // Get depth textures (from OpenXR or create our own)
     const bool hasXrDepth = m_xr.HasDepthImages();
     std::vector<GfxTexture> depthTextures;
-    GfxTexture ownedDepthTexture{};
-    GfxTextureView ownedDepthView{};
 
     if (hasXrDepth) {
         depthTextures = m_xr.GetDepthImages();
     } else {
         // Create a shared depth texture
-        GfxTextureDescriptor texDesc{};
-        texDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_DESCRIPTOR;
-        texDesc.label = "XrDepth";
-        texDesc.type = GFX_TEXTURE_TYPE_2D;
-        texDesc.size = { m_extent.width, m_extent.height, 1 };
-        texDesc.arrayLayerCount = viewCount;
-        texDesc.mipLevelCount = 1;
-        texDesc.sampleCount = (m_sampleCount > GFX_SAMPLE_COUNT_1) ? m_sampleCount : GFX_SAMPLE_COUNT_1;
-        texDesc.format = depthFormat;
-        texDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
-        GFXERRCHECK(gfxDeviceCreateTexture(m_device, &texDesc, &ownedDepthTexture));
-
-        GfxTextureViewDescriptor viewDesc{};
-        viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-        viewDesc.label = "XrDepthView";
-        viewDesc.viewType = viewType;
-        viewDesc.format = depthFormat;
-        viewDesc.baseMipLevel = 0;
-        viewDesc.mipLevelCount = 1;
-        viewDesc.baseArrayLayer = 0;
-        viewDesc.arrayLayerCount = viewCount;
-        GFXERRCHECK(gfxTextureCreateView(ownedDepthTexture, &viewDesc, &ownedDepthView));
+        const GfxSampleCount depthSampleCount = (m_sampleCount > GFX_SAMPLE_COUNT_1) ? m_sampleCount : GFX_SAMPLE_COUNT_1;
+        m_ownedDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
+                                 .SetExtent({ m_extent.width, m_extent.height, 1 })
+                                 .SetFormat(depthFormat)
+                                 .SetType(GFX_TEXTURE_TYPE_2D)
+                                 .SetViewType(viewType)
+                                 .SetSampleCount(depthSampleCount)
+                                 .SetLayerCount(viewCount)
+                                 .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
+                                 .Build();
     }
 
     m_swapchainBuffers.resize(swapchainImagesCount);
@@ -132,62 +92,41 @@ void XrSwapchain::CreateResources()
         {
             sb.colorTexture = colorTextures[i];
 
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "XrColorView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = colorFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = viewCount;
-            GFXERRCHECK(gfxTextureCreateView(sb.colorTexture, &viewDesc, &sb.colorView));
+            sb.colorView = prev::render::buffer::ImageBufferViewBuilder{ sb.colorTexture, viewType, colorFormat, viewCount }
+                               .Build();
         }
 
         // Depth: use pre-imported from OpenXR or use shared owned depth
         if (hasXrDepth) {
             sb.depthTexture = depthTextures[i];
 
-            GfxTextureViewDescriptor viewDesc{};
-            viewDesc.sType = GFX_STRUCTURE_TYPE_TEXTURE_VIEW_DESCRIPTOR;
-            viewDesc.label = "XrDepthView";
-            viewDesc.viewType = viewType;
-            viewDesc.format = depthFormat;
-            viewDesc.baseMipLevel = 0;
-            viewDesc.mipLevelCount = 1;
-            viewDesc.baseArrayLayer = 0;
-            viewDesc.arrayLayerCount = viewCount;
-            GFXERRCHECK(gfxTextureCreateView(sb.depthTexture, &viewDesc, &sb.depthView));
+            sb.depthView = prev::render::buffer::ImageBufferViewBuilder{ sb.depthTexture, viewType, depthFormat, viewCount }
+                               .Build();
         } else {
-            // Use shared depth (store in first buffer, others reference same)
-            sb.depthTexture = ownedDepthTexture;
-            sb.depthView = ownedDepthView;
+            // Create a view from the shared owned depth buffer
+            sb.depthTexture = m_ownedDepthBuffer->GetTexture();
+            sb.depthView = prev::render::buffer::ImageBufferViewBuilder{ *m_ownedDepthBuffer }
+                               .Build();
         }
 
         // Create framebuffer
-        GfxFramebufferAttachment colorAttachment{};
-        GfxFramebufferAttachment depthAttachment{};
+        GfxTextureView colorView{};
+        GfxTextureView depthView{};
+        GfxTextureView colorResolve{};
         if (m_sampleCount > GFX_SAMPLE_COUNT_1) {
-            colorAttachment.view = m_msaaColorView;
-            colorAttachment.resolveTarget = sb.colorView;
-            depthAttachment.view = m_msaaDepthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = m_msaaColorBuffer->GetTextureView();
+            colorResolve = *sb.colorView;
+            depthView = m_msaaDepthBuffer->GetTextureView();
         } else {
-            colorAttachment.view = sb.colorView;
-            colorAttachment.resolveTarget = nullptr;
-            depthAttachment.view = sb.depthView;
-            depthAttachment.resolveTarget = nullptr;
+            colorView = *sb.colorView;
+            depthView = *sb.depthView;
         }
 
-        GfxFramebufferDescriptor fbDesc{};
-        fbDesc.sType = GFX_STRUCTURE_TYPE_FRAMEBUFFER_DESCRIPTOR;
-        fbDesc.label = "XrFramebuffer";
-        fbDesc.renderPass = m_renderPass;
-        fbDesc.colorAttachments = &colorAttachment;
-        fbDesc.colorAttachmentCount = 1;
-        fbDesc.depthStencilAttachment = depthAttachment;
-        fbDesc.extent = m_extent;
-        GFXERRCHECK(gfxDeviceCreateFramebuffer(m_device, &fbDesc, &sb.framebuffer));
+        sb.framebuffer = prev::render::framebuffer::FramebufferBuilder{ m_device, m_renderPass }
+                             .SetExtent(m_extent)
+                             .AddColorAttachment(colorView, colorResolve)
+                             .SetDepthStencilAttachment(depthView)
+                             .Build();
 
         // Command encoder
         GfxCommandEncoderDescriptor ceDesc{};
@@ -196,75 +135,27 @@ void XrSwapchain::CreateResources()
         GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &sb.commandEncoder));
 
         // Fence (signaled initially)
-        GfxFenceDescriptor fenceDesc{};
-        fenceDesc.sType = GFX_STRUCTURE_TYPE_FENCE_DESCRIPTOR;
-        fenceDesc.label = "XrFence";
-        fenceDesc.signaled = true;
-        GFXERRCHECK(gfxDeviceCreateFence(m_device, &fenceDesc, &sb.fence));
+        sb.fence = std::make_unique<prev::core::sync::Fence>(m_device, true, "XrFence");
     }
 }
 
 void XrSwapchain::DestroyResources()
 {
-    // Track whether depth is shared (non-XR-provided)
-    const bool hasXrDepth = m_xr.HasDepthImages();
-    GfxTexture sharedDepthTexture{};
-    GfxTextureView sharedDepthView{};
-
-    if (!hasXrDepth && !m_swapchainBuffers.empty()) {
-        sharedDepthTexture = m_swapchainBuffers[0].depthTexture;
-        sharedDepthView = m_swapchainBuffers[0].depthView;
-    }
-
     for (auto& sb : m_swapchainBuffers) {
-        if (sb.fence) {
-            gfxFenceDestroy(sb.fence);
-        }
+        sb.fence.reset();
         if (sb.commandEncoder) {
             gfxCommandEncoderDestroy(sb.commandEncoder);
         }
-        if (sb.framebuffer) {
-            gfxFramebufferDestroy(sb.framebuffer);
-        }
-        if (sb.colorView) {
-            gfxTextureViewDestroy(sb.colorView);
-        }
-        // colorTexture owned by IXr - don't destroy
-        if (hasXrDepth) {
-            if (sb.depthView) {
-                gfxTextureViewDestroy(sb.depthView);
-            }
-            // depthTexture owned by IXr - don't destroy
-        }
+        sb.framebuffer.reset();
+        sb.colorView.reset();
+        sb.depthView.reset();
+        // colorTexture/depthTexture owned by IXr or m_ownedDepthBuffer — don't destroy here
     }
     m_swapchainBuffers.clear();
 
-    // Destroy shared depth (only once)
-    if (!hasXrDepth) {
-        if (sharedDepthView) {
-            gfxTextureViewDestroy(sharedDepthView);
-        }
-        if (sharedDepthTexture) {
-            gfxTextureDestroy(sharedDepthTexture);
-        }
-    }
-
-    if (m_msaaDepthView) {
-        gfxTextureViewDestroy(m_msaaDepthView);
-        m_msaaDepthView = nullptr;
-    }
-    if (m_msaaDepthTexture) {
-        gfxTextureDestroy(m_msaaDepthTexture);
-        m_msaaDepthTexture = nullptr;
-    }
-    if (m_msaaColorView) {
-        gfxTextureViewDestroy(m_msaaColorView);
-        m_msaaColorView = nullptr;
-    }
-    if (m_msaaColorTexture) {
-        gfxTextureDestroy(m_msaaColorTexture);
-        m_msaaColorTexture = nullptr;
-    }
+    m_ownedDepthBuffer.reset();
+    m_msaaDepthBuffer.reset();
+    m_msaaColorBuffer.reset();
 }
 
 bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
@@ -273,11 +164,11 @@ bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
 
     auto& sb = m_swapchainBuffers[m_acquiredIndex];
 
-    GFXERRCHECK(gfxFenceWait(sb.fence, UINT64_MAX));
-    GFXERRCHECK(gfxFenceReset(sb.fence));
+    sb.fence->Wait();
+    sb.fence->Reset();
     GFXERRCHECK(gfxCommandEncoderBegin(sb.commandEncoder));
 
-    outContext.frameBuffer = sb.framebuffer;
+    outContext.frameBuffer = *sb.framebuffer;
     outContext.commandEncoder = sb.commandEncoder;
     outContext.index = m_acquiredIndex;
     return true;
@@ -295,7 +186,7 @@ void XrSwapchain::EndFrame()
     submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
     submitDesc.commandEncoders = encoders;
     submitDesc.commandEncoderCount = 1;
-    submitDesc.signalFence = sb.fence;
+    submitDesc.signalFence = *sb.fence;
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 }
 

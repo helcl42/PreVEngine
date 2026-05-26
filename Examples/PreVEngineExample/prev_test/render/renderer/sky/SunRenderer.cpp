@@ -165,11 +165,11 @@ void SunRenderer::ShutDown()
 {
     m_renderPass.SetOcclusionQuerySet(nullptr);
 
-    m_queryPool = {};
+    m_queryPool.reset();
 
-    m_uniformsPoolVS = {};
+    m_uniformsPoolVS.reset();
 
-    m_pipeline = {};
-    m_shader = {};
+    m_pipeline.reset();
+    m_shader.reset();
 }
 } // namespace prev_test::render::renderer::sky

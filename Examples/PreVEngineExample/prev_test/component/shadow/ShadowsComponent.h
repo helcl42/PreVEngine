@@ -8,7 +8,7 @@
 namespace prev_test::component::shadow {
 class ShadowsComponent : public IShadowsComponent {
 public:
-    ShadowsComponent(prev::core::device::Device& device, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, const std::vector<ShadowsCascadeRenderData>& cascadesRenderData);
+    ShadowsComponent(prev::core::device::Device& device, const std::shared_ptr<prev::render::pass::RenderPass>& renderPass, const std::shared_ptr<prev::render::buffer::ImageBuffer>& depthBuffer, std::vector<ShadowsCascadeRenderData> cascadesRenderData);
 
     ~ShadowsComponent();
 

@@ -78,8 +78,8 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 {
     m_device->WaitIdle();
 
-    m_swapchain = nullptr;
-    m_surface = nullptr;
+    m_swapchain.reset();
+    m_surface.reset();
     ResetSurface();
     ResetSwapchain();
 }
@@ -87,7 +87,7 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
     m_device->WaitIdle();
-    m_swapchain = nullptr;
+    m_swapchain.reset();
     ResetSwapchain();
 }
 
