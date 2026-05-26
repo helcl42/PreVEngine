@@ -3,10 +3,10 @@
 
 #include "IComponent.h"
 
-#include <unordered_map>
 #include <memory>
 #include <stdexcept>
 #include <typeindex>
+#include <unordered_map>
 #include <vector>
 
 namespace prev::scene::component {

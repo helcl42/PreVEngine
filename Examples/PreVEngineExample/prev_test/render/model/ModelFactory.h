@@ -3,7 +3,6 @@
 
 #include "../IModel.h"
 
-
 #include <memory>
 
 namespace prev_test::render::model {

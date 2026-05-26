@@ -8,9 +8,9 @@
 #include "../../instance/Instance.h"
 
 #include "../../../event/EventHandler.h"
-#include "../../../render/surface/Surface.h"
 #include "../../../render/IRootRenderer.h"
 #include "../../../render/pass/RenderPass.h"
+#include "../../../render/surface/Surface.h"
 #include "../../../render/swapchain/ISwapchain.h"
 #include "../../../scene/IScene.h"
 #include "../../../util/Utils.h"

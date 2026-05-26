@@ -95,7 +95,7 @@ std::shared_ptr<ISceneNode> SceneNode::GetRoot() const
 {
     auto thizz{ GetThis() };
     auto parent{ thizz->GetParent() };
-    while(parent) {
+    while (parent) {
         thizz = parent;
         parent = parent->GetParent();
     }

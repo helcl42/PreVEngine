@@ -24,7 +24,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
     glm::vec3 m_initialPosition;
 
     glm::quat m_initialOrientation;

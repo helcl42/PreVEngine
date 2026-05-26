@@ -9,11 +9,11 @@
 
 #include <jni.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <streambuf>
 #include <string.h>
-#include <errno.h>
 
 //----------------------------------------printf for Android---------------------
 // Uses a 256 byte buffer to allow concatenating multiple printf's onto one log line.

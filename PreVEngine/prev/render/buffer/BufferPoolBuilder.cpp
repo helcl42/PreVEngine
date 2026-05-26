@@ -54,11 +54,11 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
     buffers.reserve(m_count);
     for (uint64_t i = 0; i < m_count; ++i) {
         auto buf = BufferBuilder(m_device, m_queue)
-            .SetUsageFlags(m_usageFlags)
-            .SetHostMapped(m_hostMapped)
-            .SetSize(alignedItemSize)
-            .SetAlignment(m_alignment)
-            .Build();
+                       .SetUsageFlags(m_usageFlags)
+                       .SetHostMapped(m_hostMapped)
+                       .SetSize(alignedItemSize)
+                       .SetAlignment(m_alignment)
+                       .Build();
         buffers.push_back(std::move(buf));
     }
 

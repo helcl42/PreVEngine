@@ -378,7 +378,7 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         for (uint32_t j = 0; j < locations.jointCount; ++j) {
             const auto& jointLocation{ locations.jointLocations[j] };
             auto& handJoint{ handEvent.joints[j] };
-            handJoint.type = static_cast<HandJointType>(j);            
+            handJoint.type = static_cast<HandJointType>(j);
             handJoint.active = (jointLocation.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 && (jointLocation.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0;
             handJoint.pose = open_xr::input::util::ConvertXrPoseToPose(jointLocation.pose);
             handJoint.radius = jointLocation.radius;

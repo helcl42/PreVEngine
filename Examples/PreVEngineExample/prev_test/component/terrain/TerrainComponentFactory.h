@@ -56,7 +56,6 @@ private:
 private:
     prev::core::device::Device& m_device;
 
-
     unsigned int m_seed;
 
     unsigned int m_vertexCount;

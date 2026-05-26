@@ -25,7 +25,6 @@ public:
 private:
     prev::core::device::Device& m_device;
 
-
 private:
     std::shared_ptr<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>> m_fontComponent;
 

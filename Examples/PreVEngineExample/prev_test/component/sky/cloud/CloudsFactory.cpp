@@ -9,6 +9,7 @@
 #include <prev/render/pipeline/ComputePipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
+#include <prev/util/MathUtils.h>
 
 namespace prev_test::component::sky::cloud {
 CloudsFactory::CloudsFactory(prev::core::device::Device& device)
@@ -83,7 +84,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         uniformBuffer->Write(uniforms);
 
         shader->Bind("uboCS", *uniformBuffer);
-    shader->Bind("outWeatherTexture", *weatherStorageView);
+        shader->Bind("outWeatherTexture", *weatherStorageView);
         const GfxBindGroup bindGroup = shader->UpdateNextBindGroup();
 
         GfxComputePassEncoder computePassEncoder{};
@@ -91,7 +92,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
         gfxCommandEncoderBeginComputePass(commandBuffer, &computePassDesc, &computePassEncoder);
         gfxComputePassEncoderSetPipeline(computePassEncoder, *pipeline);
         gfxComputePassEncoderSetBindGroup(computePassEncoder, 0, bindGroup, nullptr, 0);
-        gfxComputePassEncoderDispatch(computePassEncoder, (width + 15) / 16, (height + 15) / 16, 1);
+        gfxComputePassEncoderDispatch(computePassEncoder, prev::util::math::DispatchSize(width, 16), prev::util::math::DispatchSize(height, 16), 1);
         gfxComputePassEncoderEnd(computePassEncoder);
 
         weatherImageBuffer->GenerateMipMaps(commandBuffer);

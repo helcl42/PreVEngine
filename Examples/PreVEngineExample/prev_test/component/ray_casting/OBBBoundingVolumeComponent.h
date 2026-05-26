@@ -35,7 +35,6 @@ private:
     static prev::util::intersection::OBB OffsetOBB(const prev::util::intersection::OBB& obb, const glm::vec3& offset);
 
 private:
-
     const prev::core::device::Device& m_device;
 
     glm::vec3 m_scale;
