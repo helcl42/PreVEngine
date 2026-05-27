@@ -4,8 +4,8 @@
 #include "../../core/Core.h"
 #include "../../core/device/Device.h"
 
-#include "../buffer/Buffer.h"
 #include "../../util/Utils.h"
+#include "../buffer/Buffer.h"
 
 #include <vector>
 
