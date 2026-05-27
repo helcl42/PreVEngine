@@ -50,8 +50,8 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
 
     auto uniformBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                              .SetSize(sizeof(Uniforms))
-                             .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
-                             .SetHostMapped(true)
+                             .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
+                             .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                              .SetAlignment(static_cast<uint32_t>(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment))
                              .Build();
 

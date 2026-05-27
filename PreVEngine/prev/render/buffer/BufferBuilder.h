@@ -18,7 +18,7 @@ public:
 public:
     BufferBuilder& SetUsageFlags(const GfxBufferUsageFlags usageFlags);
 
-    BufferBuilder& SetHostMapped(bool hostMapped);
+    BufferBuilder& SetMemoryProperties(const GfxMemoryPropertyFlags memoryProperties);
 
     BufferBuilder& SetSize(const uint64_t size);
 
@@ -38,7 +38,7 @@ private:
 
     GfxBufferUsageFlags m_usageFlags{};
 
-    bool m_hostMapped{ false };
+    GfxMemoryPropertyFlags m_memoryProperties{};
 
     uint64_t m_size{ 0 };
 

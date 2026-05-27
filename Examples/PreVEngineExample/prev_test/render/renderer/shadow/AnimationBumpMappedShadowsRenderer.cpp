@@ -64,8 +64,8 @@ void AnimationBumpMappedShadowsRenderer::Init()
     LOGI("Animation Bump Mapped Shadows Pipeline created");
 
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                         .SetHostMapped(true)
-                         .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM)
+                         .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
+                         .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                          .SetCount(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)

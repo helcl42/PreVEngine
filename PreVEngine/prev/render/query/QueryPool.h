@@ -4,6 +4,7 @@
 #include "../../core/Core.h"
 #include "../../core/device/Device.h"
 
+#include "../buffer/Buffer.h"
 #include "../../util/Utils.h"
 
 #include <vector>
@@ -38,11 +39,11 @@ public:
             return false;
         }
         void* mapped{};
-        if (gfxBufferMap(m_resultBuffers[m_readIndex], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+        if (gfxBufferMap(*m_resultBuffers[m_readIndex], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
             return false;
         }
         memcpy(&outQueryResult, mapped, sizeof(ResultType));
-        gfxBufferUnmap(m_resultBuffers[m_readIndex]);
+        gfxBufferUnmap(*m_resultBuffers[m_readIndex]);
         return true;
     }
 
@@ -54,11 +55,11 @@ public:
         }
         std::vector<ResultType> result(m_queryCount);
         void* mapped{};
-        if (gfxBufferMap(m_resultBuffers[m_readIndex], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+        if (gfxBufferMap(*m_resultBuffers[m_readIndex], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
             return false;
         }
         memcpy(result.data(), mapped, sizeof(ResultType) * m_queryCount);
-        gfxBufferUnmap(m_resultBuffers[m_readIndex]);
+        gfxBufferUnmap(*m_resultBuffers[m_readIndex]);
         outQueryResults = result;
         return true;
     }
@@ -77,7 +78,7 @@ public:
         if (m_readIndex == m_index) {
             return;
         }
-        gfxBufferAsyncMap(m_resultBuffers[m_readIndex], 0, sizeof(uint64_t) * m_queryCount);
+        gfxBufferAsyncMap(*m_resultBuffers[m_readIndex], 0, sizeof(uint64_t) * m_queryCount);
         m_asyncMapPending = true;
         m_asyncMapIndex = m_readIndex;
     }
@@ -88,7 +89,7 @@ public:
             return false;
         }
         bool mapped = false;
-        gfxBufferIsAsyncMapped(m_resultBuffers[m_asyncMapIndex], &mapped);
+        gfxBufferIsAsyncMapped(*m_resultBuffers[m_asyncMapIndex], &mapped);
         return mapped;
     }
 
@@ -99,11 +100,11 @@ public:
             return false;
         }
         void* ptr{};
-        if (gfxBufferGetAsyncMappedPointer(m_resultBuffers[m_asyncMapIndex], &ptr) != GFX_RESULT_SUCCESS || !ptr) {
+        if (gfxBufferGetAsyncMappedPointer(*m_resultBuffers[m_asyncMapIndex], &ptr) != GFX_RESULT_SUCCESS || !ptr) {
             return false;
         }
         memcpy(&outQueryResult, static_cast<uint8_t*>(ptr) + queryIndex * sizeof(ResultType), sizeof(ResultType));
-        gfxBufferUnmap(m_resultBuffers[m_asyncMapIndex]);
+        gfxBufferUnmap(*m_resultBuffers[m_asyncMapIndex]);
         m_asyncMapPending = false;
         return true;
     }
@@ -126,9 +127,9 @@ private:
 
     std::vector<GfxQuerySet> m_querySets;
 
-    std::vector<GfxBuffer> m_resolveBuffers;
+    std::vector<std::unique_ptr<prev::render::buffer::Buffer>> m_resolveBuffers;
 
-    std::vector<GfxBuffer> m_resultBuffers;
+    std::vector<std::unique_ptr<prev::render::buffer::Buffer>> m_resultBuffers;
 
     bool m_asyncMapPending{ false };
 

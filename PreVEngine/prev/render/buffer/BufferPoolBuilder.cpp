@@ -20,9 +20,9 @@ BufferPoolBuilder& BufferPoolBuilder::SetUsageFlags(const GfxBufferUsageFlags us
     return *this;
 }
 
-BufferPoolBuilder& BufferPoolBuilder::SetHostMapped(const bool hostMapped)
+BufferPoolBuilder& BufferPoolBuilder::SetMemoryProperties(const GfxMemoryPropertyFlags memoryProperties)
 {
-    m_hostMapped = hostMapped;
+    m_memoryProperties = memoryProperties;
     return *this;
 }
 
@@ -55,7 +55,7 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
     for (uint64_t i = 0; i < m_count; ++i) {
         auto buf = BufferBuilder(m_device, m_queue)
                        .SetUsageFlags(m_usageFlags)
-                       .SetHostMapped(m_hostMapped)
+                       .SetMemoryProperties(m_memoryProperties)
                        .SetSize(alignedItemSize)
                        .SetAlignment(m_alignment)
                        .Build();

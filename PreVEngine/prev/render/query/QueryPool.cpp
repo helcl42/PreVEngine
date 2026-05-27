@@ -1,6 +1,7 @@
 #include "QueryPool.h"
 
 #include "../../common/Logger.h"
+#include "../buffer/BufferBuilder.h"
 
 namespace prev::render::query {
 QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType, uint32_t poolCount, uint32_t queryCount, bool precise)
@@ -27,32 +28,28 @@ QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType,
         GFXERRCHECK(gfxDeviceCreateQuerySet(m_device, &desc, &m_querySets[i]));
 
         // Buffer for resolving query results (GPU-side)
-        GfxBufferDescriptor resolveDesc{};
-        resolveDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
-        resolveDesc.usage = GFX_BUFFER_USAGE_QUERY_RESOLVE | GFX_BUFFER_USAGE_COPY_SRC | GFX_BUFFER_USAGE_COPY_DST;
-        resolveDesc.size = sizeof(uint64_t) * m_queryCount;
-        resolveDesc.memoryProperties = GFX_MEMORY_PROPERTY_DEVICE_LOCAL;
-        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &resolveDesc, &m_resolveBuffers[i]));
+        m_resolveBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                                  .SetSize(sizeof(uint64_t) * m_queryCount)
+                                  .SetUsageFlags(GFX_BUFFER_USAGE_QUERY_RESOLVE | GFX_BUFFER_USAGE_COPY_SRC | GFX_BUFFER_USAGE_COPY_DST)
+                                  .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
+                                  .Build();
 
         // Staging buffer for CPU readback
-        GfxBufferDescriptor stagingDesc{};
-        stagingDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
-        stagingDesc.usage = GFX_BUFFER_USAGE_COPY_DST | GFX_BUFFER_USAGE_MAP_READ;
-        stagingDesc.size = sizeof(uint64_t) * m_queryCount;
-        stagingDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
-        GFXERRCHECK(gfxDeviceCreateBuffer(m_device, &stagingDesc, &m_resultBuffers[i]));
+        m_resultBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                                 .SetSize(sizeof(uint64_t) * m_queryCount)
+                                 .SetUsageFlags(GFX_BUFFER_USAGE_COPY_DST | GFX_BUFFER_USAGE_MAP_READ)
+                                 .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
+                                 .Build();
     }
 }
 
 QueryPool::~QueryPool()
 {
+    m_device.WaitIdle();
+
     for (uint32_t i = 0; i < m_poolCount; ++i) {
-        if (m_resultBuffers[i]) {
-            gfxBufferDestroy(m_resultBuffers[i]);
-        }
-        if (m_resolveBuffers[i]) {
-            gfxBufferDestroy(m_resolveBuffers[i]);
-        }
+        m_resultBuffers[i].reset();
+        m_resolveBuffers[i].reset();
         if (m_querySets[i]) {
             gfxQuerySetDestroy(m_querySets[i]);
         }
@@ -86,12 +83,12 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
 
 void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
 {
-    gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, m_resolveBuffers[m_index], 0);
+    gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, *m_resolveBuffers[m_index], 0);
     // Copy from resolve buffer to mappable staging buffer
     GfxCopyBufferToBufferDescriptor copyDesc{};
-    copyDesc.source = m_resolveBuffers[m_index];
+    copyDesc.source = *m_resolveBuffers[m_index];
     copyDesc.sourceOffset = 0;
-    copyDesc.destination = m_resultBuffers[m_index];
+    copyDesc.destination = *m_resultBuffers[m_index];
     copyDesc.destinationOffset = 0;
     copyDesc.size = sizeof(uint64_t) * m_queryCount;
     gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
