@@ -38,8 +38,8 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     for (uint32_t i = 0; i < BufferCount; ++i) {
         vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
-                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
-                               .SetHostMapped(true)
+                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_MAP_WRITE)
+                               .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                                .Build();
     }
 
@@ -68,8 +68,8 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
     for (uint32_t i = 0; i < BufferCount; ++i) {
         vertexBuffers[i] = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                .SetSize(ParticleSystemComponent::GetParticleDataStride() * MaxParticleCount)
-                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
-                               .SetHostMapped(true)
+                               .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_MAP_WRITE)
+                               .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                                .Build();
     }
 

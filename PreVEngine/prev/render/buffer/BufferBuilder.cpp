@@ -18,9 +18,9 @@ BufferBuilder& BufferBuilder::SetUsageFlags(const GfxBufferUsageFlags usageFlags
     return *this;
 }
 
-BufferBuilder& BufferBuilder::SetHostMapped(const bool hostMapped)
+BufferBuilder& BufferBuilder::SetMemoryProperties(const GfxMemoryPropertyFlags memoryProperties)
 {
-    m_hostMapped = hostMapped;
+    m_memoryProperties = memoryProperties;
     return *this;
 }
 
@@ -50,14 +50,7 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
     const uint64_t alignedSize{ prev::util::math::RoundUp(m_size, m_alignment) };
 
     GfxBufferUsageFlags usageFlags{ m_usageFlags };
-    GfxMemoryPropertyFlags memProps{};
-    if (m_hostMapped) {
-        memProps = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
-        usageFlags |= GFX_BUFFER_USAGE_MAP_WRITE | GFX_BUFFER_USAGE_MAP_READ;
-    } else {
-        memProps = GFX_MEMORY_PROPERTY_DEVICE_LOCAL;
-        usageFlags |= GFX_BUFFER_USAGE_COPY_DST;
-    }
+    GfxMemoryPropertyFlags memProps{ m_memoryProperties };
 
     GfxBufferDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
@@ -72,18 +65,23 @@ std::unique_ptr<Buffer> BufferBuilder::Build() const
 
     if (m_data && m_dataSize > 0) {
         gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, std::min(m_dataSize, alignedSize));
-    } else if (m_hostMapped) {
+    } else if (memProps & GFX_MEMORY_PROPERTY_HOST_VISIBLE) {
         std::vector<uint8_t> zeros(alignedSize, 0);
         gfxQueueWriteBuffer(m_queue, buffer, 0, zeros.data(), alignedSize);
     }
 
-    return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, m_hostMapped, alignedSize));
+    const bool hostMapped = (memProps & GFX_MEMORY_PROPERTY_HOST_VISIBLE) != 0;
+    return std::unique_ptr<Buffer>(new Buffer(m_device, m_queue, buffer, hostMapped, alignedSize));
 }
 
 void BufferBuilder::Validate() const
 {
     if (m_usageFlags == 0) {
         throw std::runtime_error("Could not create buffer with usage flags 0");
+    }
+
+    if (m_memoryProperties == 0) {
+        throw std::runtime_error("Could not create buffer with memory properties 0");
     }
 
     if (m_size == 0) {

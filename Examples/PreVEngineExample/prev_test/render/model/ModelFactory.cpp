@@ -14,14 +14,16 @@ std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::share
 {
     const uint64_t verticesDataSize{ mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
+                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_COPY_DST)
+                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
                             .SetSize(verticesDataSize)
                             .SetData(mesh->GetVertexData(), verticesDataSize)
                             .Build();
 
     const uint64_t indidesDataSize{ sizeof(uint32_t) * mesh->GetIndicesCount() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX | GFX_BUFFER_USAGE_COPY_DST)
+                           .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
                            .SetSize(indidesDataSize)
                            .SetData(mesh->GetIndices().data(), indidesDataSize)
                            .Build();
@@ -40,15 +42,15 @@ std::unique_ptr<prev_test::render::IModel> ModelFactory::CreateHostVisible(const
     const uint32_t finalIndexCount{ std::max(static_cast<uint32_t>(mesh->GetIndices().size()), maxIndexCount) };
 
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                            .SetHostMapped(true)
-                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
+                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
+                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_MAP_WRITE)
                             .SetSize(mesh->GetVertexLayout().GetStride() * finalVertexCount)
                             .SetData(mesh->GetVertexData(), mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount())
                             .Build();
 
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                           .SetHostMapped(true)
-                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX)
+                           .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetSize(sizeof(uint32_t) * finalIndexCount)
                            .SetData(mesh->GetIndices().data(), sizeof(uint32_t) * mesh->GetIndicesCount())
                            .Build();

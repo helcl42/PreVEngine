@@ -27,14 +27,16 @@ std::unique_ptr<prev_test::render::IModel> RayModelFactory::Create(const prev::u
 
     const auto verticesDataSize{ sizeof(glm::vec3) * vertices.size() };
     auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX)
+                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_COPY_DST)
+                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
                             .SetSize(verticesDataSize)
                             .SetData(vertices.data(), verticesDataSize)
                             .Build();
 
     const auto indicesDataSize{ sizeof(uint32_t) * indices.size() };
     auto indexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX)
+                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX | GFX_BUFFER_USAGE_COPY_DST)
+                           .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
                            .SetSize(indicesDataSize)
                            .SetData(indices.data(), indicesDataSize)
                            .Build();
