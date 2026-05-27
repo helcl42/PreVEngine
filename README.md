@@ -39,7 +39,10 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 ## Clone
 
 ```bash
-git clone --recurse-submodules https://github.com/helcl42/PreVEngine.git
+git clone https://github.com/helcl42/PreVEngine.git
+cd PreVEngine
+git submodule update --init
+git -C PreVEngine/external/gfx submodule update --init third_party/dawn
 ```
 
 ## Build
