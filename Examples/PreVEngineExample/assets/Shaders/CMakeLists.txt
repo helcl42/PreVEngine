@@ -3,10 +3,9 @@
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-set(SHADER_MAX_VIEW_COUNT 1)
+set(SHADER_MAX_VIEW_COUNT ${MAX_VIEW_COUNT})
 set(SHADER_XR_ARGS)
 if(ENABLE_XR)
-    set(SHADER_MAX_VIEW_COUNT 2)
     set(SHADER_XR_ARGS --enable-xr)
 endif()
 

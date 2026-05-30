@@ -36,7 +36,6 @@ void XrEngineImpl::Init()
     ResetTiming();
     ResetInstance();
     ResetWindow();
-    ResetSurface();
     ResetDevice();
     ResetRenderPass();
 

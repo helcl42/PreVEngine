@@ -65,9 +65,8 @@ jobs:
     - name: Build
       run: |
         cd Examples/PreVEngineExample/platform/android
-        sed -i "s/'-DANDROID_STL=c++_static'/'-DANDROID_STL=c++_static','-DENABLE_XR=ON'/g" app/build.gradle
         chmod a+x gradlew
-        ./gradlew clean assembleDebug
+        ./gradlew clean assembleDebug -PenableXr
 
     - name: Create Artifact
       run: |

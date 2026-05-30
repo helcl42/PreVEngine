@@ -59,10 +59,6 @@ constexpr float MIN_DEPTH{ 0.0f };
 constexpr float MAX_DEPTH{ 1.0f };
 #endif // ENABLE_REVERSE_DEPTH
 
-#ifdef ENABLE_XR
-constexpr uint32_t MAX_VIEW_COUNT{ 2 };
-#else
-constexpr uint32_t MAX_VIEW_COUNT{ 1 };
-#endif
+constexpr uint32_t MAX_VIEW_COUNT{ MAX_VIEW_COUNT_VALUE };
 
 #endif

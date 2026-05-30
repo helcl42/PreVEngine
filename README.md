@@ -64,6 +64,12 @@ cd Examples/PreVEngineExample/platform/android
 chmod a+x gradlew && ./gradlew assembleDebug
 ```
 
+With OpenXR support:
+
+```bash
+./gradlew assembleDebug -PenableXr
+```
+
 Or import `Examples/PreVEngineExample/platform/android` into Android Studio.
 
 ### iOS
