@@ -1,228 +1,121 @@
-struct Light {
-    position: vec4<f32>,
-    color: vec4<f32>,
-    attenuation: vec4<f32>,
+struct _MatrixStorage_float4x4_ColMajorstd140_0
+{
+    @align(16) data_0 : array<vec4<f32>, i32(4)>,
+};
+
+struct _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0
+{
+    @align(16) data_1 : array<_MatrixStorage_float4x4_ColMajorstd140_0, i32(1)>,
+};
+
+struct Light_std140_0
+{
+    @align(16) position_0 : vec4<f32>,
+    @align(16) color_0 : vec4<f32>,
+    @align(16) attenuation_0 : vec4<f32>,
+};
+
+struct _Array_std140_Light4_0
+{
+    @align(16) data_2 : array<Light_std140_0, i32(4)>,
+};
+
+struct Lightning_std140_0
+{
+    @align(16) lights_0 : _Array_std140_Light4_0,
+    @align(16) realCountOfLights_0 : u32,
+    @align(4) ambientFactor_0 : f32,
+};
+
+struct NormalMappedVSParams_std140_0
+{
+    @align(16) modelMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) normalMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) viewMatrices_0 : _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0,
+    @align(16) projectionMatrices_0 : _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0,
+    @align(16) cameraPositions_0 : array<vec4<f32>, i32(1)>,
+    @align(16) clipPlane_0 : vec4<f32>,
+    @align(16) lightning_0 : Lightning_std140_0,
+    @align(16) textureOffset_0 : vec4<f32>,
+    @align(16) textureNumberOfRows_0 : u32,
+    @align(4) density_0 : f32,
+    @align(8) gradient_0 : f32,
+};
+
+@binding(0) @group(0) var<uniform> uboVS_0 : NormalMappedVSParams_std140_0;
+fn GetVisibility_0( viewPosition_0 : vec3<f32>,  gradient_1 : f32,  density_1 : f32) -> f32
+{
+    return clamp(exp(- pow(length(viewPosition_0) * density_1, gradient_1)), 0.0f, 1.0f);
 }
 
-struct Lightning {
-    lights: array<Light, 4>,
-    realCountOfLights: u32,
-    ambientFactor: f32,
+fn CreateTBNMatrix_0( transform_0 : mat3x3<f32>,  normal_0 : vec3<f32>,  tangent_0 : vec3<f32>,  biTangent_0 : vec3<f32>) -> mat3x3<f32>
+{
+    return mat3x3<f32>(normalize((((tangent_0) * (transform_0)))), normalize((((biTangent_0) * (transform_0)))), normalize((((normal_0) * (transform_0)))));
 }
 
-struct UniformBufferObject {
-    modelMatrix: mat4x4<f32>,
-    normalMatrix: mat4x4<f32>,
-    viewMatrices: array<mat4x4<f32>, 1>,
-    projectionMatrices: array<mat4x4<f32>, 1>,
-    cameraPositions: array<vec4<f32>, 1>,
-    clipPlane: vec4<f32>,
-    lightning: Lightning,
-    textureOffset: vec4<f32>,
-    textureNumberOfRows: u32,
-    density: f32,
-    gradient: f32,
-}
+struct Interpolants_0
+{
+    @builtin(position) position_1 : vec4<f32>,
+    @location(0) textureCoord_0 : vec2<f32>,
+    @location(11) normal_1 : vec3<f32>,
+    @location(1) worldPosition_0 : vec3<f32>,
+    @location(2) viewPosition_1 : vec3<f32>,
+    @location(3) visibility_0 : f32,
+    @location(4) toCameraVectorTangentSpace_0 : vec3<f32>,
+    @location(5) positionTangentSpace_0 : vec3<f32>,
+    @location(6) toLightVectorTangentSpace0_0 : vec3<f32>,
+    @location(7) toLightVectorTangentSpace1_0 : vec3<f32>,
+    @location(8) toLightVectorTangentSpace2_0 : vec3<f32>,
+    @location(9) toLightVectorTangentSpace3_0 : vec3<f32>,
+    @location(10) clipDistance_0 : f32,
+};
 
-struct gl_PerVertex {
-    @builtin(position) gl_Position: vec4<f32>,
-    gl_PointSize: f32,
-    gl_ClipDistance: array<f32, 1>,
-    gl_CullDistance: array<f32, 1>,
-}
+struct vertexInput_0
+{
+    @location(0) position_2 : vec3<f32>,
+    @location(1) textureCoord_1 : vec2<f32>,
+    @location(2) normal_2 : vec3<f32>,
+    @location(3) tangent_1 : vec3<f32>,
+    @location(4) biTangent_1 : vec3<f32>,
+};
 
-struct VertexOutput {
-    @location(2) member: vec3<f32>,
-    @location(11) member_1: f32,
-    @location(3) member_2: vec3<f32>,
-    @builtin(position) gl_Position: vec4<f32>,
-    @location(0) member_3: vec2<f32>,
-    @location(1) member_4: vec3<f32>,
-    @location(4) member_5: f32,
-    @location(5) member_6: vec3<f32>,
-    @location(6) member_7: vec3<f32>,
-    @location(7) member_8: vec3<f32>,
-    @location(8) member_9: vec3<f32>,
-    @location(9) member_10: vec3<f32>,
-    @location(10) member_11: vec3<f32>,
-}
-
-@group(0) @binding(0) 
-var<uniform> uboVS: UniformBufferObject;
-var<private> inPosition_1: vec3<f32>;
-var<private> outWorldPosition: vec3<f32>;
-var<private> outClipDistance: f32;
-var<private> outViewPosition: vec3<f32>;
-var<private> unnamed: gl_PerVertex = gl_PerVertex(vec4<f32>(0f, 0f, 0f, 1f), 1f, array<f32, 1>(), array<f32, 1>());
-var<private> outTextureCoord: vec2<f32>;
-var<private> inTextureCoord_1: vec2<f32>;
-var<private> outNormal: vec3<f32>;
-var<private> inNormal_1: vec3<f32>;
-var<private> outVisibility: f32;
-var<private> inTangent_1: vec3<f32>;
-var<private> inBiTangent_1: vec3<f32>;
-var<private> outToCameraVectorTangentSpace: vec3<f32>;
-var<private> outPositionTangentSpace: vec3<f32>;
-var<private> outToLightVectorTangentSpace0_: vec3<f32>;
-var<private> outToLightVectorTangentSpace1_: vec3<f32>;
-var<private> outToLightVectorTangentSpace2_: vec3<f32>;
-var<private> outToLightVectorTangentSpace3_: vec3<f32>;
-
-fn CreateTBNMatrix_u0028_mf33_u003b_vf3_u003b_vf3_u003b_vf3_u003b(transform: ptr<function, mat3x3<f32>>, normal: ptr<function, vec3<f32>>, tangent: ptr<function, vec3<f32>>, biTangent: ptr<function, vec3<f32>>) -> mat3x3<f32> {
-    var T: vec3<f32>;
-    var B: vec3<f32>;
-    var N: vec3<f32>;
-    var TBN: mat3x3<f32>;
-
-    let _e43 = (*transform);
-    let _e44 = (*tangent);
-    T = normalize((_e43 * _e44));
-    let _e47 = (*transform);
-    let _e48 = (*biTangent);
-    B = normalize((_e47 * _e48));
-    let _e51 = (*transform);
-    let _e52 = (*normal);
-    N = normalize((_e51 * _e52));
-    let _e55 = T;
-    let _e56 = B;
-    let _e57 = N;
-    TBN = transpose(mat3x3<f32>(vec3<f32>(_e55.x, _e55.y, _e55.z), vec3<f32>(_e56.x, _e56.y, _e56.z), vec3<f32>(_e57.x, _e57.y, _e57.z)));
-    let _e72 = TBN;
-    return _e72;
-}
-
-fn GetVisibility_u0028_vf3_u003b_f1_u003b_f1_u003b(viewPosition: ptr<function, vec3<f32>>, gradient: ptr<function, f32>, density: ptr<function, f32>) -> f32 {
-    var vertexToCameraDistance: f32;
-    var visibility: f32;
-
-    let _e40 = (*viewPosition);
-    vertexToCameraDistance = length(_e40);
-    let _e42 = vertexToCameraDistance;
-    let _e43 = (*density);
-    let _e45 = (*gradient);
-    visibility = exp(-(pow((_e42 * _e43), _e45)));
-    let _e49 = visibility;
-    return clamp(_e49, 0f, 1f);
-}
-
-fn main_1() {
-    var worldPosition: vec4<f32>;
-    var viewPosition_1: vec4<f32>;
-    var param: vec3<f32>;
-    var param_1: f32;
-    var param_2: f32;
-    var TBN_1: mat3x3<f32>;
-    var param_3: mat3x3<f32>;
-    var param_4: vec3<f32>;
-    var param_5: vec3<f32>;
-    var param_6: vec3<f32>;
-    var i: i32;
-    var light: Light;
-    var outToLightVectorTangentSpace_arr: array<vec3<f32>, 4>;
-
-    let _e49 = uboVS.modelMatrix;
-    let _e50 = inPosition_1;
-    worldPosition = (_e49 * vec4<f32>(_e50.x, _e50.y, _e50.z, 1f));
-    let _e56 = worldPosition;
-    outWorldPosition = _e56.xyz;
-    let _e58 = worldPosition;
-    let _e60 = uboVS.clipPlane;
-    outClipDistance = dot(_e58, _e60);
-    let _e64 = uboVS.viewMatrices[0i];
-    let _e65 = worldPosition;
-    viewPosition_1 = (_e64 * _e65);
-    let _e67 = viewPosition_1;
-    outViewPosition = _e67.xyz;
-    let _e71 = uboVS.projectionMatrices[0i];
-    let _e72 = viewPosition_1;
-    unnamed.gl_Position = (_e71 * _e72);
-    let _e75 = inTextureCoord_1;
-    let _e77 = uboVS.textureNumberOfRows;
-    let _e82 = uboVS.textureOffset;
-    outTextureCoord = ((_e75 / vec2(f32(_e77))) + _e82.xy);
-    let _e86 = uboVS.normalMatrix;
-    let _e87 = inNormal_1;
-    outNormal = (_e86 * vec4<f32>(_e87.x, _e87.y, _e87.z, 0f)).xyz;
-    let _e94 = viewPosition_1;
-    param = _e94.xyz;
-    let _e97 = uboVS.gradient;
-    param_1 = _e97;
-    let _e99 = uboVS.density;
-    param_2 = _e99;
-    let _e100 = GetVisibility_u0028_vf3_u003b_f1_u003b_f1_u003b((&param), (&param_1), (&param_2));
-    outVisibility = _e100;
-    let _e102 = uboVS.modelMatrix;
-    param_3 = mat3x3<f32>(_e102[0].xyz, _e102[1].xyz, _e102[2].xyz);
-    let _e110 = inNormal_1;
-    param_4 = _e110;
-    let _e111 = inTangent_1;
-    param_5 = _e111;
-    let _e112 = inBiTangent_1;
-    param_6 = _e112;
-    let _e113 = CreateTBNMatrix_u0028_mf33_u003b_vf3_u003b_vf3_u003b_vf3_u003b((&param_3), (&param_4), (&param_5), (&param_6));
-    TBN_1 = _e113;
-    let _e114 = TBN_1;
-    let _e117 = uboVS.cameraPositions[0i];
-    outToCameraVectorTangentSpace = (_e114 * _e117.xyz);
-    let _e120 = TBN_1;
-    let _e121 = worldPosition;
-    outPositionTangentSpace = (_e120 * _e121.xyz);
-    i = 0i;
-    loop {
-        let _e124 = i;
-        let _e128 = uboVS.lightning.realCountOfLights;
-        if (bitcast<u32>(_e124) < _e128) {
-            let _e130 = i;
-            let _e134 = uboVS.lightning.lights[_e130];
-            light.position = _e134.position;
-            light.color = _e134.color;
-            light.attenuation = _e134.attenuation;
-            let _e141 = i;
-            let _e142 = TBN_1;
-            let _e144 = light.position;
-            outToLightVectorTangentSpace_arr[_e141] = (_e142 * _e144.xyz);
-            continue;
-        } else {
+@vertex
+fn vertexMain( _S1 : vertexInput_0) -> Interpolants_0
+{
+    var worldPosition_1 : vec4<f32> = (((vec4<f32>(_S1.position_2, 1.0f)) * (mat4x4<f32>(uboVS_0.modelMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(3)]))));
+    var output_0 : Interpolants_0;
+    var _S2 : vec3<f32> = worldPosition_1.xyz;
+    output_0.worldPosition_0 = _S2;
+    output_0.clipDistance_0 = dot(worldPosition_1, uboVS_0.clipPlane_0);
+    var viewPosition_2 : vec4<f32> = (((worldPosition_1) * (mat4x4<f32>(uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(0)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(0)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(0)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(0)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(1)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(1)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(1)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(1)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(2)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(2)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(2)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(2)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(3)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(3)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(3)], uboVS_0.viewMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(3)]))));
+    var _S3 : vec3<f32> = viewPosition_2.xyz;
+    output_0.viewPosition_1 = _S3;
+    output_0.position_1 = (((viewPosition_2) * (mat4x4<f32>(uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(0)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(0)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(0)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(0)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(1)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(1)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(1)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(1)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(2)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(2)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(2)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(2)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(0)][i32(3)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(1)][i32(3)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(2)][i32(3)], uboVS_0.projectionMatrices_0.data_1[i32(0)].data_0[i32(3)][i32(3)]))));
+    output_0.textureCoord_0 = _S1.textureCoord_1 / vec2<f32>(f32(uboVS_0.textureNumberOfRows_0)) + uboVS_0.textureOffset_0.xy;
+    output_0.normal_1 = (((vec4<f32>(_S1.normal_2, 0.0f)) * (mat4x4<f32>(uboVS_0.normalMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(3)])))).xyz;
+    output_0.visibility_0 = GetVisibility_0(_S3, uboVS_0.gradient_0, uboVS_0.density_0);
+    var _S4 : mat4x4<f32> = mat4x4<f32>(uboVS_0.modelMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(3)]);
+    var TBN_0 : mat3x3<f32> = CreateTBNMatrix_0(mat3x3<f32>(_S4[i32(0)].xyz, _S4[i32(1)].xyz, _S4[i32(2)].xyz), _S1.normal_2, _S1.tangent_1, _S1.biTangent_1);
+    output_0.toCameraVectorTangentSpace_0 = (((uboVS_0.cameraPositions_0[i32(0)].xyz) * (TBN_0)));
+    output_0.positionTangentSpace_0 = (((_S2) * (TBN_0)));
+    var toLightVectors_0 : array<vec3<f32>, i32(4)>;
+    var i_0 : i32 = i32(0);
+    for(;;)
+    {
+        if(i_0 < i32(uboVS_0.lightning_0.realCountOfLights_0))
+        {
+        }
+        else
+        {
             break;
         }
-        continuing {
-            let _e148 = i;
-            i = (_e148 + 1i);
-        }
+        toLightVectors_0[i_0] = (((uboVS_0.lightning_0.lights_0.data_2[i_0].position_0.xyz) * (TBN_0)));
+        i_0 = i_0 + i32(1);
     }
-    let _e151 = outToLightVectorTangentSpace_arr[0i];
-    outToLightVectorTangentSpace0_ = _e151;
-    let _e153 = outToLightVectorTangentSpace_arr[1i];
-    outToLightVectorTangentSpace1_ = _e153;
-    let _e155 = outToLightVectorTangentSpace_arr[2i];
-    outToLightVectorTangentSpace2_ = _e155;
-    let _e157 = outToLightVectorTangentSpace_arr[3i];
-    outToLightVectorTangentSpace3_ = _e157;
-    return;
+    output_0.toLightVectorTangentSpace0_0 = toLightVectors_0[i32(0)];
+    output_0.toLightVectorTangentSpace1_0 = toLightVectors_0[i32(1)];
+    output_0.toLightVectorTangentSpace2_0 = toLightVectors_0[i32(2)];
+    output_0.toLightVectorTangentSpace3_0 = toLightVectors_0[i32(3)];
+    return output_0;
 }
 
-@vertex 
-fn main(@location(0) inPosition: vec3<f32>, @location(1) inTextureCoord: vec2<f32>, @location(2) inNormal: vec3<f32>, @location(3) inTangent: vec3<f32>, @location(4) inBiTangent: vec3<f32>) -> VertexOutput {
-    inPosition_1 = inPosition;
-    inTextureCoord_1 = inTextureCoord;
-    inNormal_1 = inNormal;
-    inTangent_1 = inTangent;
-    inBiTangent_1 = inBiTangent;
-    main_1();
-    let _e25 = unnamed.gl_Position.y;
-    unnamed.gl_Position.y = -(_e25);
-    let _e27 = outWorldPosition;
-    let _e28 = outClipDistance;
-    let _e29 = outViewPosition;
-    let _e30 = unnamed.gl_Position;
-    let _e31 = outTextureCoord;
-    let _e32 = outNormal;
-    let _e33 = outVisibility;
-    let _e34 = outToCameraVectorTangentSpace;
-    let _e35 = outPositionTangentSpace;
-    let _e36 = outToLightVectorTangentSpace0_;
-    let _e37 = outToLightVectorTangentSpace1_;
-    let _e38 = outToLightVectorTangentSpace2_;
-    let _e39 = outToLightVectorTangentSpace3_;
-    return VertexOutput(_e27, _e28, _e29, _e30, _e31, _e32, _e33, _e34, _e35, _e36, _e37, _e38, _e39);
-}

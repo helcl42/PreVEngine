@@ -30,15 +30,15 @@ void ParticlesRenderer::Init()
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
-            prev::render::shader::VertexInputAttribute{ 0, 1, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
-            prev::render::shader::VertexInputAttribute{ 0, 2, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
+            prev::render::shader::VertexInputAttribute{ 0, 7, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 0, 8, GFX_FORMAT_R32G32B32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
 
-            prev::render::shader::VertexInputAttribute{ 1, 3, GFX_FORMAT_R32G32B32_FLOAT, 0 },
-            prev::render::shader::VertexInputAttribute{ 1, 4, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
-            prev::render::shader::VertexInputAttribute{ 1, 5, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
-            prev::render::shader::VertexInputAttribute{ 1, 6, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT })},
-            prev::render::shader::VertexInputAttribute{ 1, 7, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2 })},
-            prev::render::shader::VertexInputAttribute{ 1, 8, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })}
+            prev::render::shader::VertexInputAttribute{ 1, 1, GFX_FORMAT_R32G32B32_FLOAT, 0 },
+            prev::render::shader::VertexInputAttribute{ 1, 2, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3 })},
+            prev::render::shader::VertexInputAttribute{ 1, 3, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2 })},
+            prev::render::shader::VertexInputAttribute{ 1, 4, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT })},
+            prev::render::shader::VertexInputAttribute{ 1, 5, GFX_FORMAT_R32G32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2 })},
+            prev::render::shader::VertexInputAttribute{ 1, 6, GFX_FORMAT_R32_FLOAT, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::FLOAT, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC2 })}
         })
         .AddVertexInputBindings({
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX },

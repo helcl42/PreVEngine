@@ -1,25 +1,21 @@
-@group(0) @binding(0) 
-var imageTexture: texture_2d<f32>;
-@group(0) @binding(1) 
-var imageSampler: sampler;
-var<private> inTextureCoord_1: vec2<f32>;
-var<private> outColor: vec4<f32>;
+@binding(0) @group(0) var imageTexture_0 : texture_2d<f32>;
 
-fn main_1() {
-    var color: vec4<f32>;
+@binding(1) @group(0) var imageSampler_0 : sampler;
 
-    let _e5 = inTextureCoord_1;
-    let _e6 = textureSample(imageTexture, imageSampler, _e5);
-    color = _e6;
-    let _e7 = color;
-    outColor = _e7;
-    return;
+struct pixelOutput_0
+{
+    @location(0) output_0 : vec4<f32>,
+};
+
+struct pixelInput_0
+{
+    @location(0) textureCoord_0 : vec2<f32>,
+};
+
+@fragment
+fn fragmentMain( _S1 : pixelInput_0, @builtin(position) position_0 : vec4<f32>) -> pixelOutput_0
+{
+    var _S2 : pixelOutput_0 = pixelOutput_0( (textureSample((imageTexture_0), (imageSampler_0), (_S1.textureCoord_0))) );
+    return _S2;
 }
 
-@fragment 
-fn main(@location(0) inTextureCoord: vec2<f32>) -> @location(0) vec4<f32> {
-    inTextureCoord_1 = inTextureCoord;
-    main_1();
-    let _e3 = outColor;
-    return _e3;
-}

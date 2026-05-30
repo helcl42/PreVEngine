@@ -1,1072 +1,429 @@
-struct RaymarchToCloudResult {
-    hit: bool,
-    position: vec3<f32>,
-    color: vec4<f32>,
+struct _MatrixStorage_float4x4_ColMajorstd140_0
+{
+    @align(16) data_0 : array<vec4<f32>, i32(4)>,
+};
+
+struct SkyCloudParams_std140_0
+{
+    @align(16) resolution_0 : vec4<f32>,
+    @align(16) projectionMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) inverseProjectionMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) viewMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) inverseViewMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) lightColor_0 : vec4<f32>,
+    @align(16) lightDirection_0 : vec4<f32>,
+    @align(16) cameraPosition_0 : vec4<f32>,
+    @align(16) baseCloudColor_0 : vec4<f32>,
+    @align(16) skyColorBottom_0 : vec4<f32>,
+    @align(16) skyColorTop_0 : vec4<f32>,
+    @align(16) windDirection_0 : vec4<f32>,
+    @align(16) worldOrigin_0 : vec4<f32>,
+    @align(16) time_0 : f32,
+    @align(4) coverageFactor_0 : f32,
+    @align(8) cloudSpeed_0 : f32,
+    @align(4) crispiness_0 : f32,
+    @align(16) absorption_0 : f32,
+    @align(4) curliness_0 : f32,
+    @align(8) enablePowder_0 : u32,
+    @align(4) densityFactor_0 : f32,
+    @align(16) earthRadius_0 : f32,
+    @align(4) sphereInnerRadius_0 : f32,
+    @align(8) sphereOuterRadius_0 : f32,
+    @align(4) cloudTopOffset_0 : f32,
+    @align(16) maxDepth_0 : f32,
+};
+
+@binding(8) @group(0) var<uniform> uboCS_0 : SkyCloudParams_std140_0;
+@binding(0) @group(0) var outFragColor_0 : texture_storage_2d<rgba8unorm, write>;
+
+@binding(1) @group(0) var outBloom_0 : texture_storage_2d<rgba8unorm, write>;
+
+@binding(2) @group(0) var outAlphaness_0 : texture_storage_2d<rgba8unorm, write>;
+
+@binding(3) @group(0) var outCloudDistance_0 : texture_storage_2d<r32float, write>;
+
+@binding(4) @group(0) var perlinNoiseTex_0 : texture_3d<f32>;
+
+@binding(5) @group(0) var perlinNoiseSampler_0 : sampler;
+
+@binding(6) @group(0) var weatherTex_0 : texture_2d<f32>;
+
+@binding(7) @group(0) var weatherSampler_0 : sampler;
+
+const noiseKernel_0 : array<vec3<f32>, i32(6)> = array<vec3<f32>, i32(6)>( vec3<f32>(0.38051304221153259f, 0.92453449964523315f, -0.0211134497076273f), vec3<f32>(-0.50625801086425781f, -0.03590792044997215f, -0.86163419485092163f), vec3<f32>(-0.32509216666221619f, -0.94557440280914307f, 0.01428792998194695f), vec3<f32>(0.09026238322257996f, -0.2737654447555542f, 0.95755165815353394f), vec3<f32>(0.28128597140312195f, 0.42443639039993286f, -0.86065787076950073f), vec3<f32>(-0.16852402687072754f, 0.14748696982860565f, 0.97460103034973145f) );
+const bayerFilter_0 : array<f32, i32(16)> = array<f32, i32(16)>( 0.0f, 0.5f, 0.125f, 0.625f, 0.75f, 0.25f, 0.875f, 0.375f, 0.1875f, 0.6875f, 0.0625f, 0.5625f, 0.9375f, 0.4375f, 0.8125f, 0.3125f );
+fn ComputeClipSpaceDirection_0( fragCoord_0 : vec2<i32>) -> vec4<f32>
+{
+    return vec4<f32>(vec2<f32>(2.0f) * (vec2<f32>(fragCoord_0.xy) / uboCS_0.resolution_0.xy) - vec2<f32>(1.0f), 1.0f, 1.0f);
 }
 
-struct UniformBufferObject {
-    resolution: vec4<f32>,
-    projectionMatrix: mat4x4<f32>,
-    inverseProjectionMatrix: mat4x4<f32>,
-    viewMatrix: mat4x4<f32>,
-    inverseViewMatrix: mat4x4<f32>,
-    lightColor: vec4<f32>,
-    lightDirection: vec4<f32>,
-    cameraPosition: vec4<f32>,
-    baseCloudColor: vec4<f32>,
-    skyColorBottom: vec4<f32>,
-    skyColorTop: vec4<f32>,
-    windDirection: vec4<f32>,
-    worldOrigin: vec4<f32>,
-    time: f32,
-    coverageFactor: f32,
-    cloudSpeed: f32,
-    crispiness: f32,
-    absorption: f32,
-    curliness: f32,
-    enablePowder: u32,
-    densityFactor: f32,
-    earthRadius: f32,
-    sphereInnerRadius: f32,
-    sphereOuterRadius: f32,
-    cloudTopOffset: f32,
-    maxDepth: f32,
+fn ComputeViewSpaceDirection_0( clipSpaceDir_0 : vec4<f32>) -> vec4<f32>
+{
+    return vec4<f32>((((clipSpaceDir_0) * (mat4x4<f32>(uboCS_0.inverseProjectionMatrix_0.data_0[i32(0)][i32(0)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(1)][i32(0)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(2)][i32(0)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(3)][i32(0)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(0)][i32(1)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(1)][i32(1)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(2)][i32(1)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(3)][i32(1)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(0)][i32(2)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(1)][i32(2)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(2)][i32(2)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(3)][i32(2)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(0)][i32(3)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(1)][i32(3)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(2)][i32(3)], uboCS_0.inverseProjectionMatrix_0.data_0[i32(3)][i32(3)])))).xy, -1.0f, 0.0f);
 }
 
-@group(0) @binding(8) 
-var<uniform> uboCS: UniformBufferObject;
-@group(0) @binding(4) 
-var perlinNoiseTex: texture_3d<f32>;
-@group(0) @binding(5) 
-var perlinNoiseSampler: sampler;
-@group(0) @binding(6) 
-var weatherTex: texture_2d<f32>;
-@group(0) @binding(7) 
-var weatherSampler: sampler;
-var<private> gl_GlobalInvocationID_1: vec3<u32>;
-@group(0) @binding(0) 
-var outFragColor: texture_storage_2d<rgba8unorm,write>;
-@group(0) @binding(1) 
-var outBloom: texture_storage_2d<rgba8unorm,write>;
-@group(0) @binding(2) 
-var outAlphaness: texture_storage_2d<rgba8unorm,write>;
-@group(0) @binding(3) 
-var outCloudDistance: texture_storage_2d<r32float,write>;
-
-fn ComputeDepth_u0028_mf44_u003b_mf44_u003b_vf3_u003b(projectionMatrix: ptr<function, mat4x4<f32>>, viewMatrix: ptr<function, mat4x4<f32>>, pointInWorldSpace: ptr<function, vec3<f32>>) -> f32 {
-    var pInClipSpace: vec4<f32>;
-    var pInNDC: vec3<f32>;
-    var depth: f32;
-
-    let _e143 = (*projectionMatrix);
-    let _e144 = (*viewMatrix);
-    let _e146 = (*pointInWorldSpace);
-    pInClipSpace = ((_e143 * _e144) * vec4<f32>(_e146.x, _e146.y, _e146.z, 1f));
-    let _e152 = pInClipSpace;
-    let _e155 = pInClipSpace[3u];
-    pInNDC = (_e152.xyz / vec3(_e155));
-    let _e159 = pInNDC[2u];
-    depth = _e159;
-    let _e160 = depth;
-    return _e160;
+fn ComputeWorldSpaceDirection_0( viewSpaceDir_0 : vec4<f32>) -> vec3<f32>
+{
+    return normalize((((viewSpaceDir_0) * (mat4x4<f32>(uboCS_0.inverseViewMatrix_0.data_0[i32(0)][i32(0)], uboCS_0.inverseViewMatrix_0.data_0[i32(1)][i32(0)], uboCS_0.inverseViewMatrix_0.data_0[i32(2)][i32(0)], uboCS_0.inverseViewMatrix_0.data_0[i32(3)][i32(0)], uboCS_0.inverseViewMatrix_0.data_0[i32(0)][i32(1)], uboCS_0.inverseViewMatrix_0.data_0[i32(1)][i32(1)], uboCS_0.inverseViewMatrix_0.data_0[i32(2)][i32(1)], uboCS_0.inverseViewMatrix_0.data_0[i32(3)][i32(1)], uboCS_0.inverseViewMatrix_0.data_0[i32(0)][i32(2)], uboCS_0.inverseViewMatrix_0.data_0[i32(1)][i32(2)], uboCS_0.inverseViewMatrix_0.data_0[i32(2)][i32(2)], uboCS_0.inverseViewMatrix_0.data_0[i32(3)][i32(2)], uboCS_0.inverseViewMatrix_0.data_0[i32(0)][i32(3)], uboCS_0.inverseViewMatrix_0.data_0[i32(1)][i32(3)], uboCS_0.inverseViewMatrix_0.data_0[i32(2)][i32(3)], uboCS_0.inverseViewMatrix_0.data_0[i32(3)][i32(3)])))).xyz);
 }
 
-fn GetSunColor_u0028_vf3_u003b_f1_u003b(worldRayDirection: ptr<function, vec3<f32>>, powExp: ptr<function, f32>) -> vec3<f32> {
-    var sun: f32;
-    var col: vec3<f32>;
-
-    let _e142 = uboCS.lightDirection;
-    let _e144 = (*worldRayDirection);
-    sun = clamp(dot(_e142.xyz, _e144), 0f, 1f);
-    let _e147 = sun;
-    let _e148 = (*powExp);
-    col = (vec3<f32>(0.8f, 0.48f, 0.08f) * pow(_e147, _e148));
-    let _e151 = col;
-    return _e151;
+fn GetCubeMapColor_0( worldRayDirection_0 : vec3<f32>) -> vec3<f32>
+{
+    return mix(uboCS_0.skyColorBottom_0.xyz, uboCS_0.skyColorTop_0.xyz, vec3<f32>(smoothstep(-0.07000000029802322f, 0.07000000029802322f, worldRayDirection_0.y)));
 }
 
-fn GetPowder_u0028_f1_u003b(density: ptr<function, f32>) -> f32 {
-    let _e138 = (*density);
-    return (1f - exp((-2f * _e138)));
+fn GetSunColor_0( worldRayDirection_1 : vec3<f32>,  powExp_0 : f32) -> vec3<f32>
+{
+    return vec3<f32>(0.80000001192092896f) * vec3<f32>(1.0f, 0.60000002384185791f, 0.10000000149011612f) * vec3<f32>(pow(clamp(dot(uboCS_0.lightDirection_0.xyz, worldRayDirection_1), 0.0f, 1.0f), powExp_0));
 }
 
-fn HG_u0028_f1_u003b_f1_u003b(sunDotRayDirection: ptr<function, f32>, g: ptr<function, f32>) -> f32 {
-    var gg: f32;
-
-    let _e140 = (*g);
-    let _e141 = (*g);
-    gg = (_e140 * _e141);
-    let _e143 = gg;
-    let _e145 = gg;
-    let _e147 = (*g);
-    let _e149 = (*sunDotRayDirection);
-    return ((1f - _e143) / pow(((1f + _e145) - ((2f * _e147) * _e149)), 1.5f));
+fn GetBackgroundColor_0( worldRayDirection_2 : vec3<f32>) -> vec4<f32>
+{
+    return vec4<f32>(GetCubeMapColor_0(worldRayDirection_2) + GetSunColor_0(worldRayDirection_2, 350.0f), 1.0f);
 }
 
-fn GetDensityForCloud_u0028_f1_u003b_f1_u003b(heightFraction: ptr<function, f32>, cloudType: ptr<function, f32>) -> f32 {
-    var stratusFactor: f32;
-    var stratoCumulusFactor: f32;
-    var cumulusFactor: f32;
-    var baseGradient: vec4<f32>;
-
-    let _e143 = (*cloudType);
-    stratusFactor = (1f - clamp((_e143 * 2f), 0f, 1f));
-    let _e147 = (*cloudType);
-    stratoCumulusFactor = (1f - (abs((_e147 - 0.5f)) * 2f));
-    let _e152 = (*cloudType);
-    cumulusFactor = (clamp((_e152 - 0.5f), 0f, 1f) * 2f);
-    let _e156 = stratusFactor;
-    let _e158 = stratoCumulusFactor;
-    let _e161 = cumulusFactor;
-    baseGradient = (((vec4<f32>(0f, 0.1f, 0.2f, 0.3f) * _e156) + (vec4<f32>(0.02f, 0.2f, 0.48f, 0.625f) * _e158)) + (vec4<f32>(0f, 0.1625f, 0.88f, 0.98f) * _e161));
-    let _e165 = baseGradient[0u];
-    let _e167 = baseGradient[1u];
-    let _e168 = (*heightFraction);
-    let _e171 = baseGradient[2u];
-    let _e173 = baseGradient[3u];
-    let _e174 = (*heightFraction);
-    return (smoothstep(_e165, _e167, _e168) - smoothstep(_e171, _e173, _e174));
+fn GetEarthCenter_0() -> vec3<f32>
+{
+    return uboCS_0.worldOrigin_0.xyz + vec3<f32>(0.0f, - uboCS_0.earthRadius_0, 0.0f);
 }
 
-fn Remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b(originalValue: ptr<function, f32>, originalMin: ptr<function, f32>, originalMax: ptr<function, f32>, newMin: ptr<function, f32>, newMax: ptr<function, f32>) -> f32 {
-    let _e142 = (*newMin);
-    let _e143 = (*originalValue);
-    let _e144 = (*originalMin);
-    let _e146 = (*originalMax);
-    let _e147 = (*originalMin);
-    let _e150 = (*newMax);
-    let _e151 = (*newMin);
-    return (_e142 + (((_e143 - _e144) / (_e146 - _e147)) * (_e150 - _e151)));
-}
-
-fn GetUVProjection_u0028_vf3_u003b(inPos: ptr<function, vec3<f32>>) -> vec2<f32> {
-    let _e138 = (*inPos);
-    let _e141 = uboCS.sphereInnerRadius;
-    return ((_e138.xz / vec2(_e141)) + vec2(0.5f));
-}
-
-fn GetEarthCenter_u0028_() -> vec3<f32> {
-    var sphereCenter: vec3<f32>;
-
-    let _e139 = uboCS.worldOrigin;
-    let _e142 = uboCS.earthRadius;
-    sphereCenter = (_e139.xyz + vec3<f32>(0f, -(_e142), 0f));
-    let _e146 = sphereCenter;
-    return _e146;
-}
-
-fn GetHeightFraction_u0028_vf3_u003b(inPos_1: ptr<function, vec3<f32>>) -> f32 {
-    var sphereCenter_1: vec3<f32>;
-
-    let _e139 = GetEarthCenter_u0028_();
-    sphereCenter_1 = _e139;
-    let _e140 = (*inPos_1);
-    let _e141 = sphereCenter_1;
-    let _e145 = uboCS.sphereInnerRadius;
-    let _e148 = uboCS.sphereOuterRadius;
-    let _e150 = uboCS.sphereInnerRadius;
-    return ((length((_e140 - _e141)) - _e145) / (_e148 - _e150));
-}
-
-fn SampleCloudDensity_u0028_vf3_u003b_b1_u003b_f1_u003b(inPos_2: ptr<function, vec3<f32>>, expensive: ptr<function, bool>, lod: ptr<function, f32>) -> f32 {
-    var heightFraction_1: f32;
-    var param: vec3<f32>;
-    var animation: vec3<f32>;
-    var uv: vec2<f32>;
-    var param_1: vec3<f32>;
-    var movingUV: vec2<f32>;
-    var param_2: vec3<f32>;
-    var lowFrequencyNoise: vec4<f32>;
-    var lowFreqFBM: f32;
-    var baseCloud: f32;
-    var param_3: f32;
-    var param_4: f32;
-    var param_5: f32;
-    var param_6: f32;
-    var param_7: f32;
-    var density_1: f32;
-    var param_8: f32;
-    var param_9: f32;
-    var weatherData: vec3<f32>;
-    var cloudCoverage: f32;
-    var baseCloudWithCoverage: f32;
-    var param_10: f32;
-    var param_11: f32;
-    var param_12: f32;
-    var param_13: f32;
-    var param_14: f32;
-    var erodeCloudNoise: vec3<f32>;
-    var highFreqFBM: f32;
-    var highFreqNoiseModifier: f32;
-    var param_15: f32;
-    var param_16: f32;
-    var param_17: f32;
-    var param_18: f32;
-    var param_19: f32;
-
-    let _e174 = (*inPos_2);
-    param = _e174;
-    let _e175 = GetHeightFraction_u0028_vf3_u003b((&param));
-    heightFraction_1 = _e175;
-    let _e176 = heightFraction_1;
-    let _e178 = uboCS.windDirection;
-    let _e182 = uboCS.cloudTopOffset;
-    let _e185 = uboCS.windDirection;
-    let _e188 = uboCS.time;
-    let _e191 = uboCS.cloudSpeed;
-    animation = (((_e178.xyz * _e176) * _e182) + ((_e185.xyz * _e188) * _e191));
-    let _e194 = (*inPos_2);
-    param_1 = _e194;
-    let _e195 = GetUVProjection_u0028_vf3_u003b((&param_1));
-    uv = _e195;
-    let _e196 = (*inPos_2);
-    let _e197 = animation;
-    param_2 = (_e196 + _e197);
-    let _e199 = GetUVProjection_u0028_vf3_u003b((&param_2));
-    movingUV = _e199;
-    let _e200 = heightFraction_1;
-    let _e202 = heightFraction_1;
-    if ((_e200 < 0f) || (_e202 > 1f)) {
-        return 0f;
-    }
-    let _e205 = uv;
-    let _e207 = uboCS.crispiness;
-    let _e208 = (_e205 * _e207);
-    let _e209 = heightFraction_1;
-    let _e213 = (*lod);
-    let _e214 = textureSampleLevel(perlinNoiseTex, perlinNoiseSampler, vec3<f32>(_e208.x, _e208.y, _e209), _e213);
-    lowFrequencyNoise = _e214;
-    let _e215 = lowFrequencyNoise;
-    lowFreqFBM = dot(_e215.yzw, vec3<f32>(0.625f, 0.25f, 0.125f));
-    let _e218 = lowFreqFBM;
-    let _e222 = lowFrequencyNoise[0u];
-    param_3 = _e222;
-    param_4 = -((1f - _e218));
-    param_5 = 1f;
-    param_6 = 0f;
-    param_7 = 1f;
-    let _e223 = Remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b((&param_3), (&param_4), (&param_5), (&param_6), (&param_7));
-    baseCloud = _e223;
-    let _e224 = heightFraction_1;
-    param_8 = _e224;
-    param_9 = 1f;
-    let _e225 = GetDensityForCloud_u0028_f1_u003b_f1_u003b((&param_8), (&param_9));
-    density_1 = _e225;
-    let _e226 = density_1;
-    let _e227 = heightFraction_1;
-    let _e230 = baseCloud;
-    baseCloud = (_e230 * (_e226 / max(_e227, 0.001f)));
-    let _e232 = movingUV;
-    let _e233 = textureSampleLevel(weatherTex, weatherSampler, _e232, 0f);
-    weatherData = _e233.xyz;
-    let _e236 = weatherData[0u];
-    let _e238 = uboCS.coverageFactor;
-    cloudCoverage = (_e236 * _e238);
-    let _e240 = baseCloud;
-    param_10 = _e240;
-    let _e241 = cloudCoverage;
-    param_11 = _e241;
-    param_12 = 1f;
-    param_13 = 0f;
-    param_14 = 1f;
-    let _e242 = Remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b((&param_10), (&param_11), (&param_12), (&param_13), (&param_14));
-    baseCloudWithCoverage = _e242;
-    let _e243 = cloudCoverage;
-    let _e244 = baseCloudWithCoverage;
-    baseCloudWithCoverage = (_e244 * _e243);
-    let _e246 = (*expensive);
-    if _e246 {
-        let _e247 = movingUV;
-        let _e249 = uboCS.crispiness;
-        let _e250 = (_e247 * _e249);
-        let _e251 = heightFraction_1;
-        let _e256 = uboCS.curliness;
-        let _e258 = (*lod);
-        let _e259 = textureSampleLevel(perlinNoiseTex, perlinNoiseSampler, (vec3<f32>(_e250.x, _e250.y, _e251) * _e256), _e258);
-        erodeCloudNoise = _e259.xyz;
-        let _e261 = erodeCloudNoise;
-        highFreqFBM = dot(_e261, vec3<f32>(0.625f, 0.25f, 0.125f));
-        let _e263 = highFreqFBM;
-        let _e264 = highFreqFBM;
-        let _e266 = heightFraction_1;
-        highFreqNoiseModifier = mix(_e263, (1f - _e264), clamp((_e266 * 10f), 0f, 1f));
-        let _e270 = baseCloudWithCoverage;
-        let _e271 = highFreqNoiseModifier;
-        let _e272 = baseCloudWithCoverage;
-        baseCloudWithCoverage = (_e270 - (_e271 * (1f - _e272)));
-        let _e276 = baseCloudWithCoverage;
-        let _e278 = highFreqNoiseModifier;
-        param_15 = (_e276 * 2f);
-        param_16 = (_e278 * 0.2f);
-        param_17 = 1f;
-        param_18 = 0f;
-        param_19 = 1f;
-        let _e280 = Remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b((&param_15), (&param_16), (&param_17), (&param_18), (&param_19));
-        baseCloudWithCoverage = _e280;
-    }
-    let _e281 = baseCloudWithCoverage;
-    return clamp(_e281, 0f, 1f);
-}
-
-fn RaymarchToLight_u0028_vf3_u003b_f1_u003b_vf3_u003b_f1_u003b_f1_u003b(inPos_3: ptr<function, vec3<f32>>, stepSize: ptr<function, f32>, lightDir: ptr<function, vec3<f32>>, originalDensity: ptr<function, f32>, lightDotEye: ptr<function, f32>) -> f32 {
-    var ds: f32;
-    var rayStep: vec3<f32>;
-    var sigmaDs: f32;
-    var coneRadius: f32;
-    var density_2: f32;
-    var startPos: vec3<f32>;
-    var T: f32;
-    var i: i32;
-    var pos: vec3<f32>;
-    var indexable: array<vec3<f32>, 6>;
-    var heightFraction_2: f32;
-    var param_20: vec3<f32>;
-    var cloudDensity: f32;
-    var param_21: vec3<f32>;
-    var param_22: bool;
-    var param_23: f32;
-    var Ti: f32;
-
-    let _e159 = (*stepSize);
-    ds = (_e159 * 6f);
-    let _e161 = (*lightDir);
-    let _e162 = ds;
-    rayStep = (_e161 * _e162);
-    let _e164 = ds;
-    let _e167 = uboCS.absorption;
-    sigmaDs = (-(_e164) * _e167);
-    coneRadius = 1f;
-    density_2 = 0f;
-    let _e169 = (*inPos_3);
-    startPos = _e169;
-    T = 1f;
-    i = 0i;
-    loop {
-        let _e170 = i;
-        if (_e170 < 6i) {
-            let _e172 = startPos;
-            let _e173 = coneRadius;
-            let _e174 = i;
-            indexable = array<vec3<f32>, 6>(vec3<f32>(0.38051304f, 0.9245345f, -0.02111345f), vec3<f32>(-0.506258f, -0.03590792f, -0.8616342f), vec3<f32>(-0.32509217f, -0.9455744f, 0.01428793f), vec3<f32>(0.09026238f, -0.27376544f, 0.95755166f), vec3<f32>(0.28128597f, 0.4244364f, -0.8606579f), vec3<f32>(-0.16852403f, 0.14748697f, 0.97460103f));
-            let _e176 = indexable[_e174];
-            let _e178 = i;
-            pos = (_e172 + ((_e176 * _e173) * f32(_e178)));
-            let _e182 = pos;
-            param_20 = _e182;
-            let _e183 = GetHeightFraction_u0028_vf3_u003b((&param_20));
-            heightFraction_2 = _e183;
-            let _e184 = heightFraction_2;
-            if (_e184 >= 0f) {
-                let _e186 = density_2;
-                let _e188 = i;
-                let _e191 = pos;
-                param_21 = _e191;
-                param_22 = (_e186 > 0.3f);
-                param_23 = f32((_e188 / 16i));
-                let _e192 = SampleCloudDensity_u0028_vf3_u003b_b1_u003b_f1_u003b((&param_21), (&param_22), (&param_23));
-                cloudDensity = _e192;
-                let _e193 = cloudDensity;
-                if (_e193 > 0f) {
-                    let _e195 = cloudDensity;
-                    let _e196 = sigmaDs;
-                    Ti = exp((_e195 * _e196));
-                    let _e199 = Ti;
-                    let _e200 = T;
-                    T = (_e200 * _e199);
-                    let _e202 = cloudDensity;
-                    let _e203 = density_2;
-                    density_2 = (_e203 + _e202);
-                }
-            }
-            let _e205 = rayStep;
-            let _e206 = startPos;
-            startPos = (_e206 + _e205);
-            let _e208 = coneRadius;
-            coneRadius = (_e208 + 0.16666667f);
-            continue;
-        } else {
-            break;
-        }
-        continuing {
-            let _e210 = i;
-            i = (_e210 + 1i);
-        }
-    }
-    let _e212 = T;
-    return _e212;
-}
-
-fn CreateDefaultRaymarchToCloudResult_u0028_() -> RaymarchToCloudResult {
-    var result: RaymarchToCloudResult;
-
-    result.hit = false;
-    result.position = vec3<f32>(1000000000000f, 1000000000000f, 1000000000000f);
-    result.color = vec4<f32>(0f, 0f, 0f, 0f);
-    let _e141 = result;
-    return _e141;
-}
-
-fn RaymarchToCloud_u0028_vf3_u003b_vf3_u003b_vf3_u003b(startPos_1: ptr<function, vec3<f32>>, endPos: ptr<function, vec3<f32>>, bg: ptr<function, vec3<f32>>) -> RaymarchToCloudResult {
-    var path: vec3<f32>;
-    var pathLength: f32;
-    var step_: f32;
-    var dir: vec3<f32>;
-    var stepVector: vec3<f32>;
-    var fragCoord: vec2<u32>;
-    var a: i32;
-    var b: i32;
-    var pos_1: vec3<f32>;
-    var indexable_1: array<f32, 16>;
-    var density_3: f32;
-    var lightDotEye_1: f32;
-    var T_1: f32;
-    var sigmaDs_1: f32;
-    var result_1: RaymarchToCloudResult;
-    var i_1: i32;
-    var densitySample: f32;
-    var param_24: vec3<f32>;
-    var param_25: bool;
-    var param_26: f32;
-    var ambientLight: vec3<f32>;
-    var lightDensity: f32;
-    var param_27: vec3<f32>;
-    var param_28: f32;
-    var param_29: vec3<f32>;
-    var param_30: f32;
-    var param_31: f32;
-    var scattering: f32;
-    var param_32: f32;
-    var param_33: f32;
-    var param_34: f32;
-    var param_35: f32;
-    var powderTerm: f32;
-    var param_36: f32;
-    var S: vec3<f32>;
-    var dTrans: f32;
-    var Sint: vec3<f32>;
-
-    let _e177 = (*endPos);
-    let _e178 = (*startPos_1);
-    path = (_e177 - _e178);
-    let _e180 = path;
-    pathLength = length(_e180);
-    let _e182 = pathLength;
-    step_ = (_e182 / 64f);
-    let _e184 = path;
-    dir = normalize(_e184);
-    let _e186 = dir;
-    let _e187 = step_;
-    stepVector = (_e186 * _e187);
-    let _e189 = gl_GlobalInvocationID_1;
-    fragCoord = _e189.xy;
-    let _e192 = fragCoord[0u];
-    let _e193 = bitcast<i32>(_e192);
-    a = (_e193 - (i32(floor((f32(_e193) / f32(4i)))) * 4i));
-    let _e202 = fragCoord[1u];
-    let _e203 = bitcast<i32>(_e202);
-    b = (_e203 - (i32(floor((f32(_e203) / f32(4i)))) * 4i));
-    let _e211 = (*startPos_1);
-    let _e212 = stepVector;
-    let _e213 = a;
-    let _e215 = b;
-    indexable_1 = array<f32, 16>(0f, 0.5f, 0.125f, 0.625f, 0.75f, 0.25f, 0.875f, 0.375f, 0.1875f, 0.6875f, 0.0625f, 0.5625f, 0.9375f, 0.4375f, 0.8125f, 0.3125f);
-    let _e218 = indexable_1[((_e213 * 4i) + _e215)];
-    pos_1 = (_e211 + (_e212 * _e218));
-    density_3 = 0f;
-    let _e222 = uboCS.lightDirection;
-    let _e225 = dir;
-    lightDotEye_1 = dot(normalize(_e222.xyz), _e225);
-    T_1 = 1f;
-    let _e227 = step_;
-    let _e230 = uboCS.densityFactor;
-    sigmaDs_1 = (-(_e227) * _e230);
-    let _e232 = CreateDefaultRaymarchToCloudResult_u0028_();
-    result_1 = _e232;
-    i_1 = 0i;
-    loop {
-        let _e233 = i_1;
-        if (_e233 < 64i) {
-            let _e235 = i_1;
-            let _e238 = pos_1;
-            param_24 = _e238;
-            param_25 = true;
-            param_26 = f32((_e235 / 16i));
-            let _e239 = SampleCloudDensity_u0028_vf3_u003b_b1_u003b_f1_u003b((&param_24), (&param_25), (&param_26));
-            densitySample = _e239;
-            let _e240 = densitySample;
-            if (_e240 > 0f) {
-                let _e243 = result_1.hit;
-                if !(_e243) {
-                    let _e245 = pos_1;
-                    result_1.position = _e245;
-                    result_1.hit = true;
-                }
-                let _e249 = uboCS.baseCloudColor;
-                ambientLight = _e249.xyz;
-                let _e251 = step_;
-                let _e253 = pos_1;
-                param_27 = _e253;
-                param_28 = (_e251 * 0.1f);
-                let _e255 = uboCS.lightDirection;
-                param_29 = _e255.xyz;
-                let _e257 = densitySample;
-                param_30 = _e257;
-                let _e258 = lightDotEye_1;
-                param_31 = _e258;
-                let _e259 = RaymarchToLight_u0028_vf3_u003b_f1_u003b_vf3_u003b_f1_u003b_f1_u003b((&param_27), (&param_28), (&param_29), (&param_30), (&param_31));
-                lightDensity = _e259;
-                let _e260 = lightDotEye_1;
-                param_32 = _e260;
-                param_33 = -0.08f;
-                let _e261 = HG_u0028_f1_u003b_f1_u003b((&param_32), (&param_33));
-                let _e262 = lightDotEye_1;
-                param_34 = _e262;
-                param_35 = 0.08f;
-                let _e263 = HG_u0028_f1_u003b_f1_u003b((&param_34), (&param_35));
-                let _e264 = lightDotEye_1;
-                scattering = mix(_e261, _e263, clamp(((_e264 * 0.5f) + 0.5f), 0f, 1f));
-                let _e269 = scattering;
-                scattering = max(_e269, 1f);
-                powderTerm = 1f;
-                let _e272 = uboCS.enablePowder;
-                if (_e272 == 1u) {
-                    let _e274 = densitySample;
-                    param_36 = _e274;
-                    let _e275 = GetPowder_u0028_f1_u003b((&param_36));
-                    powderTerm = _e275;
-                }
-                let _e276 = ambientLight;
-                let _e278 = (*bg);
-                let _e281 = scattering;
-                let _e283 = uboCS.lightColor;
-                let _e286 = powderTerm;
-                let _e287 = lightDensity;
-                let _e292 = densitySample;
-                S = ((mix(mix((_e276 * 1.8f), _e278, vec3(0.2f)), (_e283.xyz * _e281), vec3((_e286 * _e287))) * 0.6f) * _e292);
-                let _e294 = densitySample;
-                let _e295 = sigmaDs_1;
-                dTrans = exp((_e294 * _e295));
-                let _e298 = S;
-                let _e299 = S;
-                let _e300 = dTrans;
-                let _e303 = densitySample;
-                Sint = ((_e298 - (_e299 * _e300)) * (1f / _e303));
-                let _e306 = T_1;
-                let _e307 = Sint;
-                let _e310 = result_1.color;
-                let _e312 = (_e310.xyz + (_e307 * _e306));
-                result_1.color[0u] = _e312.x;
-                result_1.color[1u] = _e312.y;
-                result_1.color[2u] = _e312.z;
-                let _e322 = dTrans;
-                let _e323 = T_1;
-                T_1 = (_e323 * _e322);
-            }
-            let _e325 = T_1;
-            if (_e325 <= 0.1f) {
-                break;
-            }
-            let _e327 = stepVector;
-            let _e328 = pos_1;
-            pos_1 = (_e328 + _e327);
-            continue;
-        } else {
-            break;
-        }
-        continuing {
-            let _e330 = i_1;
-            i_1 = (_e330 + 1i);
-        }
-    }
-    let _e332 = T_1;
-    result_1.color[3u] = (1f - _e332);
-    let _e336 = result_1;
-    return _e336;
-}
-
-fn ComputeFogAmount_u0028_vf3_u003b_f1_u003b(startPos_2: ptr<function, vec3<f32>>, factor: ptr<function, f32>) -> f32 {
-    var sphereCenter_2: vec3<f32>;
-    var dist: f32;
-    var radius: f32;
-    var alpha: f32;
-
-    let _e143 = GetEarthCenter_u0028_();
-    sphereCenter_2 = _e143;
-    let _e144 = (*startPos_2);
-    let _e146 = uboCS.cameraPosition;
-    dist = length((_e144 - _e146.xyz));
-    let _e152 = uboCS.cameraPosition[1u];
-    let _e154 = sphereCenter_2[1u];
-    radius = ((_e152 - _e154) * 0.3f);
-    let _e157 = dist;
-    let _e158 = radius;
-    alpha = (_e157 / _e158);
-    let _e160 = dist;
-    let _e162 = alpha;
-    let _e164 = (*factor);
-    return (1f - exp(((-(_e160) * _e162) * _e164)));
-}
-
-fn RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b(rayStartPosition: ptr<function, vec3<f32>>, rayDirection: ptr<function, vec3<f32>>, sphereCenter_3: ptr<function, vec3<f32>>, radius_1: ptr<function, f32>, intersectionPoint: ptr<function, vec3<f32>>) -> bool {
-    var radius2_: f32;
-    var L: vec3<f32>;
-    var a_1: f32;
-    var b_1: f32;
-    var c: f32;
-    var discr: f32;
-    var sqrtDiscr: f32;
-    var t1_: f32;
-    var t2_: f32;
-    var t: f32;
-
-    let _e152 = (*radius_1);
-    let _e153 = (*radius_1);
-    radius2_ = (_e152 * _e153);
-    let _e155 = (*rayStartPosition);
-    let _e156 = (*sphereCenter_3);
-    L = (_e155 - _e156);
-    let _e158 = (*rayDirection);
-    let _e159 = (*rayDirection);
-    a_1 = dot(_e158, _e159);
-    let _e161 = (*rayDirection);
-    let _e162 = L;
-    b_1 = (2f * dot(_e161, _e162));
-    let _e165 = L;
-    let _e166 = L;
-    let _e168 = radius2_;
-    c = (dot(_e165, _e166) - _e168);
-    let _e170 = b_1;
-    let _e171 = b_1;
-    let _e173 = a_1;
-    let _e175 = c;
-    discr = ((_e170 * _e171) - ((4f * _e173) * _e175));
-    let _e178 = discr;
-    if (_e178 < 0f) {
+fn RaySphereIntersection_0( rayStartPosition_0 : vec3<f32>,  rayDirection_0 : vec3<f32>,  sphereCenter_0 : vec3<f32>,  radius_0 : f32,  intersectionPoint_0 : ptr<function, vec3<f32>>) -> bool
+{
+    var L_0 : vec3<f32> = rayStartPosition_0 - sphereCenter_0;
+    var a_0 : f32 = dot(rayDirection_0, rayDirection_0);
+    var b_0 : f32 = 2.0f * dot(rayDirection_0, L_0);
+    var discr_0 : f32 = b_0 * b_0 - 4.0f * a_0 * (dot(L_0, L_0) - radius_0 * radius_0);
+    if(discr_0 < 0.0f)
+    {
+        (*intersectionPoint_0) = vec3<f32>(0.0f);
         return false;
     }
-    let _e180 = discr;
-    sqrtDiscr = sqrt(_e180);
-    let _e182 = b_1;
-    let _e184 = sqrtDiscr;
-    let _e186 = a_1;
-    t1_ = ((-(_e182) - _e184) / (2f * _e186));
-    let _e189 = b_1;
-    let _e191 = sqrtDiscr;
-    let _e193 = a_1;
-    t2_ = ((-(_e189) + _e191) / (2f * _e193));
-    let _e196 = t1_;
-    let _e198 = t1_;
-    let _e199 = t2_;
-    t = select(_e199, _e198, (_e196 > 0f));
-    let _e201 = t;
-    if (_e201 <= 0f) {
+    var sqrtDiscr_0 : f32 = sqrt(discr_0);
+    var _S1 : f32 = - b_0;
+    var _S2 : f32 = 2.0f * a_0;
+    var t1_0 : f32 = (_S1 - sqrtDiscr_0) / _S2;
+    var t2_0 : f32 = (_S1 + sqrtDiscr_0) / _S2;
+    var t_0 : f32;
+    if(t1_0 > 0.0f)
+    {
+        t_0 = t1_0;
+    }
+    else
+    {
+        t_0 = t2_0;
+    }
+    if(t_0 <= 0.0f)
+    {
+        (*intersectionPoint_0) = vec3<f32>(0.0f);
         return false;
     }
-    let _e203 = (*rayStartPosition);
-    let _e204 = (*rayDirection);
-    let _e205 = t;
-    (*intersectionPoint) = (_e203 + (_e204 * _e205));
+    (*intersectionPoint_0) = rayStartPosition_0 + rayDirection_0 * vec3<f32>(t_0);
     return true;
 }
 
-fn GetCubeMapColor_u0028_vf3_u003b(worldRayDirection_1: ptr<function, vec3<f32>>) -> vec3<f32> {
-    var transitionRatio: f32;
-    var color: vec3<f32>;
-
-    let _e141 = (*worldRayDirection_1)[1u];
-    transitionRatio = smoothstep(-0.07f, 0.07f, _e141);
-    let _e144 = uboCS.skyColorBottom;
-    let _e147 = uboCS.skyColorTop;
-    let _e149 = transitionRatio;
-    color = mix(_e144.xyz, _e147.xyz, vec3(_e149));
-    let _e152 = color;
-    return _e152;
+fn ComputeFogAmount_0( startPos_0 : vec3<f32>,  factor_0 : f32) -> f32
+{
+    var dist_0 : f32 = length(startPos_0 - uboCS_0.cameraPosition_0.xyz);
+    return 1.0f - exp(- dist_0 * (dist_0 / ((uboCS_0.cameraPosition_0.y - GetEarthCenter_0().y) * 0.30000001192092896f)) * factor_0);
 }
 
-fn GetBackgroundColor_u0028_vf3_u003b(worldRayDirection_2: ptr<function, vec3<f32>>) -> vec4<f32> {
-    var backgroundColor: vec3<f32>;
-    var param_37: vec3<f32>;
-    var sunColor: vec3<f32>;
-    var param_38: vec3<f32>;
-    var param_39: f32;
-    var finalColor: vec3<f32>;
-
-    let _e144 = (*worldRayDirection_2);
-    param_37 = _e144;
-    let _e145 = GetCubeMapColor_u0028_vf3_u003b((&param_37));
-    backgroundColor = _e145;
-    let _e146 = (*worldRayDirection_2);
-    param_38 = _e146;
-    param_39 = 350f;
-    let _e147 = GetSunColor_u0028_vf3_u003b_f1_u003b((&param_38), (&param_39));
-    sunColor = _e147;
-    let _e148 = backgroundColor;
-    let _e149 = sunColor;
-    finalColor = (_e148 + _e149);
-    let _e151 = finalColor;
-    return vec4<f32>(_e151.x, _e151.y, _e151.z, 1f);
+fn GetHeightFraction_0( inPos_0 : vec3<f32>) -> f32
+{
+    return (length(inPos_0 - GetEarthCenter_0()) - uboCS_0.sphereInnerRadius_0) / (uboCS_0.sphereOuterRadius_0 - uboCS_0.sphereInnerRadius_0);
 }
 
-fn ComputeWorldSpaceDirection_u0028_vf4_u003b(viewSpaceDir: ptr<function, vec4<f32>>) -> vec3<f32> {
-    var worldDir: vec3<f32>;
-
-    let _e140 = uboCS.inverseViewMatrix;
-    let _e141 = (*viewSpaceDir);
-    worldDir = (_e140 * _e141).xyz;
-    let _e144 = worldDir;
-    return normalize(_e144);
+fn GetUVProjection_0( inPos_1 : vec3<f32>) -> vec2<f32>
+{
+    return inPos_1.xz / vec2<f32>(uboCS_0.sphereInnerRadius_0) + vec2<f32>(0.5f);
 }
 
-fn ComputeViewSpaceDirection_u0028_vf4_u003b(clipSpaceDir: ptr<function, vec4<f32>>) -> vec4<f32> {
-    var rayView: vec4<f32>;
-
-    let _e140 = uboCS.inverseProjectionMatrix;
-    let _e141 = (*clipSpaceDir);
-    rayView = (_e140 * _e141);
-    let _e143 = rayView;
-    let _e144 = _e143.xy;
-    return vec4<f32>(_e144.x, _e144.y, -1f, 0f);
+fn Remap_0( originalValue_0 : f32,  originalMin_0 : f32,  originalMax_0 : f32,  newMin_0 : f32,  newMax_0 : f32) -> f32
+{
+    return newMin_0 + (originalValue_0 - originalMin_0) / (originalMax_0 - originalMin_0) * (newMax_0 - newMin_0);
 }
 
-fn ComputeClipSpaceDirection_u0028_vi2_u003b(fragCoord_1: ptr<function, vec2<i32>>) -> vec4<f32> {
-    var normalizedFragCoord: vec2<f32>;
-    var rayNds: vec2<f32>;
-
-    let _e140 = (*fragCoord_1);
-    let _e143 = uboCS.resolution;
-    normalizedFragCoord = (vec2<f32>(_e140) / _e143.xy);
-    let _e146 = normalizedFragCoord;
-    rayNds = ((_e146 * 2f) - vec2(1f));
-    let _e150 = rayNds;
-    return vec4<f32>(_e150.x, _e150.y, 1f, 1f);
+fn GetDensityForCloud_0( heightFraction_0 : f32,  cloudType_0 : f32) -> f32
+{
+    var _S3 : f32 = cloudType_0 - 0.5f;
+    var baseGradient_0 : vec4<f32> = vec4<f32>((1.0f - clamp(cloudType_0 * 2.0f, 0.0f, 1.0f))) * vec4<f32>(0.0f, 0.10000000149011612f, 0.20000000298023224f, 0.30000001192092896f) + vec4<f32>((1.0f - abs(_S3) * 2.0f)) * vec4<f32>(0.01999999955296516f, 0.20000000298023224f, 0.47999998927116394f, 0.625f) + vec4<f32>((clamp(_S3, 0.0f, 1.0f) * 2.0f)) * vec4<f32>(0.0f, 0.16249999403953552f, 0.87999999523162842f, 0.98000001907348633f);
+    return smoothstep(baseGradient_0.x, baseGradient_0.y, heightFraction_0) - smoothstep(baseGradient_0.z, baseGradient_0.w, heightFraction_0);
 }
 
-fn main_1() {
-    var fragCoord_2: vec2<i32>;
-    var clipDir: vec4<f32>;
-    var param_40: vec2<i32>;
-    var viewDir: vec4<f32>;
-    var param_41: vec4<f32>;
-    var worldDir_1: vec3<f32>;
-    var param_42: vec4<f32>;
-    var backgroundColor_1: vec4<f32>;
-    var param_43: vec3<f32>;
-    var sphereCenter_4: vec3<f32>;
-    var camDistFromCenter: f32;
-    var startPos_3: vec3<f32>;
-    var param_44: vec3<f32>;
-    var param_45: vec3<f32>;
-    var param_46: vec3<f32>;
-    var param_47: f32;
-    var param_48: vec3<f32>;
-    var endPos_1: vec3<f32>;
-    var param_49: vec3<f32>;
-    var param_50: vec3<f32>;
-    var param_51: vec3<f32>;
-    var param_52: f32;
-    var param_53: vec3<f32>;
-    var fogRay: vec3<f32>;
-    var hitInner: bool;
-    var innerHit: vec3<f32>;
-    var param_54: vec3<f32>;
-    var param_55: vec3<f32>;
-    var param_56: vec3<f32>;
-    var param_57: f32;
-    var param_58: vec3<f32>;
-    var param_59: vec3<f32>;
-    var param_60: vec3<f32>;
-    var param_61: vec3<f32>;
-    var param_62: f32;
-    var param_63: vec3<f32>;
-    var param_64: vec3<f32>;
-    var param_65: vec3<f32>;
-    var param_66: vec3<f32>;
-    var param_67: f32;
-    var param_68: vec3<f32>;
-    var param_69: vec3<f32>;
-    var param_70: vec3<f32>;
-    var param_71: vec3<f32>;
-    var param_72: f32;
-    var param_73: vec3<f32>;
-    var fogAmount: f32;
-    var param_74: vec3<f32>;
-    var param_75: f32;
-    var raymarchResult: RaymarchToCloudResult;
-    var param_76: vec3<f32>;
-    var param_77: vec3<f32>;
-    var param_78: vec3<f32>;
-    var sun_1: f32;
-    var s: vec3<f32>;
-    var bloomColor: vec4<f32>;
-    var param_79: vec3<f32>;
-    var param_80: f32;
-    var cloudAlphaness: f32;
-    var alphaness: vec4<f32>;
-    var fogAmount_1: f32;
-    var param_81: vec3<f32>;
-    var param_82: f32;
-    var cloud: vec3<f32>;
-    var fragColor: vec4<f32>;
-    var cloudDepth: f32;
-    var local: f32;
-    var param_83: mat4x4<f32>;
-    var param_84: mat4x4<f32>;
-    var param_85: vec3<f32>;
-    var depth_1: vec4<f32>;
-    var phi_1122_: bool;
+fn SampleCloudDensity_0( inPos_2 : vec3<f32>,  expensive_0 : bool,  lod_0 : f32) -> f32
+{
+    var heightFraction_1 : f32 = GetHeightFraction_0(inPos_2);
+    var uv_0 : vec2<f32> = GetUVProjection_0(inPos_2);
+    var movingUV_0 : vec2<f32> = GetUVProjection_0(inPos_2 + (vec3<f32>(heightFraction_1) * uboCS_0.windDirection_0.xyz * vec3<f32>(uboCS_0.cloudTopOffset_0) + uboCS_0.windDirection_0.xyz * vec3<f32>(uboCS_0.time_0) * vec3<f32>(uboCS_0.cloudSpeed_0)));
+    var _S4 : bool;
+    if(heightFraction_1 < 0.0f)
+    {
+        _S4 = true;
+    }
+    else
+    {
+        _S4 = heightFraction_1 > 1.0f;
+    }
+    if(_S4)
+    {
+        return 0.0f;
+    }
+    const noiseScaler_0 : vec3<f32> = vec3<f32>(0.625f, 0.25f, 0.125f);
+    var lowFrequencyNoise_0 : vec4<f32> = (textureSampleLevel((perlinNoiseTex_0), (perlinNoiseSampler_0), (vec3<f32>(uv_0 * vec2<f32>(uboCS_0.crispiness_0), heightFraction_1)), (lod_0)));
+    var cloudCoverage_0 : f32 = (textureSampleLevel((weatherTex_0), (weatherSampler_0), (movingUV_0), (0.0f))).xyz.x * uboCS_0.coverageFactor_0;
+    var baseCloudWithCoverage_0 : f32 = Remap_0(Remap_0(lowFrequencyNoise_0.x, - (1.0f - dot(lowFrequencyNoise_0.yzw, noiseScaler_0)), 1.0f, 0.0f, 1.0f) * (GetDensityForCloud_0(heightFraction_1, 1.0f) / max(heightFraction_1, 0.00100000004749745f)), cloudCoverage_0, 1.0f, 0.0f, 1.0f) * cloudCoverage_0;
+    var baseCloudWithCoverage_1 : f32;
+    if(expensive_0)
+    {
+        var highFreqFBM_0 : f32 = dot((textureSampleLevel((perlinNoiseTex_0), (perlinNoiseSampler_0), (vec3<f32>(movingUV_0 * vec2<f32>(uboCS_0.crispiness_0), heightFraction_1) * vec3<f32>(uboCS_0.curliness_0)), (lod_0))).xyz.xyz, noiseScaler_0);
+        var highFreqNoiseModifier_0 : f32 = mix(highFreqFBM_0, 1.0f - highFreqFBM_0, clamp(heightFraction_1 * 10.0f, 0.0f, 1.0f));
+        baseCloudWithCoverage_1 = Remap_0((baseCloudWithCoverage_0 - highFreqNoiseModifier_0 * (1.0f - baseCloudWithCoverage_0)) * 2.0f, highFreqNoiseModifier_0 * 0.20000000298023224f, 1.0f, 0.0f, 1.0f);
+    }
+    else
+    {
+        baseCloudWithCoverage_1 = baseCloudWithCoverage_0;
+    }
+    return clamp(baseCloudWithCoverage_1, 0.0f, 1.0f);
+}
 
-    let _e208 = gl_GlobalInvocationID_1;
-    fragCoord_2 = bitcast<vec2<i32>>(_e208.xy);
-    let _e211 = fragCoord_2;
-    param_40 = _e211;
-    let _e212 = ComputeClipSpaceDirection_u0028_vi2_u003b((&param_40));
-    clipDir = _e212;
-    let _e213 = clipDir;
-    param_41 = _e213;
-    let _e214 = ComputeViewSpaceDirection_u0028_vf4_u003b((&param_41));
-    viewDir = _e214;
-    let _e215 = viewDir;
-    param_42 = _e215;
-    let _e216 = ComputeWorldSpaceDirection_u0028_vf4_u003b((&param_42));
-    worldDir_1 = _e216;
-    let _e217 = worldDir_1;
-    param_43 = _e217;
-    let _e218 = GetBackgroundColor_u0028_vf3_u003b((&param_43));
-    backgroundColor_1 = _e218;
-    let _e219 = GetEarthCenter_u0028_();
-    sphereCenter_4 = _e219;
-    let _e221 = uboCS.cameraPosition;
-    let _e223 = sphereCenter_4;
-    camDistFromCenter = length((_e221.xyz - _e223));
-    let _e226 = camDistFromCenter;
-    let _e228 = uboCS.sphereInnerRadius;
-    if (_e226 < _e228) {
-        let _e231 = uboCS.cameraPosition;
-        param_44 = _e231.xyz;
-        let _e233 = worldDir_1;
-        param_45 = _e233;
-        let _e234 = sphereCenter_4;
-        param_46 = _e234;
-        let _e236 = uboCS.sphereInnerRadius;
-        param_47 = _e236;
-        let _e237 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_44), (&param_45), (&param_46), (&param_47), (&param_48));
-        let _e238 = param_48;
-        startPos_3 = _e238;
-        let _e240 = uboCS.cameraPosition;
-        param_49 = _e240.xyz;
-        let _e242 = worldDir_1;
-        param_50 = _e242;
-        let _e243 = sphereCenter_4;
-        param_51 = _e243;
-        let _e245 = uboCS.sphereOuterRadius;
-        param_52 = _e245;
-        let _e246 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_49), (&param_50), (&param_51), (&param_52), (&param_53));
-        let _e247 = param_53;
-        endPos_1 = _e247;
-        let _e248 = startPos_3;
-        fogRay = _e248;
-    } else {
-        let _e249 = camDistFromCenter;
-        let _e251 = uboCS.sphereInnerRadius;
-        let _e252 = (_e249 >= _e251);
-        phi_1122_ = _e252;
-        if _e252 {
-            let _e253 = camDistFromCenter;
-            let _e255 = uboCS.sphereOuterRadius;
-            phi_1122_ = (_e253 < _e255);
+fn RaymarchToLight_0( inPos_3 : vec3<f32>,  stepSize_0 : f32,  lightDir_0 : vec3<f32>,  originalDensity_0 : f32,  lightDotEye_0 : f32) -> f32
+{
+    var ds_0 : f32 = stepSize_0 * 6.0f;
+    var _S5 : vec3<f32> = lightDir_0 * vec3<f32>(ds_0);
+    var _S6 : f32 = - ds_0 * uboCS_0.absorption_0;
+    var i_0 : i32 = i32(0);
+    var startPos_1 : vec3<f32> = inPos_3;
+    var coneRadius_0 : f32 = 1.0f;
+    var density_0 : f32 = 0.0f;
+    var T_0 : f32 = 1.0f;
+    for(;;)
+    {
+        if(i_0 < i32(6))
+        {
         }
-        let _e258 = phi_1122_;
-        if _e258 {
-            let _e260 = uboCS.cameraPosition;
-            startPos_3 = _e260.xyz;
-            let _e263 = uboCS.cameraPosition;
-            param_54 = _e263.xyz;
-            let _e265 = worldDir_1;
-            param_55 = _e265;
-            let _e266 = sphereCenter_4;
-            param_56 = _e266;
-            let _e268 = uboCS.sphereInnerRadius;
-            param_57 = _e268;
-            let _e269 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_54), (&param_55), (&param_56), (&param_57), (&param_58));
-            let _e270 = param_58;
-            innerHit = _e270;
-            hitInner = _e269;
-            let _e271 = hitInner;
-            if _e271 {
-                let _e272 = innerHit;
-                endPos_1 = _e272;
-                let _e273 = innerHit;
-                fogRay = _e273;
-            } else {
-                let _e275 = uboCS.cameraPosition;
-                param_59 = _e275.xyz;
-                let _e277 = worldDir_1;
-                param_60 = _e277;
-                let _e278 = sphereCenter_4;
-                param_61 = _e278;
-                let _e280 = uboCS.sphereOuterRadius;
-                param_62 = _e280;
-                let _e281 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_59), (&param_60), (&param_61), (&param_62), (&param_63));
-                let _e282 = param_63;
-                endPos_1 = _e282;
-                let _e283 = startPos_3;
-                fogRay = _e283;
+        else
+        {
+            break;
+        }
+        var pos_0 : vec3<f32> = startPos_1 + vec3<f32>(coneRadius_0) * noiseKernel_0[i_0] * vec3<f32>(f32(i_0));
+        if((GetHeightFraction_0(pos_0)) >= 0.0f)
+        {
+            var cloudDensity_0 : f32 = SampleCloudDensity_0(pos_0, density_0 > 0.30000001192092896f, f32(i_0 / i32(16)));
+            var density_1 : f32;
+            var T_1 : f32;
+            if(cloudDensity_0 > 0.0f)
+            {
+                var T_2 : f32 = T_0 * exp(cloudDensity_0 * _S6);
+                density_1 = density_0 + cloudDensity_0;
+                T_1 = T_2;
             }
-        } else {
-            let _e285 = uboCS.cameraPosition;
-            param_64 = _e285.xyz;
-            let _e287 = worldDir_1;
-            param_65 = _e287;
-            let _e288 = sphereCenter_4;
-            param_66 = _e288;
-            let _e290 = uboCS.sphereOuterRadius;
-            param_67 = _e290;
-            let _e291 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_64), (&param_65), (&param_66), (&param_67), (&param_68));
-            let _e292 = param_68;
-            startPos_3 = _e292;
-            let _e294 = uboCS.cameraPosition;
-            param_69 = _e294.xyz;
-            let _e296 = worldDir_1;
-            param_70 = _e296;
-            let _e297 = sphereCenter_4;
-            param_71 = _e297;
-            let _e299 = uboCS.sphereInnerRadius;
-            param_72 = _e299;
-            let _e300 = RaySphereIntersection_u0028_vf3_u003b_vf3_u003b_vf3_u003b_f1_u003b_vf3_u003b((&param_69), (&param_70), (&param_71), (&param_72), (&param_73));
-            let _e301 = param_73;
-            endPos_1 = _e301;
-            let _e302 = startPos_3;
-            fogRay = _e302;
+            else
+            {
+                density_1 = density_0;
+                T_1 = T_0;
+            }
+            density_0 = density_1;
+            T_0 = T_1;
+        }
+        var startPos_2 : vec3<f32> = startPos_1 + _S5;
+        var coneRadius_1 : f32 = coneRadius_0 + 0.1666666716337204f;
+        i_0 = i_0 + i32(1);
+        startPos_1 = startPos_2;
+        coneRadius_0 = coneRadius_1;
+    }
+    return T_0;
+}
+
+fn HG_0( sunDotRayDirection_0 : f32,  g_0 : f32) -> f32
+{
+    var gg_0 : f32 = g_0 * g_0;
+    return (1.0f - gg_0) / pow(1.0f + gg_0 - 2.0f * g_0 * sunDotRayDirection_0, 1.5f);
+}
+
+fn GetPowder_0( density_2 : f32) -> f32
+{
+    return 1.0f - exp(-2.0f * density_2);
+}
+
+struct RaymarchToCloudResult_0
+{
+     hit_0 : bool,
+     position_0 : vec3<f32>,
+     color_0 : vec4<f32>,
+};
+
+fn RaymarchToCloud_0( startPos_3 : vec3<f32>,  endPos_0 : vec3<f32>,  bg_0 : vec3<f32>,  fragCoord_1 : vec2<u32>) -> RaymarchToCloudResult_0
+{
+    var path_0 : vec3<f32> = endPos_0 - startPos_3;
+    var stepVal_0 : f32 = length(path_0) / 64.0f;
+    var dir_0 : vec3<f32> = normalize(path_0);
+    var stepVector_0 : vec3<f32> = dir_0 * vec3<f32>(stepVal_0);
+    var _S7 : vec3<f32> = startPos_3 + stepVector_0 * vec3<f32>(bayerFilter_0[i32(fragCoord_1.x) % i32(4) * i32(4) + i32(fragCoord_1.y) % i32(4)]);
+    var _S8 : f32 = dot(normalize(uboCS_0.lightDirection_0.xyz), dir_0);
+    var _S9 : f32 = - stepVal_0 * uboCS_0.densityFactor_0;
+    var result_0 : RaymarchToCloudResult_0;
+    result_0.hit_0 = false;
+    result_0.position_0 = vec3<f32>(9.99999995904e+11f, 9.99999995904e+11f, 9.99999995904e+11f);
+    result_0.color_0 = vec4<f32>(0.0f);
+    var i_1 : i32 = i32(0);
+    var pos_1 : vec3<f32> = _S7;
+    var T_3 : f32 = 1.0f;
+    for(;;)
+    {
+        if(i_1 < i32(64))
+        {
+        }
+        else
+        {
+            break;
+        }
+        var densitySample_0 : f32 = SampleCloudDensity_0(pos_1, true, f32(i_1 / i32(16)));
+        var T_4 : f32;
+        if(densitySample_0 > 0.0f)
+        {
+            if(!result_0.hit_0)
+            {
+                result_0.position_0 = pos_1;
+                result_0.hit_0 = true;
+            }
+            var ambientLight_0 : vec3<f32> = uboCS_0.baseCloudColor_0.xyz;
+            var lightDensity_0 : f32 = RaymarchToLight_0(pos_1, stepVal_0 * 0.10000000149011612f, uboCS_0.lightDirection_0.xyz, densitySample_0, _S8);
+            var _S10 : f32 = max(mix(HG_0(_S8, -0.07999999821186066f), HG_0(_S8, 0.07999999821186066f), clamp(_S8 * 0.5f + 0.5f, 0.0f, 1.0f)), 1.0f);
+            if((uboCS_0.enablePowder_0) == u32(1))
+            {
+                T_4 = GetPowder_0(densitySample_0);
+            }
+            else
+            {
+                T_4 = 1.0f;
+            }
+            var S_0 : vec3<f32> = vec3<f32>(0.60000002384185791f) * mix(mix(ambientLight_0 * vec3<f32>(1.79999995231628418f), bg_0, vec3<f32>(0.20000000298023224f)), vec3<f32>(_S10) * uboCS_0.lightColor_0.xyz, vec3<f32>((T_4 * lightDensity_0))) * vec3<f32>(densitySample_0);
+            var dTrans_0 : f32 = exp(densitySample_0 * _S9);
+            var _S11 : vec3<f32> = result_0.color_0.xyz + vec3<f32>(T_3) * ((S_0 - S_0 * vec3<f32>(dTrans_0)) * vec3<f32>((1.0f / densitySample_0)));
+            result_0.color_0.x = _S11.x;
+            result_0.color_0.y = _S11.y;
+            result_0.color_0.z = _S11.z;
+            T_4 = T_3 * dTrans_0;
+        }
+        else
+        {
+            T_4 = T_3;
+        }
+        if(T_4 <= 0.10000000149011612f)
+        {
+            T_3 = T_4;
+            break;
+        }
+        var pos_2 : vec3<f32> = pos_1 + stepVector_0;
+        i_1 = i_1 + i32(1);
+        pos_1 = pos_2;
+        T_3 = T_4;
+    }
+    result_0.color_0[i32(3)] = 1.0f - T_3;
+    return result_0;
+}
+
+fn ComputeDepth_0( projectionMatrix_1 : mat4x4<f32>,  viewMatrix_1 : mat4x4<f32>,  pointInWorldSpace_0 : vec3<f32>) -> f32
+{
+    var pInClipSpace_0 : vec4<f32> = ((((((vec4<f32>(pointInWorldSpace_0, 1.0f)) * (viewMatrix_1)))) * (projectionMatrix_1)));
+    return (pInClipSpace_0.xyz / vec3<f32>(pInClipSpace_0.w)).z;
+}
+
+@compute
+@workgroup_size(16, 16, 1)
+fn computeMain(@builtin(global_invocation_id) dispatchThreadID_0 : vec3<u32>)
+{
+    var _S12 : vec2<i32> = vec2<i32>(dispatchThreadID_0.xy);
+    var worldDir_0 : vec3<f32> = ComputeWorldSpaceDirection_0(ComputeViewSpaceDirection_0(ComputeClipSpaceDirection_0(_S12)));
+    var backgroundColor_0 : vec4<f32> = GetBackgroundColor_0(worldDir_0);
+    var sphereCenter_1 : vec3<f32> = GetEarthCenter_0();
+    var startPos_4 : vec3<f32>;
+    var endPos_1 : vec3<f32>;
+    var camDistFromCenter_0 : f32 = length(uboCS_0.cameraPosition_0.xyz - sphereCenter_1);
+    var fogRay_0 : vec3<f32>;
+    if(camDistFromCenter_0 < (uboCS_0.sphereInnerRadius_0))
+    {
+        var _S13 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereInnerRadius_0, &(startPos_4));
+        var _S14 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereOuterRadius_0, &(endPos_1));
+        fogRay_0 = startPos_4;
+    }
+    else
+    {
+        var _S15 : bool;
+        if(camDistFromCenter_0 >= (uboCS_0.sphereInnerRadius_0))
+        {
+            _S15 = camDistFromCenter_0 < (uboCS_0.sphereOuterRadius_0);
+        }
+        else
+        {
+            _S15 = false;
+        }
+        if(_S15)
+        {
+            startPos_4 = uboCS_0.cameraPosition_0.xyz;
+            var innerHit_0 : vec3<f32>;
+            var hitInner_0 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereInnerRadius_0, &(innerHit_0));
+            if(hitInner_0)
+            {
+                endPos_1 = innerHit_0;
+                fogRay_0 = innerHit_0;
+            }
+            else
+            {
+                var _S16 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereOuterRadius_0, &(endPos_1));
+                fogRay_0 = startPos_4;
+            }
+        }
+        else
+        {
+            var _S17 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereOuterRadius_0, &(startPos_4));
+            var _S18 : bool = RaySphereIntersection_0(uboCS_0.cameraPosition_0.xyz, worldDir_0, sphereCenter_1, uboCS_0.sphereInnerRadius_0, &(endPos_1));
+            fogRay_0 = startPos_4;
         }
     }
-    let _e303 = fogRay;
-    param_74 = _e303;
-    param_75 = 0.00006f;
-    let _e304 = ComputeFogAmount_u0028_vf3_u003b_f1_u003b((&param_74), (&param_75));
-    fogAmount = _e304;
-    let _e305 = fogAmount;
-    if (_e305 > 0.965f) {
-        let _e307 = fragCoord_2;
-        let _e308 = backgroundColor_1;
-        textureStore(outFragColor, _e307, _e308);
-        let _e309 = fragCoord_2;
-        let _e310 = backgroundColor_1;
-        textureStore(outBloom, _e309, _e310);
-        let _e311 = fragCoord_2;
-        textureStore(outAlphaness, _e311, vec4<f32>(0f, 0f, 0f, 0f));
-        let _e312 = fragCoord_2;
-        let _e314 = uboCS.maxDepth;
-        textureStore(outCloudDistance, _e312, vec4(_e314));
+    var fogAmount_0 : f32 = ComputeFogAmount_0(fogRay_0, 0.00005999999848427f);
+    if(fogAmount_0 > 0.9649999737739563f)
+    {
+        var _S19 : vec2<u32> = vec2<u32>(_S12);
+        textureStore((outFragColor_0), (_S19), (backgroundColor_0));
+        textureStore((outBloom_0), (_S19), (backgroundColor_0));
+        textureStore((outAlphaness_0), (_S19), (vec4<f32>(0.0f)));
+        textureStore((outCloudDistance_0), (_S19), (vec4<f32>(uboCS_0.maxDepth_0, 0.0f, 0.0f, 0.0f)));
         return;
     }
-    let _e316 = startPos_3;
-    param_76 = _e316;
-    let _e317 = endPos_1;
-    param_77 = _e317;
-    let _e318 = backgroundColor_1;
-    param_78 = _e318.xyz;
-    let _e320 = RaymarchToCloud_u0028_vf3_u003b_vf3_u003b_vf3_u003b((&param_76), (&param_77), (&param_78));
-    raymarchResult = _e320;
-    let _e322 = raymarchResult.color;
-    let _e326 = ((_e322.xyz * 1.8f) - vec3(0.1f));
-    raymarchResult.color[0u] = _e326.x;
-    raymarchResult.color[1u] = _e326.y;
-    raymarchResult.color[2u] = _e326.z;
-    let _e337 = raymarchResult.color;
-    let _e339 = backgroundColor_1;
-    let _e343 = raymarchResult.color[3u];
-    let _e345 = fogAmount;
-    let _e348 = mix(_e337.xyz, (_e339.xyz * _e343), vec3(clamp(_e345, 0f, 1f)));
-    raymarchResult.color[0u] = _e348.x;
-    raymarchResult.color[1u] = _e348.y;
-    raymarchResult.color[2u] = _e348.z;
-    let _e359 = uboCS.lightDirection;
-    let _e361 = endPos_1;
-    let _e362 = startPos_3;
-    sun_1 = clamp(dot(_e359.xyz, normalize((_e361 - _e362))), 0f, 1f);
-    let _e367 = sun_1;
-    s = (vec3<f32>(0.8f, 0.32f, 0.16f) * pow(_e367, 256f));
-    let _e370 = s;
-    let _e373 = raymarchResult.color[3u];
-    let _e376 = raymarchResult.color;
-    let _e378 = (_e376.xyz + (_e370 * _e373));
-    raymarchResult.color[0u] = _e378.x;
-    raymarchResult.color[1u] = _e378.y;
-    raymarchResult.color[2u] = _e378.z;
-    let _e388 = backgroundColor_1;
-    let _e392 = raymarchResult.color[3u];
-    let _e396 = raymarchResult.color;
-    let _e398 = ((_e388.xyz * (1f - _e392)) + _e396.xyz);
-    backgroundColor_1[0u] = _e398.x;
-    backgroundColor_1[1u] = _e398.y;
-    backgroundColor_1[2u] = _e398.z;
-    backgroundColor_1[3u] = 1f;
-    let _e406 = worldDir_1;
-    param_79 = _e406;
-    param_80 = 128f;
-    let _e407 = GetSunColor_u0028_vf3_u003b_f1_u003b((&param_79), (&param_80));
-    let _e408 = (_e407 * 1.3f);
-    bloomColor = vec4<f32>(_e408.x, _e408.y, _e408.z, 1f);
-    let _e415 = raymarchResult.color[3u];
-    cloudAlphaness = clamp(_e415, 0.2f, 1f);
-    let _e417 = cloudAlphaness;
-    alphaness = vec4<f32>(_e417, 0f, 0f, 1f);
-    let _e419 = cloudAlphaness;
-    if (_e419 > 0.1f) {
-        let _e421 = startPos_3;
-        param_81 = _e421;
-        param_82 = 0.00003f;
-        let _e422 = ComputeFogAmount_u0028_vf3_u003b_f1_u003b((&param_81), (&param_82));
-        fogAmount_1 = _e422;
-        let _e423 = bloomColor;
-        let _e425 = fogAmount_1;
-        cloud = mix(vec3<f32>(0f, 0f, 0f), _e423.xyz, vec3(clamp(_e425, 0f, 1f)));
-        let _e429 = bloomColor;
-        let _e431 = cloudAlphaness;
-        let _e434 = cloud;
-        let _e435 = ((_e429.xyz * (1f - _e431)) + _e434);
-        bloomColor[0u] = _e435.x;
-        bloomColor[1u] = _e435.y;
-        bloomColor[2u] = _e435.z;
+    var _S20 : vec2<u32> = vec2<u32>(_S12);
+    var raymarchResult_0 : RaymarchToCloudResult_0 = RaymarchToCloud_0(startPos_4, endPos_1, backgroundColor_0.xyz, _S20);
+    var _S21 : vec3<f32> = raymarchResult_0.color_0.xyz * vec3<f32>(1.79999995231628418f) - vec3<f32>(0.10000000149011612f);
+    raymarchResult_0.color_0.x = _S21.x;
+    raymarchResult_0.color_0.y = _S21.y;
+    raymarchResult_0.color_0.z = _S21.z;
+    var _S22 : vec3<f32> = mix(raymarchResult_0.color_0.xyz, backgroundColor_0.xyz * vec3<f32>(raymarchResult_0.color_0.w), vec3<f32>(clamp(fogAmount_0, 0.0f, 1.0f)));
+    raymarchResult_0.color_0.x = _S22.x;
+    raymarchResult_0.color_0.y = _S22.y;
+    raymarchResult_0.color_0.z = _S22.z;
+    var _S23 : vec3<f32> = raymarchResult_0.color_0.xyz + vec3<f32>(0.80000001192092896f) * vec3<f32>(1.0f, 0.40000000596046448f, 0.20000000298023224f) * vec3<f32>(pow(clamp(dot(uboCS_0.lightDirection_0.xyz, normalize(endPos_1 - startPos_4)), 0.0f, 1.0f), 256.0f)) * vec3<f32>(raymarchResult_0.color_0.w);
+    raymarchResult_0.color_0.x = _S23.x;
+    raymarchResult_0.color_0.y = _S23.y;
+    raymarchResult_0.color_0.z = _S23.z;
+    var _S24 : vec3<f32> = backgroundColor_0.xyz * vec3<f32>((1.0f - raymarchResult_0.color_0.w)) + raymarchResult_0.color_0.xyz;
+    backgroundColor_0.x = _S24.x;
+    backgroundColor_0.y = _S24.y;
+    backgroundColor_0.z = _S24.z;
+    backgroundColor_0[i32(3)] = 1.0f;
+    var bloomColor_0 : vec4<f32> = vec4<f32>(GetSunColor_0(worldDir_0, 128.0f) * vec3<f32>(1.29999995231628418f), 1.0f);
+    var cloudAlphaness_0 : f32 = clamp(raymarchResult_0.color_0.w, 0.20000000298023224f, 1.0f);
+    var alphaness_0 : vec4<f32> = vec4<f32>(cloudAlphaness_0, 0.0f, 0.0f, 1.0f);
+    if(cloudAlphaness_0 > 0.10000000149011612f)
+    {
+        var _S25 : vec3<f32> = bloomColor_0.xyz * vec3<f32>((1.0f - cloudAlphaness_0)) + mix(vec3<f32>(0.0f), bloomColor_0.xyz, vec3<f32>(clamp(ComputeFogAmount_0(startPos_4, 0.00002999999924214f), 0.0f, 1.0f))).xyz;
+        bloomColor_0.x = _S25.x;
+        bloomColor_0.y = _S25.y;
+        bloomColor_0.z = _S25.z;
     }
-    let _e442 = backgroundColor_1;
-    let _e443 = _e442.xyz;
-    fragColor = vec4<f32>(_e443.x, _e443.y, _e443.z, 1f);
-    let _e450 = raymarchResult.color[3u];
-    if (_e450 > 0.1f) {
-        let _e453 = uboCS.projectionMatrix;
-        param_83 = _e453;
-        let _e455 = uboCS.viewMatrix;
-        param_84 = _e455;
-        let _e457 = raymarchResult.position;
-        param_85 = _e457;
-        let _e458 = ComputeDepth_u0028_mf44_u003b_mf44_u003b_vf3_u003b((&param_83), (&param_84), (&param_85));
-        local = _e458;
-    } else {
-        let _e460 = uboCS.maxDepth;
-        local = _e460;
-    }
-    let _e461 = local;
-    cloudDepth = _e461;
-    let _e462 = cloudDepth;
-    depth_1 = vec4<f32>(_e462, 0f, 0f, 0f);
-    let _e464 = fragCoord_2;
-    let _e465 = fragColor;
-    textureStore(outFragColor, _e464, _e465);
-    let _e466 = fragCoord_2;
-    let _e467 = bloomColor;
-    textureStore(outBloom, _e466, _e467);
-    let _e468 = fragCoord_2;
-    let _e469 = alphaness;
-    textureStore(outAlphaness, _e468, _e469);
-    let _e470 = fragCoord_2;
-    let _e471 = depth_1;
-    textureStore(outCloudDistance, _e470, _e471);
+    var depth_0 : vec4<f32> = vec4<f32>(ComputeDepth_0(mat4x4<f32>(uboCS_0.projectionMatrix_0.data_0[i32(0)][i32(0)], uboCS_0.projectionMatrix_0.data_0[i32(1)][i32(0)], uboCS_0.projectionMatrix_0.data_0[i32(2)][i32(0)], uboCS_0.projectionMatrix_0.data_0[i32(3)][i32(0)], uboCS_0.projectionMatrix_0.data_0[i32(0)][i32(1)], uboCS_0.projectionMatrix_0.data_0[i32(1)][i32(1)], uboCS_0.projectionMatrix_0.data_0[i32(2)][i32(1)], uboCS_0.projectionMatrix_0.data_0[i32(3)][i32(1)], uboCS_0.projectionMatrix_0.data_0[i32(0)][i32(2)], uboCS_0.projectionMatrix_0.data_0[i32(1)][i32(2)], uboCS_0.projectionMatrix_0.data_0[i32(2)][i32(2)], uboCS_0.projectionMatrix_0.data_0[i32(3)][i32(2)], uboCS_0.projectionMatrix_0.data_0[i32(0)][i32(3)], uboCS_0.projectionMatrix_0.data_0[i32(1)][i32(3)], uboCS_0.projectionMatrix_0.data_0[i32(2)][i32(3)], uboCS_0.projectionMatrix_0.data_0[i32(3)][i32(3)]), mat4x4<f32>(uboCS_0.viewMatrix_0.data_0[i32(0)][i32(0)], uboCS_0.viewMatrix_0.data_0[i32(1)][i32(0)], uboCS_0.viewMatrix_0.data_0[i32(2)][i32(0)], uboCS_0.viewMatrix_0.data_0[i32(3)][i32(0)], uboCS_0.viewMatrix_0.data_0[i32(0)][i32(1)], uboCS_0.viewMatrix_0.data_0[i32(1)][i32(1)], uboCS_0.viewMatrix_0.data_0[i32(2)][i32(1)], uboCS_0.viewMatrix_0.data_0[i32(3)][i32(1)], uboCS_0.viewMatrix_0.data_0[i32(0)][i32(2)], uboCS_0.viewMatrix_0.data_0[i32(1)][i32(2)], uboCS_0.viewMatrix_0.data_0[i32(2)][i32(2)], uboCS_0.viewMatrix_0.data_0[i32(3)][i32(2)], uboCS_0.viewMatrix_0.data_0[i32(0)][i32(3)], uboCS_0.viewMatrix_0.data_0[i32(1)][i32(3)], uboCS_0.viewMatrix_0.data_0[i32(2)][i32(3)], uboCS_0.viewMatrix_0.data_0[i32(3)][i32(3)]), raymarchResult_0.position_0), 0.0f, 0.0f, 0.0f);
+    textureStore((outFragColor_0), (_S20), (vec4<f32>(backgroundColor_0.xyz, 1.0f)));
+    textureStore((outBloom_0), (_S20), (bloomColor_0));
+    textureStore((outAlphaness_0), (_S20), (alphaness_0));
+    textureStore((outCloudDistance_0), (_S20), (depth_0));
     return;
 }
 
-@compute @workgroup_size(16, 16, 1) 
-fn main(@builtin(global_invocation_id) gl_GlobalInvocationID: vec3<u32>) {
-    gl_GlobalInvocationID_1 = gl_GlobalInvocationID;
-    main_1();
-}

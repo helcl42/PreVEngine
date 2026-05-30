@@ -119,7 +119,7 @@ GfxRenderPipeline GraphicsPipelineBuilder::CreateGraphicsPipeline() const
 
     GfxVertexState vertexState{};
     vertexState.module = vertexShader;
-    vertexState.entryPoint = "main";
+    vertexState.entryPoint = "vertexMain";
     vertexState.buffers = bufferLayouts.data();
     vertexState.bufferCount = static_cast<uint32_t>(bufferLayouts.size());
 
@@ -147,7 +147,7 @@ GfxRenderPipeline GraphicsPipelineBuilder::CreateGraphicsPipeline() const
 
     GfxFragmentState fragmentState{};
     fragmentState.module = fragmentShader;
-    fragmentState.entryPoint = "main";
+    fragmentState.entryPoint = "fragmentMain";
     fragmentState.targets = colorTargets.data();
     fragmentState.targetCount = static_cast<uint32_t>(colorTargets.size());
 

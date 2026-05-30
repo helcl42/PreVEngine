@@ -1,40 +1,33 @@
-struct gl_PerVertex {
-    @builtin(position) gl_Position: vec4<f32>,
-    gl_PointSize: f32,
-    gl_ClipDistance: array<f32, 1>,
-    gl_CullDistance: array<f32, 1>,
+struct _MatrixStorage_float4x4_ColMajorstd140_0
+{
+    @align(16) data_0 : array<vec4<f32>, i32(4)>,
+};
+
+struct SelectionVSParams_std140_0
+{
+    @align(16) modelMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) viewMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) projectionMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+};
+
+@binding(0) @group(0) var<uniform> uboVS_0 : SelectionVSParams_std140_0;
+struct VertexOutput_0
+{
+    @builtin(position) position_0 : vec4<f32>,
+};
+
+struct vertexInput_0
+{
+    @location(0) position_1 : vec3<f32>,
+    @location(1) textureCoord_0 : vec2<f32>,
+    @location(2) normal_0 : vec3<f32>,
+};
+
+@vertex
+fn vertexMain( _S1 : vertexInput_0) -> VertexOutput_0
+{
+    var output_0 : VertexOutput_0;
+    output_0.position_0 = (((((((((vec4<f32>(_S1.position_1, 1.0f)) * (mat4x4<f32>(uboVS_0.modelMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(3)]))))) * (mat4x4<f32>(uboVS_0.viewMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.viewMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.viewMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.viewMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.viewMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.viewMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.viewMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.viewMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.viewMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.viewMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.viewMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.viewMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.viewMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.viewMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.viewMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.viewMatrix_0.data_0[i32(3)][i32(3)]))))) * (mat4x4<f32>(uboVS_0.projectionMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.projectionMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.projectionMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.projectionMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.projectionMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.projectionMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.projectionMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.projectionMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.projectionMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.projectionMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.projectionMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.projectionMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.projectionMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.projectionMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.projectionMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.projectionMatrix_0.data_0[i32(3)][i32(3)]))));
+    return output_0;
 }
 
-struct UniformBufferObject {
-    modelMatrix: mat4x4<f32>,
-    viewMatrix: mat4x4<f32>,
-    projectionMatrix: mat4x4<f32>,
-}
-
-var<private> unnamed: gl_PerVertex = gl_PerVertex(vec4<f32>(0f, 0f, 0f, 1f), 1f, array<f32, 1>(), array<f32, 1>());
-@group(0) @binding(0) 
-var<uniform> uboVS: UniformBufferObject;
-var<private> inPosition_1: vec3<f32>;
-var<private> inTextureCoord_1: vec2<f32>;
-var<private> inNormal_1: vec3<f32>;
-
-fn main_1() {
-    let _e11 = uboVS.projectionMatrix;
-    let _e13 = uboVS.viewMatrix;
-    let _e16 = uboVS.modelMatrix;
-    let _e18 = inPosition_1;
-    unnamed.gl_Position = (((_e11 * _e13) * _e16) * vec4<f32>(_e18.x, _e18.y, _e18.z, 1f));
-    return;
-}
-
-@vertex 
-fn main(@location(0) inPosition: vec3<f32>, @location(1) inTextureCoord: vec2<f32>, @location(2) inNormal: vec3<f32>) -> @builtin(position) vec4<f32> {
-    inPosition_1 = inPosition;
-    inTextureCoord_1 = inTextureCoord;
-    inNormal_1 = inNormal;
-    main_1();
-    let _e9 = unnamed.gl_Position.y;
-    unnamed.gl_Position.y = -(_e9);
-    let _e11 = unnamed.gl_Position;
-    return _e11;
-}

@@ -23,7 +23,7 @@ struct ShadowsCascadeFrameData {
 
     glm::mat4 projectionMatrix{};
 
-    glm::mat4 GetBiasedViewProjectionMatrix() const;
+    glm::mat4 GetBiasedViewProjectionMatrix(bool flipY = false) const;
 };
 } // namespace prev_test::component::shadow
 

@@ -1,46 +1,28 @@
-struct UniformBufferObject {
-    translations: array<vec4<f32>, 1>,
-    scale: vec4<f32>,
+struct SunOcclusionVSParams_std140_0
+{
+    @align(16) translations_0 : array<vec4<f32>, i32(1)>,
+    @align(16) scale_0 : vec4<f32>,
+};
+
+@binding(0) @group(0) var<uniform> uboVS_0 : SunOcclusionVSParams_std140_0;
+struct VertexOutput_0
+{
+    @builtin(position) position_0 : vec4<f32>,
+};
+
+struct vertexInput_0
+{
+    @location(0) position_1 : vec3<f32>,
+    @location(1) textureCoord_0 : vec2<f32>,
+    @location(2) normal_0 : vec3<f32>,
+};
+
+@vertex
+fn vertexMain( _S1 : vertexInput_0) -> VertexOutput_0
+{
+    var translation_0 : vec3<f32> = uboVS_0.translations_0[i32(0)].xyz;
+    var output_0 : VertexOutput_0;
+    output_0.position_0 = vec4<f32>(_S1.position_1.xy * uboVS_0.scale_0.xy + translation_0.xy, translation_0.z, 1.0f);
+    return output_0;
 }
 
-struct gl_PerVertex {
-    @builtin(position) gl_Position: vec4<f32>,
-    gl_PointSize: f32,
-    gl_ClipDistance: array<f32, 1>,
-    gl_CullDistance: array<f32, 1>,
-}
-
-@group(0) @binding(0) 
-var<uniform> uboVS: UniformBufferObject;
-var<private> inPosition_1: vec3<f32>;
-var<private> unnamed: gl_PerVertex = gl_PerVertex(vec4<f32>(0f, 0f, 0f, 1f), 1f, array<f32, 1>(), array<f32, 1>());
-var<private> inTextureCoord_1: vec2<f32>;
-var<private> inNormal_1: vec3<f32>;
-
-fn main_1() {
-    var translation: vec3<f32>;
-    var screenPosition: vec2<f32>;
-
-    let _e14 = uboVS.translations[0i];
-    translation = _e14.xyz;
-    let _e16 = inPosition_1;
-    let _e19 = uboVS.scale;
-    let _e22 = translation;
-    screenPosition = ((_e16.xy * _e19.xy) + _e22.xy);
-    let _e25 = screenPosition;
-    let _e27 = translation[2u];
-    unnamed.gl_Position = vec4<f32>(_e25.x, _e25.y, _e27, 1f);
-    return;
-}
-
-@vertex 
-fn main(@location(0) inPosition: vec3<f32>, @location(1) inTextureCoord: vec2<f32>, @location(2) inNormal: vec3<f32>) -> @builtin(position) vec4<f32> {
-    inPosition_1 = inPosition;
-    inTextureCoord_1 = inTextureCoord;
-    inNormal_1 = inNormal;
-    main_1();
-    let _e9 = unnamed.gl_Position.y;
-    unnamed.gl_Position.y = -(_e9);
-    let _e11 = unnamed.gl_Position;
-    return _e11;
-}

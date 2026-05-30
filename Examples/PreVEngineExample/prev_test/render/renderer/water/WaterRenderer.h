@@ -90,6 +90,8 @@ private:
 
         DEFAULT_ALIGNMENT glm::vec4 nearFarClippingPlane;
 
+        DEFAULT_ALIGNMENT glm::vec4 viewportSize;
+
         DEFAULT_ALIGNMENT float moveFactor;
     };
 

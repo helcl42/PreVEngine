@@ -132,7 +132,7 @@ void SkyRenderer::Init()
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(GFX_POLYGON_MODE_FILL)
-        .SetCullingMode(GFX_CULL_MODE_BACK)
+        .SetCullingMode(GFX_CULL_MODE_NONE)
         .Build();
     // clang-format on
 

@@ -1,1020 +1,306 @@
-var<private> gl_GlobalInvocationID_1: vec3<u32>;
-@group(0) @binding(0) 
-var outVolumeTexture: texture_storage_3d<rgba8unorm,write>;
+@binding(0) @group(0) var outVolumeTexture_0 : texture_storage_3d<rgba8unorm, write>;
 
-fn remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b(originalValue: ptr<function, f32>, originalMin: ptr<function, f32>, originalMax: ptr<function, f32>, newMin: ptr<function, f32>, newMax: ptr<function, f32>) -> f32 {
-    let _e67 = (*newMin);
-    let _e68 = (*originalValue);
-    let _e69 = (*originalMin);
-    let _e71 = (*originalMax);
-    let _e72 = (*originalMin);
-    let _e75 = (*newMax);
-    let _e76 = (*newMin);
-    return (_e67 + (((_e68 - _e69) / (_e71 - _e72)) * (_e75 - _e76)));
+fn mod289_0( x_0 : vec4<f32>) -> vec4<f32>
+{
+    var _S1 : vec4<f32> = vec4<f32>(289.0f);
+    return x_0 - floor(x_0 / _S1) * _S1;
 }
 
-fn hash_u0028_i1_u003b(n: ptr<function, i32>) -> f32 {
-    let _e63 = (*n);
-    return fract((sin((f32(_e63) + 1.951f)) * 43758.547f));
+fn permute_0( x_1 : vec4<f32>) -> vec4<f32>
+{
+    return mod289_0((x_1 * vec4<f32>(34.0f) + vec4<f32>(1.0f)) * x_1);
 }
 
-fn noise_u0028_vf3_u003b(x: ptr<function, vec3<f32>>) -> f32 {
-    var p: vec3<f32>;
-    var f: vec3<f32>;
-    var n_1: f32;
-    var param: i32;
-    var param_1: i32;
-    var param_2: i32;
-    var param_3: i32;
-    var param_4: i32;
-    var param_5: i32;
-    var param_6: i32;
-    var param_7: i32;
-
-    let _e74 = (*x);
-    p = floor(_e74);
-    let _e76 = (*x);
-    f = fract(_e76);
-    let _e78 = f;
-    let _e79 = f;
-    let _e81 = f;
-    f = ((_e78 * _e79) * (vec3<f32>(3f, 3f, 3f) - (vec3<f32>(2f, 2f, 2f) * _e81)));
-    let _e86 = p[0u];
-    let _e88 = p[1u];
-    let _e92 = p[2u];
-    n_1 = ((_e86 + (_e88 * 57f)) + (113f * _e92));
-    let _e95 = n_1;
-    param = i32((_e95 + 0f));
-    let _e98 = hash_u0028_i1_u003b((&param));
-    let _e99 = n_1;
-    param_1 = i32((_e99 + 1f));
-    let _e102 = hash_u0028_i1_u003b((&param_1));
-    let _e104 = f[0u];
-    let _e106 = n_1;
-    param_2 = i32((_e106 + 57f));
-    let _e109 = hash_u0028_i1_u003b((&param_2));
-    let _e110 = n_1;
-    param_3 = i32((_e110 + 58f));
-    let _e113 = hash_u0028_i1_u003b((&param_3));
-    let _e115 = f[0u];
-    let _e118 = f[1u];
-    let _e120 = n_1;
-    param_4 = i32((_e120 + 113f));
-    let _e123 = hash_u0028_i1_u003b((&param_4));
-    let _e124 = n_1;
-    param_5 = i32((_e124 + 114f));
-    let _e127 = hash_u0028_i1_u003b((&param_5));
-    let _e129 = f[0u];
-    let _e131 = n_1;
-    param_6 = i32((_e131 + 170f));
-    let _e134 = hash_u0028_i1_u003b((&param_6));
-    let _e135 = n_1;
-    param_7 = i32((_e135 + 171f));
-    let _e138 = hash_u0028_i1_u003b((&param_7));
-    let _e140 = f[0u];
-    let _e143 = f[1u];
-    let _e146 = f[2u];
-    return mix(mix(mix(_e98, _e102, _e104), mix(_e109, _e113, _e115), _e118), mix(mix(_e123, _e127, _e129), mix(_e134, _e138, _e140), _e143), _e146);
+fn taylorInvSqrt_0( r_0 : vec4<f32>) -> vec4<f32>
+{
+    return vec4<f32>(1.79284286499023438f) - vec4<f32>(0.85373473167419434f) * r_0;
 }
 
-fn cells_u0028_vf3_u003b_f1_u003b(p_1: ptr<function, vec3<f32>>, cellCount: ptr<function, f32>) -> f32 {
-    var pCell: vec3<f32>;
-    var d: f32;
-    var xo: i32;
-    var yo: i32;
-    var zo: i32;
-    var tp: vec3<f32>;
-    var param_8: vec3<f32>;
+fn fade_0( t_0 : vec4<f32>) -> vec4<f32>
+{
+    return t_0 * t_0 * t_0 * (t_0 * (t_0 * vec4<f32>(vec4<i32>(i32(6))) - vec4<f32>(vec4<i32>(i32(15)))) + vec4<f32>(vec4<i32>(i32(10))));
+}
 
-    let _e71 = (*p_1);
-    let _e72 = (*cellCount);
-    pCell = (_e71 * _e72);
-    d = 10000000000f;
-    xo = -1i;
-    loop {
-        let _e74 = xo;
-        if (_e74 <= 1i) {
-            yo = -1i;
-            loop {
-                let _e76 = yo;
-                if (_e76 <= 1i) {
-                    zo = -1i;
-                    loop {
-                        let _e78 = zo;
-                        if (_e78 <= 1i) {
-                            let _e80 = pCell;
-                            let _e82 = xo;
-                            let _e84 = yo;
-                            let _e86 = zo;
-                            tp = (floor(_e80) + vec3<f32>(f32(_e82), f32(_e84), f32(_e86)));
-                            let _e90 = pCell;
-                            let _e91 = tp;
-                            let _e93 = tp;
-                            let _e94 = (*cellCount);
-                            let _e96 = vec3((_e94 / 1f));
-                            param_8 = (_e93 - (floor((_e93 / _e96)) * _e96));
-                            let _e101 = noise_u0028_vf3_u003b((&param_8));
-                            tp = ((_e90 - _e91) - vec3(_e101));
-                            let _e104 = d;
-                            let _e105 = tp;
-                            let _e106 = tp;
-                            d = min(_e104, dot(_e105, _e106));
-                            continue;
-                        } else {
-                            break;
-                        }
-                        continuing {
-                            let _e109 = zo;
-                            zo = (_e109 + 1i);
-                        }
-                    }
-                    continue;
-                } else {
+fn glmPerlin4D_0( Position_0 : vec4<f32>,  rep_0 : vec4<f32>) -> f32
+{
+    var i_0 : i32;
+    var _S2 : vec4<f32>;
+    var _S3 : vec4<f32>;
+    var _S4 : vec4<f32> = floor(Position_0);
+    for(;;)
+    {
+        var result_0 : vec4<f32>;
+        i_0 = i32(0);
+        for(;;)
+        {
+            if(i_0 < i32(4))
+            {
+            }
+            else
+            {
+                break;
+            }
+            result_0[i_0] = ((((_S4[i_0])) % ((rep_0[i_0]))));
+            i_0 = i_0 + i32(1);
+        }
+        _S2 = result_0;
+        break;
+    }
+    var _S5 : vec4<f32> = vec4<f32>(vec4<i32>(i32(1)));
+    var _S6 : vec4<f32> = _S2 + _S5;
+    for(;;)
+    {
+        var result_1 : vec4<f32>;
+        i_0 = i32(0);
+        for(;;)
+        {
+            if(i_0 < i32(4))
+            {
+            }
+            else
+            {
+                break;
+            }
+            result_1[i_0] = ((((_S6[i_0])) % ((rep_0[i_0]))));
+            i_0 = i_0 + i32(1);
+        }
+        _S3 = result_1;
+        break;
+    }
+    var Pf0_0 : vec4<f32> = fract(Position_0);
+    var Pf1_0 : vec4<f32> = Pf0_0 - _S5;
+    var _S7 : f32 = _S2.x;
+    var _S8 : f32 = _S3.x;
+    var _S9 : f32 = _S2.y;
+    var _S10 : f32 = _S3.y;
+    var iw0_0 : vec4<f32> = vec4<f32>(_S2.w);
+    var iw1_0 : vec4<f32> = vec4<f32>(_S3.w);
+    var ixy_0 : vec4<f32> = permute_0(permute_0(vec4<f32>(_S7, _S8, _S7, _S8)) + vec4<f32>(_S9, _S9, _S10, _S10));
+    var ixy0_0 : vec4<f32> = permute_0(ixy_0 + vec4<f32>(_S2.z));
+    var ixy1_0 : vec4<f32> = permute_0(ixy_0 + vec4<f32>(_S3.z));
+    var _S11 : vec4<f32> = vec4<f32>(vec4<i32>(i32(7)));
+    var gx00_0 : vec4<f32> = permute_0(ixy0_0 + iw0_0) / _S11;
+    var gy00_0 : vec4<f32> = floor(gx00_0) / _S11;
+    var _S12 : vec4<f32> = vec4<f32>(vec4<i32>(i32(6)));
+    var _S13 : vec4<f32> = vec4<f32>(0.5f);
+    var gx00_1 : vec4<f32> = fract(gx00_0) - _S13;
+    var gy00_1 : vec4<f32> = fract(gy00_0) - _S13;
+    var gz00_0 : vec4<f32> = fract(floor(gy00_0) / _S12) - _S13;
+    var _S14 : vec4<f32> = vec4<f32>(0.75f);
+    var gw00_0 : vec4<f32> = _S14 - abs(gx00_1) - abs(gy00_1) - abs(gz00_0);
+    var _S15 : vec4<f32> = vec4<f32>(0.0f);
+    var sw00_0 : vec4<f32> = step(gw00_0, _S15);
+    var _S16 : vec4<f32> = vec4<f32>(vec4<i32>(i32(0)));
+    var gx00_2 : vec4<f32> = gx00_1 - sw00_0 * (step(_S16, gx00_1) - _S13);
+    var gy00_2 : vec4<f32> = gy00_1 - sw00_0 * (step(_S16, gy00_1) - _S13);
+    var gx01_0 : vec4<f32> = permute_0(ixy0_0 + iw1_0) / _S11;
+    var gy01_0 : vec4<f32> = floor(gx01_0) / _S11;
+    var gx01_1 : vec4<f32> = fract(gx01_0) - _S13;
+    var gy01_1 : vec4<f32> = fract(gy01_0) - _S13;
+    var gz01_0 : vec4<f32> = fract(floor(gy01_0) / _S12) - _S13;
+    var gw01_0 : vec4<f32> = _S14 - abs(gx01_1) - abs(gy01_1) - abs(gz01_0);
+    var sw01_0 : vec4<f32> = step(gw01_0, _S15);
+    var gx01_2 : vec4<f32> = gx01_1 - sw01_0 * (step(_S16, gx01_1) - _S13);
+    var gy01_2 : vec4<f32> = gy01_1 - sw01_0 * (step(_S16, gy01_1) - _S13);
+    var gx10_0 : vec4<f32> = permute_0(ixy1_0 + iw0_0) / _S11;
+    var gy10_0 : vec4<f32> = floor(gx10_0) / _S11;
+    var gx10_1 : vec4<f32> = fract(gx10_0) - _S13;
+    var gy10_1 : vec4<f32> = fract(gy10_0) - _S13;
+    var gz10_0 : vec4<f32> = fract(floor(gy10_0) / _S12) - _S13;
+    var gw10_0 : vec4<f32> = _S14 - abs(gx10_1) - abs(gy10_1) - abs(gz10_0);
+    var sw10_0 : vec4<f32> = step(gw10_0, _S16);
+    var gx10_2 : vec4<f32> = gx10_1 - sw10_0 * (step(_S16, gx10_1) - _S13);
+    var gy10_2 : vec4<f32> = gy10_1 - sw10_0 * (step(_S16, gy10_1) - _S13);
+    var gx11_0 : vec4<f32> = permute_0(ixy1_0 + iw1_0) / _S11;
+    var gy11_0 : vec4<f32> = floor(gx11_0) / _S11;
+    var gx11_1 : vec4<f32> = fract(gx11_0) - _S13;
+    var gy11_1 : vec4<f32> = fract(gy11_0) - _S13;
+    var gz11_0 : vec4<f32> = fract(floor(gy11_0) / _S12) - _S13;
+    var gw11_0 : vec4<f32> = _S14 - abs(gx11_1) - abs(gy11_1) - abs(gz11_0);
+    var sw11_0 : vec4<f32> = step(gw11_0, _S15);
+    var gx11_2 : vec4<f32> = gx11_1 - sw11_0 * (step(_S16, gx11_1) - _S13);
+    var gy11_2 : vec4<f32> = gy11_1 - sw11_0 * (step(_S16, gy11_1) - _S13);
+    var g0000_0 : vec4<f32> = vec4<f32>(gx00_2.x, gy00_2.x, gz00_0.x, gw00_0.x);
+    var g1000_0 : vec4<f32> = vec4<f32>(gx00_2.y, gy00_2.y, gz00_0.y, gw00_0.y);
+    var g0100_0 : vec4<f32> = vec4<f32>(gx00_2.z, gy00_2.z, gz00_0.z, gw00_0.z);
+    var g1100_0 : vec4<f32> = vec4<f32>(gx00_2.w, gy00_2.w, gz00_0.w, gw00_0.w);
+    var g0010_0 : vec4<f32> = vec4<f32>(gx10_2.x, gy10_2.x, gz10_0.x, gw10_0.x);
+    var g1010_0 : vec4<f32> = vec4<f32>(gx10_2.y, gy10_2.y, gz10_0.y, gw10_0.y);
+    var g0110_0 : vec4<f32> = vec4<f32>(gx10_2.z, gy10_2.z, gz10_0.z, gw10_0.z);
+    var g1110_0 : vec4<f32> = vec4<f32>(gx10_2.w, gy10_2.w, gz10_0.w, gw10_0.w);
+    var g0001_0 : vec4<f32> = vec4<f32>(gx01_2.x, gy01_2.x, gz01_0.x, gw01_0.x);
+    var g1001_0 : vec4<f32> = vec4<f32>(gx01_2.y, gy01_2.y, gz01_0.y, gw01_0.y);
+    var g0101_0 : vec4<f32> = vec4<f32>(gx01_2.z, gy01_2.z, gz01_0.z, gw01_0.z);
+    var g1101_0 : vec4<f32> = vec4<f32>(gx01_2.w, gy01_2.w, gz01_0.w, gw01_0.w);
+    var g0011_0 : vec4<f32> = vec4<f32>(gx11_2.x, gy11_2.x, gz11_0.x, gw11_0.x);
+    var g1011_0 : vec4<f32> = vec4<f32>(gx11_2.y, gy11_2.y, gz11_0.y, gw11_0.y);
+    var g0111_0 : vec4<f32> = vec4<f32>(gx11_2.z, gy11_2.z, gz11_0.z, gw11_0.z);
+    var g1111_0 : vec4<f32> = vec4<f32>(gx11_2.w, gy11_2.w, gz11_0.w, gw11_0.w);
+    var norm00_0 : vec4<f32> = taylorInvSqrt_0(vec4<f32>(dot(g0000_0, g0000_0), dot(g0100_0, g0100_0), dot(g1000_0, g1000_0), dot(g1100_0, g1100_0)));
+    var norm01_0 : vec4<f32> = taylorInvSqrt_0(vec4<f32>(dot(g0001_0, g0001_0), dot(g0101_0, g0101_0), dot(g1001_0, g1001_0), dot(g1101_0, g1101_0)));
+    var norm10_0 : vec4<f32> = taylorInvSqrt_0(vec4<f32>(dot(g0010_0, g0010_0), dot(g0110_0, g0110_0), dot(g1010_0, g1010_0), dot(g1110_0, g1110_0)));
+    var norm11_0 : vec4<f32> = taylorInvSqrt_0(vec4<f32>(dot(g0011_0, g0011_0), dot(g0111_0, g0111_0), dot(g1011_0, g1011_0), dot(g1111_0, g1111_0)));
+    var _S17 : f32 = Pf1_0.x;
+    var _S18 : f32 = Pf0_0.y;
+    var _S19 : f32 = Pf0_0.z;
+    var _S20 : f32 = Pf0_0.w;
+    var _S21 : f32 = Pf0_0.x;
+    var _S22 : f32 = Pf1_0.y;
+    var _S23 : f32 = Pf1_0.z;
+    var _S24 : f32 = Pf1_0.w;
+    var fade_xyzw_0 : vec4<f32> = fade_0(Pf0_0);
+    var _S25 : vec4<f32> = vec4<f32>(fade_xyzw_0.w);
+    var n_zw_0 : vec4<f32> = mix(mix(vec4<f32>(dot(g0000_0 * vec4<f32>(norm00_0.x), Pf0_0), dot(g1000_0 * vec4<f32>(norm00_0.z), vec4<f32>(_S17, _S18, _S19, _S20)), dot(g0100_0 * vec4<f32>(norm00_0.y), vec4<f32>(_S21, _S22, _S19, _S20)), dot(g1100_0 * vec4<f32>(norm00_0.w), vec4<f32>(_S17, _S22, _S19, _S20))), vec4<f32>(dot(g0001_0 * vec4<f32>(norm01_0.x), vec4<f32>(_S21, _S18, _S19, _S24)), dot(g1001_0 * vec4<f32>(norm01_0.z), vec4<f32>(_S17, _S18, _S19, _S24)), dot(g0101_0 * vec4<f32>(norm01_0.y), vec4<f32>(_S21, _S22, _S19, _S24)), dot(g1101_0 * vec4<f32>(norm01_0.w), vec4<f32>(_S17, _S22, _S19, _S24))), _S25), mix(vec4<f32>(dot(g0010_0 * vec4<f32>(norm10_0.x), vec4<f32>(_S21, _S18, _S23, _S20)), dot(g1010_0 * vec4<f32>(norm10_0.z), vec4<f32>(_S17, _S18, _S23, _S20)), dot(g0110_0 * vec4<f32>(norm10_0.y), vec4<f32>(_S21, _S22, _S23, _S20)), dot(g1110_0 * vec4<f32>(norm10_0.w), vec4<f32>(_S17, _S22, _S23, _S20))), vec4<f32>(dot(g0011_0 * vec4<f32>(norm11_0.x), vec4<f32>(_S21, _S18, _S23, _S24)), dot(g1011_0 * vec4<f32>(norm11_0.z), vec4<f32>(_S17, _S18, _S23, _S24)), dot(g0111_0 * vec4<f32>(norm11_0.y), vec4<f32>(_S21, _S22, _S23, _S24)), dot(g1111_0 * vec4<f32>(norm11_0.w), Pf1_0)), _S25), vec4<f32>(fade_xyzw_0.z));
+    var n_yzw_0 : vec2<f32> = mix(vec2<f32>(n_zw_0.x, n_zw_0.y), vec2<f32>(n_zw_0.z, n_zw_0.w), vec2<f32>(fade_xyzw_0.y));
+    return 2.20000004768371582f * mix(n_yzw_0.x, n_yzw_0.y, fade_xyzw_0.x);
+}
+
+fn perlinNoise3D_0( pIn_0 : vec3<f32>,  frequency_0 : f32,  octaveCount_0 : i32) -> f32
+{
+    var oct_0 : i32 = i32(0);
+    var _S26 : f32 = frequency_0;
+    var weight_0 : f32 = 0.5f;
+    var sum_0 : f32 = 0.0f;
+    var weightSum_0 : f32 = 0.0f;
+    for(;;)
+    {
+        if(oct_0 < octaveCount_0)
+        {
+        }
+        else
+        {
+            break;
+        }
+        var _S27 : vec4<f32> = vec4<f32>(_S26);
+        var sum_1 : f32 = sum_0 + glmPerlin4D_0(vec4<f32>(pIn_0.x, pIn_0.y, pIn_0.z, 0.0f) * _S27, _S27) * weight_0;
+        var weightSum_1 : f32 = weightSum_0 + weight_0;
+        var weight_1 : f32 = weight_0 * weight_0;
+        var _S28 : f32 = _S26 * 2.0f;
+        oct_0 = oct_0 + i32(1);
+        _S26 = _S28;
+        weight_0 = weight_1;
+        sum_0 = sum_1;
+        weightSum_0 = weightSum_1;
+    }
+    return max(min(sum_0 / weightSum_0, 1.0f), 0.0f);
+}
+
+fn hash_0( n_0 : i32) -> f32
+{
+    return fract(sin(f32(n_0) + 1.95099997520446777f) * 43758.546875f);
+}
+
+fn noise_0( x_2 : vec3<f32>) -> f32
+{
+    var p_0 : vec3<f32> = floor(x_2);
+    var f_0 : vec3<f32> = fract(x_2);
+    var f_1 : vec3<f32> = f_0 * f_0 * (vec3<f32>(3.0f) - vec3<f32>(2.0f) * f_0);
+    var n_1 : f32 = p_0.x + p_0.y * 57.0f + 113.0f * p_0.z;
+    var _S29 : f32 = f_1.x;
+    var _S30 : f32 = f_1.y;
+    return mix(mix(mix(hash_0(i32(n_1)), hash_0(i32(n_1 + 1.0f)), _S29), mix(hash_0(i32(n_1 + 57.0f)), hash_0(i32(n_1 + 58.0f)), _S29), _S30), mix(mix(hash_0(i32(n_1 + 113.0f)), hash_0(i32(n_1 + 114.0f)), _S29), mix(hash_0(i32(n_1 + 170.0f)), hash_0(i32(n_1 + 171.0f)), _S29), _S30), f_1.z);
+}
+
+fn cells_0( p_1 : vec3<f32>,  cellCount_0 : f32) -> f32
+{
+    var _S31 : vec3<f32>;
+    var _S32 : vec3<f32> = p_1 * vec3<f32>(cellCount_0);
+    var d_0 : f32 = 1.0e+10f;
+    var xo_0 : i32 = i32(-1);
+    for(;;)
+    {
+        if(xo_0 <= i32(1))
+        {
+        }
+        else
+        {
+            break;
+        }
+        var yo_0 : i32 = i32(-1);
+        for(;;)
+        {
+            if(yo_0 <= i32(1))
+            {
+            }
+            else
+            {
+                break;
+            }
+            var d_1 : f32 = d_0;
+            var zo_0 : i32 = i32(-1);
+            for(;;)
+            {
+                if(zo_0 <= i32(1))
+                {
+                }
+                else
+                {
                     break;
                 }
-                continuing {
-                    let _e111 = yo;
-                    yo = (_e111 + 1i);
+                var tp_0 : vec3<f32> = floor(_S32) + vec3<f32>(f32(xo_0), f32(yo_0), f32(zo_0));
+                var _S33 : vec3<f32> = _S32 - tp_0;
+                for(;;)
+                {
+                    var result_2 : vec3<f32>;
+                    var i_1 : i32 = i32(0);
+                    for(;;)
+                    {
+                        if(i_1 < i32(3))
+                        {
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        result_2[i_1] = ((((tp_0[i_1])) % ((cellCount_0))));
+                        i_1 = i_1 + i32(1);
+                    }
+                    _S31 = result_2;
+                    break;
                 }
+                var tp_1 : vec3<f32> = _S33 - vec3<f32>(noise_0(_S31));
+                var _S34 : f32 = min(d_1, dot(tp_1, tp_1));
+                var _S35 : i32 = zo_0 + i32(1);
+                d_1 = _S34;
+                zo_0 = _S35;
             }
-            continue;
-        } else {
-            break;
+            var _S36 : i32 = yo_0 + i32(1);
+            d_0 = d_1;
+            yo_0 = _S36;
         }
-        continuing {
-            let _e113 = xo;
-            xo = (_e113 + 1i);
-        }
+        xo_0 = xo_0 + i32(1);
     }
-    let _e115 = d;
-    d = min(_e115, 1f);
-    let _e117 = d;
-    d = max(_e117, 0f);
-    let _e119 = d;
-    return _e119;
+    return max(min(d_0, 1.0f), 0.0f);
 }
 
-fn worleyNoise3D_u0028_vf3_u003b_f1_u003b(p_2: ptr<function, vec3<f32>>, cellCount_1: ptr<function, f32>) -> f32 {
-    var param_9: vec3<f32>;
-    var param_10: f32;
-
-    let _e66 = (*p_2);
-    param_9 = _e66;
-    let _e67 = (*cellCount_1);
-    param_10 = _e67;
-    let _e68 = cells_u0028_vf3_u003b_f1_u003b((&param_9), (&param_10));
-    return _e68;
+fn worleyNoise3D_0( p_2 : vec3<f32>,  cellCount_1 : f32) -> f32
+{
+    return cells_0(p_2, cellCount_1);
 }
 
-fn fade_u0028_vf4_u003b(t: ptr<function, vec4<f32>>) -> vec4<f32> {
-    let _e63 = (*t);
-    let _e64 = (*t);
-    let _e66 = (*t);
-    let _e68 = (*t);
-    let _e69 = (*t);
-    return (((_e63 * _e64) * _e66) * ((_e68 * ((_e69 * vec4<f32>(6f, 6f, 6f, 6f)) - vec4<f32>(15f, 15f, 15f, 15f))) + vec4<f32>(10f, 10f, 10f, 10f)));
+fn remap_0( originalValue_0 : f32,  originalMin_0 : f32,  originalMax_0 : f32,  newMin_0 : f32,  newMax_0 : f32) -> f32
+{
+    return newMin_0 + (originalValue_0 - originalMin_0) / (originalMax_0 - originalMin_0) * (newMax_0 - newMin_0);
 }
 
-fn taylorInvSqrt_u0028_vf4_u003b(r: ptr<function, vec4<f32>>) -> vec4<f32> {
-    let _e63 = (*r);
-    return (vec4<f32>(1.7928429f, 1.7928429f, 1.7928429f, 1.7928429f) - (vec4<f32>(0.85373473f, 0.85373473f, 0.85373473f, 0.85373473f) * _e63));
+fn stackable3DNoise_0( pixel_0 : vec3<i32>) -> vec4<f32>
+{
+    var coord_0 : vec3<f32> = vec3<f32>(f32(pixel_0.x) / 128.0f, f32(pixel_0.y) / 128.0f, f32(pixel_0.z) / 128.0f);
+    var worleyNoise1_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 32.0f);
+    var _S37 : f32 = (1.0f - worleyNoise3D_0(coord_0, 8.0f)) * 0.625f;
+    var _S38 : f32 = worleyNoise1_0 * 0.25f;
+    var PerlinWorleyNoise_0 : f32 = remap_0(perlinNoise3D_0(coord_0, 8.0f, i32(3)), 0.0f, 1.0f, _S37 + _S38 + (1.0f - worleyNoise3D_0(coord_0, 56.0f)) * 0.125f, 1.0f);
+    var w2_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 16.0f);
+    var w4_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 64.0f);
+    return vec4<f32>(PerlinWorleyNoise_0 * PerlinWorleyNoise_0, _S37 + w2_0 * 0.25f + worleyNoise1_0 * 0.125f, w2_0 * 0.625f + _S38 + w4_0 * 0.125f, worleyNoise1_0 * 0.75f + w4_0 * 0.25f);
 }
 
-fn mod289_u0028_vf4_u003b(x_1: ptr<function, vec4<f32>>) -> vec4<f32> {
-    let _e63 = (*x_1);
-    let _e64 = (*x_1);
-    return (_e63 - (floor(((_e64 * vec4<f32>(1f, 1f, 1f, 1f)) / vec4<f32>(289f, 289f, 289f, 289f))) * vec4<f32>(289f, 289f, 289f, 289f)));
-}
-
-fn permute_u0028_vf4_u003b(x_2: ptr<function, vec4<f32>>) -> vec4<f32> {
-    var param_11: vec4<f32>;
-
-    let _e64 = (*x_2);
-    let _e68 = (*x_2);
-    param_11 = (((_e64 * 34f) + vec4(1f)) * _e68);
-    let _e70 = mod289_u0028_vf4_u003b((&param_11));
-    return _e70;
-}
-
-fn glmPerlin4D_u0028_vf4_u003b_vf4_u003b(Position: ptr<function, vec4<f32>>, rep: ptr<function, vec4<f32>>) -> f32 {
-    var Pi0_: vec4<f32>;
-    var Pi1_: vec4<f32>;
-    var Pf0_: vec4<f32>;
-    var Pf1_: vec4<f32>;
-    var ix: vec4<f32>;
-    var iy: vec4<f32>;
-    var iz0_: vec4<f32>;
-    var iz1_: vec4<f32>;
-    var iw0_: vec4<f32>;
-    var iw1_: vec4<f32>;
-    var ixy: vec4<f32>;
-    var param_12: vec4<f32>;
-    var param_13: vec4<f32>;
-    var ixy0_: vec4<f32>;
-    var param_14: vec4<f32>;
-    var ixy1_: vec4<f32>;
-    var param_15: vec4<f32>;
-    var ixy00_: vec4<f32>;
-    var param_16: vec4<f32>;
-    var ixy01_: vec4<f32>;
-    var param_17: vec4<f32>;
-    var ixy10_: vec4<f32>;
-    var param_18: vec4<f32>;
-    var ixy11_: vec4<f32>;
-    var param_19: vec4<f32>;
-    var gx00_: vec4<f32>;
-    var gy00_: vec4<f32>;
-    var gz00_: vec4<f32>;
-    var gw00_: vec4<f32>;
-    var sw00_: vec4<f32>;
-    var gx01_: vec4<f32>;
-    var gy01_: vec4<f32>;
-    var gz01_: vec4<f32>;
-    var gw01_: vec4<f32>;
-    var sw01_: vec4<f32>;
-    var gx10_: vec4<f32>;
-    var gy10_: vec4<f32>;
-    var gz10_: vec4<f32>;
-    var gw10_: vec4<f32>;
-    var sw10_: vec4<f32>;
-    var gx11_: vec4<f32>;
-    var gy11_: vec4<f32>;
-    var gz11_: vec4<f32>;
-    var gw11_: vec4<f32>;
-    var sw11_: vec4<f32>;
-    var g0000_: vec4<f32>;
-    var g1000_: vec4<f32>;
-    var g0100_: vec4<f32>;
-    var g1100_: vec4<f32>;
-    var g0010_: vec4<f32>;
-    var g1010_: vec4<f32>;
-    var g0110_: vec4<f32>;
-    var g1110_: vec4<f32>;
-    var g0001_: vec4<f32>;
-    var g1001_: vec4<f32>;
-    var g0101_: vec4<f32>;
-    var g1101_: vec4<f32>;
-    var g0011_: vec4<f32>;
-    var g1011_: vec4<f32>;
-    var g0111_: vec4<f32>;
-    var g1111_: vec4<f32>;
-    var norm00_: vec4<f32>;
-    var param_20: vec4<f32>;
-    var norm01_: vec4<f32>;
-    var param_21: vec4<f32>;
-    var norm10_: vec4<f32>;
-    var param_22: vec4<f32>;
-    var norm11_: vec4<f32>;
-    var param_23: vec4<f32>;
-    var n0000_: f32;
-    var n1000_: f32;
-    var n0100_: f32;
-    var n1100_: f32;
-    var n0010_: f32;
-    var n1010_: f32;
-    var n0110_: f32;
-    var n1110_: f32;
-    var n0001_: f32;
-    var n1001_: f32;
-    var n0101_: f32;
-    var n1101_: f32;
-    var n0011_: f32;
-    var n1011_: f32;
-    var n0111_: f32;
-    var n1111_: f32;
-    var fade_xyzw: vec4<f32>;
-    var param_24: vec4<f32>;
-    var n_0w: vec4<f32>;
-    var n_1w: vec4<f32>;
-    var n_zw: vec4<f32>;
-    var n_yzw: vec2<f32>;
-    var n_xyzw: f32;
-
-    let _e156 = (*Position);
-    let _e157 = floor(_e156);
-    let _e158 = (*rep);
-    Pi0_ = (_e157 - (floor((_e157 / _e158)) * _e158));
-    let _e163 = Pi0_;
-    let _e164 = (_e163 + vec4<f32>(1f, 1f, 1f, 1f));
-    let _e165 = (*rep);
-    Pi1_ = (_e164 - (floor((_e164 / _e165)) * _e165));
-    let _e170 = (*Position);
-    Pf0_ = fract(_e170);
-    let _e172 = Pf0_;
-    Pf1_ = (_e172 - vec4<f32>(1f, 1f, 1f, 1f));
-    let _e175 = Pi0_[0u];
-    let _e177 = Pi1_[0u];
-    let _e179 = Pi0_[0u];
-    let _e181 = Pi1_[0u];
-    ix = vec4<f32>(_e175, _e177, _e179, _e181);
-    let _e184 = Pi0_[1u];
-    let _e186 = Pi0_[1u];
-    let _e188 = Pi1_[1u];
-    let _e190 = Pi1_[1u];
-    iy = vec4<f32>(_e184, _e186, _e188, _e190);
-    let _e193 = Pi0_[2u];
-    iz0_ = vec4(_e193);
-    let _e196 = Pi1_[2u];
-    iz1_ = vec4(_e196);
-    let _e199 = Pi0_[3u];
-    iw0_ = vec4(_e199);
-    let _e202 = Pi1_[3u];
-    iw1_ = vec4(_e202);
-    let _e204 = ix;
-    param_12 = _e204;
-    let _e205 = permute_u0028_vf4_u003b((&param_12));
-    let _e206 = iy;
-    param_13 = (_e205 + _e206);
-    let _e208 = permute_u0028_vf4_u003b((&param_13));
-    ixy = _e208;
-    let _e209 = ixy;
-    let _e210 = iz0_;
-    param_14 = (_e209 + _e210);
-    let _e212 = permute_u0028_vf4_u003b((&param_14));
-    ixy0_ = _e212;
-    let _e213 = ixy;
-    let _e214 = iz1_;
-    param_15 = (_e213 + _e214);
-    let _e216 = permute_u0028_vf4_u003b((&param_15));
-    ixy1_ = _e216;
-    let _e217 = ixy0_;
-    let _e218 = iw0_;
-    param_16 = (_e217 + _e218);
-    let _e220 = permute_u0028_vf4_u003b((&param_16));
-    ixy00_ = _e220;
-    let _e221 = ixy0_;
-    let _e222 = iw1_;
-    param_17 = (_e221 + _e222);
-    let _e224 = permute_u0028_vf4_u003b((&param_17));
-    ixy01_ = _e224;
-    let _e225 = ixy1_;
-    let _e226 = iw0_;
-    param_18 = (_e225 + _e226);
-    let _e228 = permute_u0028_vf4_u003b((&param_18));
-    ixy10_ = _e228;
-    let _e229 = ixy1_;
-    let _e230 = iw1_;
-    param_19 = (_e229 + _e230);
-    let _e232 = permute_u0028_vf4_u003b((&param_19));
-    ixy11_ = _e232;
-    let _e233 = ixy00_;
-    gx00_ = (_e233 / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e235 = gx00_;
-    gy00_ = (floor(_e235) / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e238 = gy00_;
-    gz00_ = (floor(_e238) / vec4<f32>(6f, 6f, 6f, 6f));
-    let _e241 = gx00_;
-    gx00_ = (fract(_e241) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e244 = gy00_;
-    gy00_ = (fract(_e244) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e247 = gz00_;
-    gz00_ = (fract(_e247) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e250 = gx00_;
-    let _e253 = gy00_;
-    let _e256 = gz00_;
-    gw00_ = (((vec4<f32>(0.75f, 0.75f, 0.75f, 0.75f) - abs(_e250)) - abs(_e253)) - abs(_e256));
-    let _e259 = gw00_;
-    sw00_ = step(_e259, vec4<f32>(0f, 0f, 0f, 0f));
-    let _e261 = sw00_;
-    let _e262 = gx00_;
-    let _e266 = gx00_;
-    gx00_ = (_e266 - (_e261 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e262) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e268 = sw00_;
-    let _e269 = gy00_;
-    let _e273 = gy00_;
-    gy00_ = (_e273 - (_e268 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e269) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e275 = ixy01_;
-    gx01_ = (_e275 / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e277 = gx01_;
-    gy01_ = (floor(_e277) / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e280 = gy01_;
-    gz01_ = (floor(_e280) / vec4<f32>(6f, 6f, 6f, 6f));
-    let _e283 = gx01_;
-    gx01_ = (fract(_e283) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e286 = gy01_;
-    gy01_ = (fract(_e286) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e289 = gz01_;
-    gz01_ = (fract(_e289) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e292 = gx01_;
-    let _e295 = gy01_;
-    let _e298 = gz01_;
-    gw01_ = (((vec4<f32>(0.75f, 0.75f, 0.75f, 0.75f) - abs(_e292)) - abs(_e295)) - abs(_e298));
-    let _e301 = gw01_;
-    sw01_ = step(_e301, vec4<f32>(0f, 0f, 0f, 0f));
-    let _e303 = sw01_;
-    let _e304 = gx01_;
-    let _e308 = gx01_;
-    gx01_ = (_e308 - (_e303 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e304) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e310 = sw01_;
-    let _e311 = gy01_;
-    let _e315 = gy01_;
-    gy01_ = (_e315 - (_e310 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e311) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e317 = ixy10_;
-    gx10_ = (_e317 / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e319 = gx10_;
-    gy10_ = (floor(_e319) / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e322 = gy10_;
-    gz10_ = (floor(_e322) / vec4<f32>(6f, 6f, 6f, 6f));
-    let _e325 = gx10_;
-    gx10_ = (fract(_e325) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e328 = gy10_;
-    gy10_ = (fract(_e328) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e331 = gz10_;
-    gz10_ = (fract(_e331) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e334 = gx10_;
-    let _e337 = gy10_;
-    let _e340 = gz10_;
-    gw10_ = (((vec4<f32>(0.75f, 0.75f, 0.75f, 0.75f) - abs(_e334)) - abs(_e337)) - abs(_e340));
-    let _e343 = gw10_;
-    sw10_ = step(_e343, vec4<f32>(0f, 0f, 0f, 0f));
-    let _e345 = sw10_;
-    let _e346 = gx10_;
-    let _e350 = gx10_;
-    gx10_ = (_e350 - (_e345 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e346) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e352 = sw10_;
-    let _e353 = gy10_;
-    let _e357 = gy10_;
-    gy10_ = (_e357 - (_e352 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e353) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e359 = ixy11_;
-    gx11_ = (_e359 / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e361 = gx11_;
-    gy11_ = (floor(_e361) / vec4<f32>(7f, 7f, 7f, 7f));
-    let _e364 = gy11_;
-    gz11_ = (floor(_e364) / vec4<f32>(6f, 6f, 6f, 6f));
-    let _e367 = gx11_;
-    gx11_ = (fract(_e367) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e370 = gy11_;
-    gy11_ = (fract(_e370) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e373 = gz11_;
-    gz11_ = (fract(_e373) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f));
-    let _e376 = gx11_;
-    let _e379 = gy11_;
-    let _e382 = gz11_;
-    gw11_ = (((vec4<f32>(0.75f, 0.75f, 0.75f, 0.75f) - abs(_e376)) - abs(_e379)) - abs(_e382));
-    let _e385 = gw11_;
-    sw11_ = step(_e385, vec4<f32>(0f, 0f, 0f, 0f));
-    let _e387 = sw11_;
-    let _e388 = gx11_;
-    let _e392 = gx11_;
-    gx11_ = (_e392 - (_e387 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e388) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e394 = sw11_;
-    let _e395 = gy11_;
-    let _e399 = gy11_;
-    gy11_ = (_e399 - (_e394 * (step(vec4<f32>(0f, 0f, 0f, 0f), _e395) - vec4<f32>(0.5f, 0.5f, 0.5f, 0.5f))));
-    let _e402 = gx00_[0u];
-    let _e404 = gy00_[0u];
-    let _e406 = gz00_[0u];
-    let _e408 = gw00_[0u];
-    g0000_ = vec4<f32>(_e402, _e404, _e406, _e408);
-    let _e411 = gx00_[1u];
-    let _e413 = gy00_[1u];
-    let _e415 = gz00_[1u];
-    let _e417 = gw00_[1u];
-    g1000_ = vec4<f32>(_e411, _e413, _e415, _e417);
-    let _e420 = gx00_[2u];
-    let _e422 = gy00_[2u];
-    let _e424 = gz00_[2u];
-    let _e426 = gw00_[2u];
-    g0100_ = vec4<f32>(_e420, _e422, _e424, _e426);
-    let _e429 = gx00_[3u];
-    let _e431 = gy00_[3u];
-    let _e433 = gz00_[3u];
-    let _e435 = gw00_[3u];
-    g1100_ = vec4<f32>(_e429, _e431, _e433, _e435);
-    let _e438 = gx10_[0u];
-    let _e440 = gy10_[0u];
-    let _e442 = gz10_[0u];
-    let _e444 = gw10_[0u];
-    g0010_ = vec4<f32>(_e438, _e440, _e442, _e444);
-    let _e447 = gx10_[1u];
-    let _e449 = gy10_[1u];
-    let _e451 = gz10_[1u];
-    let _e453 = gw10_[1u];
-    g1010_ = vec4<f32>(_e447, _e449, _e451, _e453);
-    let _e456 = gx10_[2u];
-    let _e458 = gy10_[2u];
-    let _e460 = gz10_[2u];
-    let _e462 = gw10_[2u];
-    g0110_ = vec4<f32>(_e456, _e458, _e460, _e462);
-    let _e465 = gx10_[3u];
-    let _e467 = gy10_[3u];
-    let _e469 = gz10_[3u];
-    let _e471 = gw10_[3u];
-    g1110_ = vec4<f32>(_e465, _e467, _e469, _e471);
-    let _e474 = gx01_[0u];
-    let _e476 = gy01_[0u];
-    let _e478 = gz01_[0u];
-    let _e480 = gw01_[0u];
-    g0001_ = vec4<f32>(_e474, _e476, _e478, _e480);
-    let _e483 = gx01_[1u];
-    let _e485 = gy01_[1u];
-    let _e487 = gz01_[1u];
-    let _e489 = gw01_[1u];
-    g1001_ = vec4<f32>(_e483, _e485, _e487, _e489);
-    let _e492 = gx01_[2u];
-    let _e494 = gy01_[2u];
-    let _e496 = gz01_[2u];
-    let _e498 = gw01_[2u];
-    g0101_ = vec4<f32>(_e492, _e494, _e496, _e498);
-    let _e501 = gx01_[3u];
-    let _e503 = gy01_[3u];
-    let _e505 = gz01_[3u];
-    let _e507 = gw01_[3u];
-    g1101_ = vec4<f32>(_e501, _e503, _e505, _e507);
-    let _e510 = gx11_[0u];
-    let _e512 = gy11_[0u];
-    let _e514 = gz11_[0u];
-    let _e516 = gw11_[0u];
-    g0011_ = vec4<f32>(_e510, _e512, _e514, _e516);
-    let _e519 = gx11_[1u];
-    let _e521 = gy11_[1u];
-    let _e523 = gz11_[1u];
-    let _e525 = gw11_[1u];
-    g1011_ = vec4<f32>(_e519, _e521, _e523, _e525);
-    let _e528 = gx11_[2u];
-    let _e530 = gy11_[2u];
-    let _e532 = gz11_[2u];
-    let _e534 = gw11_[2u];
-    g0111_ = vec4<f32>(_e528, _e530, _e532, _e534);
-    let _e537 = gx11_[3u];
-    let _e539 = gy11_[3u];
-    let _e541 = gz11_[3u];
-    let _e543 = gw11_[3u];
-    g1111_ = vec4<f32>(_e537, _e539, _e541, _e543);
-    let _e545 = g0000_;
-    let _e546 = g0000_;
-    let _e548 = g0100_;
-    let _e549 = g0100_;
-    let _e551 = g1000_;
-    let _e552 = g1000_;
-    let _e554 = g1100_;
-    let _e555 = g1100_;
-    param_20 = vec4<f32>(dot(_e545, _e546), dot(_e548, _e549), dot(_e551, _e552), dot(_e554, _e555));
-    let _e558 = taylorInvSqrt_u0028_vf4_u003b((&param_20));
-    norm00_ = _e558;
-    let _e560 = norm00_[0u];
-    let _e561 = g0000_;
-    g0000_ = (_e561 * _e560);
-    let _e564 = norm00_[1u];
-    let _e565 = g0100_;
-    g0100_ = (_e565 * _e564);
-    let _e568 = norm00_[2u];
-    let _e569 = g1000_;
-    g1000_ = (_e569 * _e568);
-    let _e572 = norm00_[3u];
-    let _e573 = g1100_;
-    g1100_ = (_e573 * _e572);
-    let _e575 = g0001_;
-    let _e576 = g0001_;
-    let _e578 = g0101_;
-    let _e579 = g0101_;
-    let _e581 = g1001_;
-    let _e582 = g1001_;
-    let _e584 = g1101_;
-    let _e585 = g1101_;
-    param_21 = vec4<f32>(dot(_e575, _e576), dot(_e578, _e579), dot(_e581, _e582), dot(_e584, _e585));
-    let _e588 = taylorInvSqrt_u0028_vf4_u003b((&param_21));
-    norm01_ = _e588;
-    let _e590 = norm01_[0u];
-    let _e591 = g0001_;
-    g0001_ = (_e591 * _e590);
-    let _e594 = norm01_[1u];
-    let _e595 = g0101_;
-    g0101_ = (_e595 * _e594);
-    let _e598 = norm01_[2u];
-    let _e599 = g1001_;
-    g1001_ = (_e599 * _e598);
-    let _e602 = norm01_[3u];
-    let _e603 = g1101_;
-    g1101_ = (_e603 * _e602);
-    let _e605 = g0010_;
-    let _e606 = g0010_;
-    let _e608 = g0110_;
-    let _e609 = g0110_;
-    let _e611 = g1010_;
-    let _e612 = g1010_;
-    let _e614 = g1110_;
-    let _e615 = g1110_;
-    param_22 = vec4<f32>(dot(_e605, _e606), dot(_e608, _e609), dot(_e611, _e612), dot(_e614, _e615));
-    let _e618 = taylorInvSqrt_u0028_vf4_u003b((&param_22));
-    norm10_ = _e618;
-    let _e620 = norm10_[0u];
-    let _e621 = g0010_;
-    g0010_ = (_e621 * _e620);
-    let _e624 = norm10_[1u];
-    let _e625 = g0110_;
-    g0110_ = (_e625 * _e624);
-    let _e628 = norm10_[2u];
-    let _e629 = g1010_;
-    g1010_ = (_e629 * _e628);
-    let _e632 = norm10_[3u];
-    let _e633 = g1110_;
-    g1110_ = (_e633 * _e632);
-    let _e635 = g0011_;
-    let _e636 = g0011_;
-    let _e638 = g0111_;
-    let _e639 = g0111_;
-    let _e641 = g1011_;
-    let _e642 = g1011_;
-    let _e644 = g1111_;
-    let _e645 = g1111_;
-    param_23 = vec4<f32>(dot(_e635, _e636), dot(_e638, _e639), dot(_e641, _e642), dot(_e644, _e645));
-    let _e648 = taylorInvSqrt_u0028_vf4_u003b((&param_23));
-    norm11_ = _e648;
-    let _e650 = norm11_[0u];
-    let _e651 = g0011_;
-    g0011_ = (_e651 * _e650);
-    let _e654 = norm11_[1u];
-    let _e655 = g0111_;
-    g0111_ = (_e655 * _e654);
-    let _e658 = norm11_[2u];
-    let _e659 = g1011_;
-    g1011_ = (_e659 * _e658);
-    let _e662 = norm11_[3u];
-    let _e663 = g1111_;
-    g1111_ = (_e663 * _e662);
-    let _e665 = g0000_;
-    let _e666 = Pf0_;
-    n0000_ = dot(_e665, _e666);
-    let _e668 = g1000_;
-    let _e670 = Pf1_[0u];
-    let _e672 = Pf0_[1u];
-    let _e674 = Pf0_[2u];
-    let _e676 = Pf0_[3u];
-    n1000_ = dot(_e668, vec4<f32>(_e670, _e672, _e674, _e676));
-    let _e679 = g0100_;
-    let _e681 = Pf0_[0u];
-    let _e683 = Pf1_[1u];
-    let _e685 = Pf0_[2u];
-    let _e687 = Pf0_[3u];
-    n0100_ = dot(_e679, vec4<f32>(_e681, _e683, _e685, _e687));
-    let _e690 = g1100_;
-    let _e692 = Pf1_[0u];
-    let _e694 = Pf1_[1u];
-    let _e696 = Pf0_[2u];
-    let _e698 = Pf0_[3u];
-    n1100_ = dot(_e690, vec4<f32>(_e692, _e694, _e696, _e698));
-    let _e701 = g0010_;
-    let _e703 = Pf0_[0u];
-    let _e705 = Pf0_[1u];
-    let _e707 = Pf1_[2u];
-    let _e709 = Pf0_[3u];
-    n0010_ = dot(_e701, vec4<f32>(_e703, _e705, _e707, _e709));
-    let _e712 = g1010_;
-    let _e714 = Pf1_[0u];
-    let _e716 = Pf0_[1u];
-    let _e718 = Pf1_[2u];
-    let _e720 = Pf0_[3u];
-    n1010_ = dot(_e712, vec4<f32>(_e714, _e716, _e718, _e720));
-    let _e723 = g0110_;
-    let _e725 = Pf0_[0u];
-    let _e727 = Pf1_[1u];
-    let _e729 = Pf1_[2u];
-    let _e731 = Pf0_[3u];
-    n0110_ = dot(_e723, vec4<f32>(_e725, _e727, _e729, _e731));
-    let _e734 = g1110_;
-    let _e736 = Pf1_[0u];
-    let _e738 = Pf1_[1u];
-    let _e740 = Pf1_[2u];
-    let _e742 = Pf0_[3u];
-    n1110_ = dot(_e734, vec4<f32>(_e736, _e738, _e740, _e742));
-    let _e745 = g0001_;
-    let _e747 = Pf0_[0u];
-    let _e749 = Pf0_[1u];
-    let _e751 = Pf0_[2u];
-    let _e753 = Pf1_[3u];
-    n0001_ = dot(_e745, vec4<f32>(_e747, _e749, _e751, _e753));
-    let _e756 = g1001_;
-    let _e758 = Pf1_[0u];
-    let _e760 = Pf0_[1u];
-    let _e762 = Pf0_[2u];
-    let _e764 = Pf1_[3u];
-    n1001_ = dot(_e756, vec4<f32>(_e758, _e760, _e762, _e764));
-    let _e767 = g0101_;
-    let _e769 = Pf0_[0u];
-    let _e771 = Pf1_[1u];
-    let _e773 = Pf0_[2u];
-    let _e775 = Pf1_[3u];
-    n0101_ = dot(_e767, vec4<f32>(_e769, _e771, _e773, _e775));
-    let _e778 = g1101_;
-    let _e780 = Pf1_[0u];
-    let _e782 = Pf1_[1u];
-    let _e784 = Pf0_[2u];
-    let _e786 = Pf1_[3u];
-    n1101_ = dot(_e778, vec4<f32>(_e780, _e782, _e784, _e786));
-    let _e789 = g0011_;
-    let _e791 = Pf0_[0u];
-    let _e793 = Pf0_[1u];
-    let _e795 = Pf1_[2u];
-    let _e797 = Pf1_[3u];
-    n0011_ = dot(_e789, vec4<f32>(_e791, _e793, _e795, _e797));
-    let _e800 = g1011_;
-    let _e802 = Pf1_[0u];
-    let _e804 = Pf0_[1u];
-    let _e806 = Pf1_[2u];
-    let _e808 = Pf1_[3u];
-    n1011_ = dot(_e800, vec4<f32>(_e802, _e804, _e806, _e808));
-    let _e811 = g0111_;
-    let _e813 = Pf0_[0u];
-    let _e815 = Pf1_[1u];
-    let _e817 = Pf1_[2u];
-    let _e819 = Pf1_[3u];
-    n0111_ = dot(_e811, vec4<f32>(_e813, _e815, _e817, _e819));
-    let _e822 = g1111_;
-    let _e823 = Pf1_;
-    n1111_ = dot(_e822, _e823);
-    let _e825 = Pf0_;
-    param_24 = _e825;
-    let _e826 = fade_u0028_vf4_u003b((&param_24));
-    fade_xyzw = _e826;
-    let _e827 = n0000_;
-    let _e828 = n1000_;
-    let _e829 = n0100_;
-    let _e830 = n1100_;
-    let _e832 = n0001_;
-    let _e833 = n1001_;
-    let _e834 = n0101_;
-    let _e835 = n1101_;
-    let _e838 = fade_xyzw[3u];
-    n_0w = mix(vec4<f32>(_e827, _e828, _e829, _e830), vec4<f32>(_e832, _e833, _e834, _e835), vec4(_e838));
-    let _e841 = n0010_;
-    let _e842 = n1010_;
-    let _e843 = n0110_;
-    let _e844 = n1110_;
-    let _e846 = n0011_;
-    let _e847 = n1011_;
-    let _e848 = n0111_;
-    let _e849 = n1111_;
-    let _e852 = fade_xyzw[3u];
-    n_1w = mix(vec4<f32>(_e841, _e842, _e843, _e844), vec4<f32>(_e846, _e847, _e848, _e849), vec4(_e852));
-    let _e855 = n_0w;
-    let _e856 = n_1w;
-    let _e858 = fade_xyzw[2u];
-    n_zw = mix(_e855, _e856, vec4(_e858));
-    let _e862 = n_zw[0u];
-    let _e864 = n_zw[1u];
-    let _e867 = n_zw[2u];
-    let _e869 = n_zw[3u];
-    let _e872 = fade_xyzw[1u];
-    n_yzw = mix(vec2<f32>(_e862, _e864), vec2<f32>(_e867, _e869), vec2(_e872));
-    let _e876 = n_yzw[0u];
-    let _e878 = n_yzw[1u];
-    let _e880 = fade_xyzw[0u];
-    n_xyzw = mix(_e876, _e878, _e880);
-    let _e882 = n_xyzw;
-    return (2.2f * _e882);
-}
-
-fn perlinNoise3D_u0028_vf3_u003b_f1_u003b_i1_u003b(pIn: ptr<function, vec3<f32>>, frequency: ptr<function, f32>, octaveCount: ptr<function, i32>) -> f32 {
-    var octaveFrenquencyFactor: f32;
-    var sum: f32;
-    var weightSum: f32;
-    var weight: f32;
-    var oct: i32;
-    var p_3: vec4<f32>;
-    var val: f32;
-    var param_25: vec4<f32>;
-    var param_26: vec4<f32>;
-    var noise: f32;
-
-    octaveFrenquencyFactor = 2f;
-    sum = 0f;
-    weightSum = 0f;
-    weight = 0.5f;
-    oct = 0i;
-    loop {
-        let _e75 = oct;
-        let _e76 = (*octaveCount);
-        if (_e75 < _e76) {
-            let _e79 = (*pIn)[0u];
-            let _e81 = (*pIn)[1u];
-            let _e83 = (*pIn)[2u];
-            let _e85 = (*frequency);
-            p_3 = (vec4<f32>(_e79, _e81, _e83, 0f) * vec4(_e85));
-            let _e88 = (*frequency);
-            let _e90 = p_3;
-            param_25 = _e90;
-            param_26 = vec4(_e88);
-            let _e91 = glmPerlin4D_u0028_vf4_u003b_vf4_u003b((&param_25), (&param_26));
-            val = _e91;
-            let _e92 = val;
-            let _e93 = weight;
-            let _e95 = sum;
-            sum = (_e95 + (_e92 * _e93));
-            let _e97 = weight;
-            let _e98 = weightSum;
-            weightSum = (_e98 + _e97);
-            let _e100 = weight;
-            let _e101 = weight;
-            weight = (_e101 * _e100);
-            let _e103 = octaveFrenquencyFactor;
-            let _e104 = (*frequency);
-            (*frequency) = (_e104 * _e103);
-            continue;
-        } else {
-            break;
-        }
-        continuing {
-            let _e106 = oct;
-            oct = (_e106 + 1i);
-        }
-    }
-    let _e108 = sum;
-    let _e109 = weightSum;
-    noise = (_e108 / _e109);
-    let _e111 = noise;
-    noise = min(_e111, 1f);
-    let _e113 = noise;
-    noise = max(_e113, 0f);
-    let _e115 = noise;
-    return _e115;
-}
-
-fn stackable3DNoise_u0028_vi3_u003b(pixel: ptr<function, vec3<i32>>) -> vec4<f32> {
-    var coord: vec3<f32>;
-    var octaveCount_1: i32;
-    var frequency_1: f32;
-    var perlinNoise: f32;
-    var param_27: vec3<f32>;
-    var param_28: f32;
-    var param_29: i32;
-    var PerlinWorleyNoise: f32;
-    var cellCount_2: f32;
-    var worleyNoise0_: f32;
-    var param_30: vec3<f32>;
-    var param_31: f32;
-    var worleyNoise1_: f32;
-    var param_32: vec3<f32>;
-    var param_33: f32;
-    var worleyNoise2_: f32;
-    var param_34: vec3<f32>;
-    var param_35: f32;
-    var worleyNoise3_: f32;
-    var param_36: vec3<f32>;
-    var param_37: f32;
-    var worleyNoise4_: f32;
-    var param_38: vec3<f32>;
-    var param_39: f32;
-    var worleyNoise5_: f32;
-    var param_40: vec3<f32>;
-    var param_41: f32;
-    var worleyFBM: f32;
-    var param_42: f32;
-    var param_43: f32;
-    var param_44: f32;
-    var param_45: f32;
-    var param_46: f32;
-    var cellCount_3: f32;
-    var worleyNoise0_1: f32;
-    var param_47: vec3<f32>;
-    var param_48: f32;
-    var worleyNoise1_1: f32;
-    var param_49: vec3<f32>;
-    var param_50: f32;
-    var worleyNoise2_1: f32;
-    var param_51: vec3<f32>;
-    var param_52: f32;
-    var worleyNoise3_1: f32;
-    var param_53: vec3<f32>;
-    var param_54: f32;
-    var worleyNoise4_1: f32;
-    var param_55: vec3<f32>;
-    var param_56: f32;
-    var worleyFBM0_: f32;
-    var worleyFBM1_: f32;
-    var worleyFBM2_: f32;
-
-    let _e116 = (*pixel)[0u];
-    let _e120 = (*pixel)[1u];
-    let _e124 = (*pixel)[2u];
-    coord = vec3<f32>((f32(_e116) / 128f), (f32(_e120) / 128f), (f32(_e124) / 128f));
-    octaveCount_1 = 3i;
-    frequency_1 = 8f;
-    let _e128 = coord;
-    param_27 = _e128;
-    let _e129 = frequency_1;
-    param_28 = _e129;
-    let _e130 = octaveCount_1;
-    param_29 = _e130;
-    let _e131 = perlinNoise3D_u0028_vf3_u003b_f1_u003b_i1_u003b((&param_27), (&param_28), (&param_29));
-    perlinNoise = _e131;
-    PerlinWorleyNoise = 0f;
-    cellCount_2 = 4f;
-    let _e132 = cellCount_2;
-    let _e134 = coord;
-    param_30 = _e134;
-    param_31 = (_e132 * 2f);
-    let _e135 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_30), (&param_31));
-    worleyNoise0_ = (1f - _e135);
-    let _e137 = cellCount_2;
-    let _e139 = coord;
-    param_32 = _e139;
-    param_33 = (_e137 * 8f);
-    let _e140 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_32), (&param_33));
-    worleyNoise1_ = (1f - _e140);
-    let _e142 = cellCount_2;
-    let _e144 = coord;
-    param_34 = _e144;
-    param_35 = (_e142 * 14f);
-    let _e145 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_34), (&param_35));
-    worleyNoise2_ = (1f - _e145);
-    let _e147 = cellCount_2;
-    let _e149 = coord;
-    param_36 = _e149;
-    param_37 = (_e147 * 20f);
-    let _e150 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_36), (&param_37));
-    worleyNoise3_ = (1f - _e150);
-    let _e152 = cellCount_2;
-    let _e154 = coord;
-    param_38 = _e154;
-    param_39 = (_e152 * 26f);
-    let _e155 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_38), (&param_39));
-    worleyNoise4_ = (1f - _e155);
-    let _e157 = cellCount_2;
-    let _e159 = coord;
-    param_40 = _e159;
-    param_41 = (_e157 * 32f);
-    let _e160 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_40), (&param_41));
-    worleyNoise5_ = (1f - _e160);
-    let _e162 = worleyNoise0_;
-    let _e164 = worleyNoise1_;
-    let _e167 = worleyNoise2_;
-    worleyFBM = (((_e162 * 0.625f) + (_e164 * 0.25f)) + (_e167 * 0.125f));
-    let _e170 = perlinNoise;
-    param_42 = _e170;
-    param_43 = 0f;
-    param_44 = 1f;
-    let _e171 = worleyFBM;
-    param_45 = _e171;
-    param_46 = 1f;
-    let _e172 = remap_u0028_f1_u003b_f1_u003b_f1_u003b_f1_u003b_f1_u003b((&param_42), (&param_43), (&param_44), (&param_45), (&param_46));
-    PerlinWorleyNoise = _e172;
-    cellCount_3 = 4f;
-    let _e173 = cellCount_3;
-    let _e175 = coord;
-    param_47 = _e175;
-    param_48 = (_e173 * 1f);
-    let _e176 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_47), (&param_48));
-    worleyNoise0_1 = (1f - _e176);
-    let _e178 = cellCount_3;
-    let _e180 = coord;
-    param_49 = _e180;
-    param_50 = (_e178 * 2f);
-    let _e181 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_49), (&param_50));
-    worleyNoise1_1 = (1f - _e181);
-    let _e183 = cellCount_3;
-    let _e185 = coord;
-    param_51 = _e185;
-    param_52 = (_e183 * 4f);
-    let _e186 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_51), (&param_52));
-    worleyNoise2_1 = (1f - _e186);
-    let _e188 = cellCount_3;
-    let _e190 = coord;
-    param_53 = _e190;
-    param_54 = (_e188 * 8f);
-    let _e191 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_53), (&param_54));
-    worleyNoise3_1 = (1f - _e191);
-    let _e193 = cellCount_3;
-    let _e195 = coord;
-    param_55 = _e195;
-    param_56 = (_e193 * 16f);
-    let _e196 = worleyNoise3D_u0028_vf3_u003b_f1_u003b((&param_55), (&param_56));
-    worleyNoise4_1 = (1f - _e196);
-    let _e198 = worleyNoise1_1;
-    let _e200 = worleyNoise2_1;
-    let _e203 = worleyNoise3_1;
-    worleyFBM0_ = (((_e198 * 0.625f) + (_e200 * 0.25f)) + (_e203 * 0.125f));
-    let _e206 = worleyNoise2_1;
-    let _e208 = worleyNoise3_1;
-    let _e211 = worleyNoise4_1;
-    worleyFBM1_ = (((_e206 * 0.625f) + (_e208 * 0.25f)) + (_e211 * 0.125f));
-    let _e214 = worleyNoise3_1;
-    let _e216 = worleyNoise4_1;
-    worleyFBM2_ = ((_e214 * 0.75f) + (_e216 * 0.25f));
-    let _e219 = PerlinWorleyNoise;
-    let _e220 = PerlinWorleyNoise;
-    let _e222 = worleyFBM0_;
-    let _e223 = worleyFBM1_;
-    let _e224 = worleyFBM2_;
-    return vec4<f32>((_e219 * _e220), _e222, _e223, _e224);
-}
-
-fn main_1() {
-    var pixel_1: vec3<i32>;
-    var param_57: vec3<i32>;
-
-    let _e64 = gl_GlobalInvocationID_1;
-    pixel_1 = bitcast<vec3<i32>>(_e64);
-    let _e66 = pixel_1;
-    let _e67 = pixel_1;
-    param_57 = _e67;
-    let _e68 = stackable3DNoise_u0028_vi3_u003b((&param_57));
-    textureStore(outVolumeTexture, _e66, _e68);
+@compute
+@workgroup_size(4, 4, 4)
+fn computeMain(@builtin(global_invocation_id) dispatchThreadID_0 : vec3<u32>)
+{
+    var _S39 : vec3<i32> = vec3<i32>(dispatchThreadID_0.xyz);
+    textureStore((outVolumeTexture_0), (vec3<u32>(_S39)), (stackable3DNoise_0(_S39)));
     return;
 }
 
-@compute @workgroup_size(4, 4, 4) 
-fn main(@builtin(global_invocation_id) gl_GlobalInvocationID: vec3<u32>) {
-    gl_GlobalInvocationID_1 = gl_GlobalInvocationID;
-    main_1();
-}

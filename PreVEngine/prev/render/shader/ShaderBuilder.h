@@ -127,7 +127,7 @@ private:
     std::string m_entryPointName;
 
 private:
-    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" };
+    static inline const std::string DEFAULT_ENTRY_POINT_NAME{ "main" }; // Legacy: entry points are now vertexMain/fragmentMain/computeMain
 };
 } // namespace prev::render::shader
 
