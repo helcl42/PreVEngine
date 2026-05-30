@@ -1,44 +1,28 @@
-struct gl_PerVertex {
-    @builtin(position) gl_Position: vec4<f32>,
-    gl_PointSize: f32,
-    gl_ClipDistance: array<f32, 1>,
-    gl_CullDistance: array<f32, 1>,
+struct FontVSParams_std140_0
+{
+    @align(16) translation_0 : vec4<f32>,
+    @align(16) scale_0 : vec4<f32>,
+};
+
+@binding(0) @group(0) var<uniform> uboVS_0 : FontVSParams_std140_0;
+struct Interpolants_0
+{
+    @builtin(position) position_0 : vec4<f32>,
+    @location(0) textureCoord_0 : vec2<f32>,
+};
+
+struct vertexInput_0
+{
+    @location(0) position_1 : vec2<f32>,
+    @location(1) textureCoord_1 : vec2<f32>,
+};
+
+@vertex
+fn vertexMain( _S1 : vertexInput_0) -> Interpolants_0
+{
+    var output_0 : Interpolants_0;
+    output_0.position_0 = vec4<f32>((_S1.position_1 + uboVS_0.translation_0.xy * vec2<f32>(2.0f, 2.0f)) * uboVS_0.scale_0.xy, 0.0f, 1.0f);
+    output_0.textureCoord_0 = _S1.textureCoord_1;
+    return output_0;
 }
 
-struct UniformBufferObject {
-    translation: vec4<f32>,
-}
-
-struct VertexOutput {
-    @builtin(position) gl_Position: vec4<f32>,
-    @location(0) member: vec2<f32>,
-}
-
-var<private> unnamed: gl_PerVertex = gl_PerVertex(vec4<f32>(0f, 0f, 0f, 1f), 1f, array<f32, 1>(), array<f32, 1>());
-var<private> inPosition_1: vec2<f32>;
-@group(0) @binding(0) 
-var<uniform> uboVS: UniformBufferObject;
-var<private> outTextureCoord: vec2<f32>;
-var<private> inTextureCoord_1: vec2<f32>;
-
-fn main_1() {
-    let _e11 = inPosition_1;
-    let _e13 = uboVS.translation;
-    let _e16 = (_e11 + (_e13.xy * vec2<f32>(2f, 2f)));
-    unnamed.gl_Position = vec4<f32>(_e16.x, _e16.y, 0f, 1f);
-    let _e21 = inTextureCoord_1;
-    outTextureCoord = _e21;
-    return;
-}
-
-@vertex 
-fn main(@location(0) inPosition: vec2<f32>, @location(1) inTextureCoord: vec2<f32>) -> VertexOutput {
-    inPosition_1 = inPosition;
-    inTextureCoord_1 = inTextureCoord;
-    main_1();
-    let _e8 = unnamed.gl_Position.y;
-    unnamed.gl_Position.y = -(_e8);
-    let _e10 = unnamed.gl_Position;
-    let _e11 = outTextureCoord;
-    return VertexOutput(_e10, _e11);
-}

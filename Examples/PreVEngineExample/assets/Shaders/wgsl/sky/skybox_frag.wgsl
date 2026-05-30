@@ -1,49 +1,30 @@
-struct UniformBufferObject {
-    fogColor: vec4<f32>,
-    lowerLimit: vec4<f32>,
-    upperLimit: vec4<f32>,
+@binding(2) @group(0) var cubeMap1Texture_0 : texture_cube<f32>;
+
+@binding(3) @group(0) var cubeMap1Sampler_0 : sampler;
+
+struct SkyboxFSParams_std140_0
+{
+    @align(16) fogColor_0 : vec4<f32>,
+    @align(16) lowerLimit_0 : vec4<f32>,
+    @align(16) upperLimit_0 : vec4<f32>,
+};
+
+@binding(1) @group(0) var<uniform> uboFS_0 : SkyboxFSParams_std140_0;
+struct pixelOutput_0
+{
+    @location(0) output_0 : vec4<f32>,
+};
+
+struct pixelInput_0
+{
+    @location(0) textureCoord_0 : vec3<f32>,
+};
+
+@fragment
+fn fragmentMain( _S1 : pixelInput_0, @builtin(position) position_0 : vec4<f32>) -> pixelOutput_0
+{
+    var _S2 : f32 = _S1.textureCoord_0.y;
+    var _S3 : pixelOutput_0 = pixelOutput_0( mix(vec4<f32>(uboFS_0.fogColor_0.xyz, 1.0f), (textureSample((cubeMap1Texture_0), (cubeMap1Sampler_0), (vec3<f32>(- _S1.textureCoord_0.x, _S2, _S1.textureCoord_0.z)))), vec4<f32>(clamp((_S2 - uboFS_0.lowerLimit_0.x) / (uboFS_0.upperLimit_0.x - uboFS_0.lowerLimit_0.x), 0.0f, 1.0f))) );
+    return _S3;
 }
 
-var<private> inTextureCoord_1: vec3<f32>;
-@group(0) @binding(2) 
-var cubeMap1Texture: texture_cube<f32>;
-@group(0) @binding(3) 
-var cubeMap1Sampler: sampler;
-@group(0) @binding(1) 
-var<uniform> uboFS: UniformBufferObject;
-var<private> outColor: vec4<f32>;
-
-fn main_1() {
-    var tc: vec3<f32>;
-    var finalColor: vec4<f32>;
-    var factor: f32;
-
-    let _e17 = inTextureCoord_1[0u];
-    let _e20 = inTextureCoord_1[1u];
-    let _e22 = inTextureCoord_1[2u];
-    tc = vec3<f32>(-(_e17), _e20, _e22);
-    let _e24 = tc;
-    let _e25 = textureSample(cubeMap1Texture, cubeMap1Sampler, _e24);
-    finalColor = _e25;
-    let _e27 = inTextureCoord_1[1u];
-    let _e30 = uboFS.lowerLimit[0u];
-    let _e34 = uboFS.upperLimit[0u];
-    let _e37 = uboFS.lowerLimit[0u];
-    factor = ((_e27 - _e30) / (_e34 - _e37));
-    let _e40 = factor;
-    factor = clamp(_e40, 0f, 1f);
-    let _e43 = uboFS.fogColor;
-    let _e44 = _e43.xyz;
-    let _e49 = finalColor;
-    let _e50 = factor;
-    outColor = mix(vec4<f32>(_e44.x, _e44.y, _e44.z, 1f), _e49, vec4(_e50));
-    return;
-}
-
-@fragment 
-fn main(@location(0) inTextureCoord: vec3<f32>) -> @location(0) vec4<f32> {
-    inTextureCoord_1 = inTextureCoord;
-    main_1();
-    let _e3 = outColor;
-    return _e3;
-}

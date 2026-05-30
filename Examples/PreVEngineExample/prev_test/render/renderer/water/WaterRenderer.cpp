@@ -179,11 +179,12 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     uniformsFS.light.color = glm::vec4(mainLightComponent->GetColor(), 1.0f);
     uniformsFS.light.position = glm::vec4(mainLightComponent->GetPosition(), 1.0f);
     uniformsFS.nearFarClippingPlane = glm::vec4(renderContext.nearFarClippingPlanes[0], 0.0f, 0.0f);
+    uniformsFS.viewportSize = glm::vec4(static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 0.0f);
     uniformsFS.moveFactor = waterComponent->GetMoveFactor();
     // shadows
     for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
         const auto& cascade{ shadowsComponent->GetCascadeFrameData(i) };
-        uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(), glm::vec4(cascade.endSplitDepth));
+        uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU), glm::vec4(cascade.endSplitDepth));
     }
     uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
     uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH ? 1 : 0;

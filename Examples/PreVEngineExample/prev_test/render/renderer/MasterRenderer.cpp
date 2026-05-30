@@ -308,8 +308,14 @@ void MasterRenderer::RenderShadows(const prev::render::RenderContext& renderCont
         const auto& cascadeRenderData{ shadows->GetCascadeRenderData(cascadeIndex) };
         const auto& cascadeFrameData{ shadows->GetCascadeFrameData(cascadeIndex) };
 
+        // For WebGPU: cancel the Vulkan Y-flip so the shadow map renders with correct orientation.
+        // The lookup (GetBiasedViewProjectionMatrix) still uses the original projection, so the UVs
+        // remain consistent with the Vulkan-oriented shadow map content.
+        auto shadowProjection{ cascadeFrameData.projectionMatrix };
+        shadowProjection = AdjustProjection(shadowProjection);
+
         const prev::render::RenderContext customRenderContextBase{ *cascadeRenderData.framebuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, shadows->GetExtent() } };
-        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, cascadeFrameData.projectionMatrix, cascadeIndex, prev::util::intersection::Frustum{ cascadeFrameData.projectionMatrix, cascadeFrameData.viewMatrix } };
+        const ShadowsRenderContext customRenderContext{ customRenderContextBase, cascadeFrameData.viewMatrix, shadowProjection, cascadeIndex, prev::util::intersection::Frustum{ shadowProjection, cascadeFrameData.viewMatrix } };
 
 #ifdef PARALLEL_COMMAND_RECORDING
         const auto& cascadeCommandBuffers{ m_shadowsCommandBufferGroups[cascadeIndex]->GetEncoders(customRenderContext.frameInFlightIndex) };
@@ -348,7 +354,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
         const auto reflectedUpDirection{ glm::reflect(-cameraComponent->GetUpDirection(), cameraComponent->GetDefaultUpDirection()) };
 
         const glm::mat4 viewMatrix{ glm::lookAt(newCameraPosition, newCameraViewPosition, reflectedUpDirection) };
-        const glm::mat4 projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
+        const glm::mat4 projectionMatrix{ AdjustProjection(cameraComponent->GetViewFrustum().CreateProjectionMatrix()) };
 
         customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
         customRenderContext.viewMatrices[view] = viewMatrix;
@@ -383,7 +389,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
         const auto& cameraComponent{ cameraComponents[view] };
 
         const auto& viewMatrix{ cameraComponent->LookAt() };
-        const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
+        const auto projectionMatrix{ AdjustProjection(cameraComponent->GetViewFrustum().CreateProjectionMatrix()) };
 
         customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
         customRenderContext.viewMatrices[view] = viewMatrix;
@@ -415,7 +421,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
         const auto& cameraComponent{ cameraComponents[view] };
 
         const auto& viewMatrix{ cameraComponent->LookAt() };
-        const auto projectionMatrix{ cameraComponent->GetViewFrustum().CreateProjectionMatrix() };
+        const auto projectionMatrix{ AdjustProjection(cameraComponent->GetViewFrustum().CreateProjectionMatrix()) };
 
         customRenderContext.nearFarClippingPlanes[view] = glm::vec2(cameraComponent->GetViewFrustum().GetNearClippingPlane(), cameraComponent->GetViewFrustum().GetFarClippingPlane());
         customRenderContext.viewMatrices[view] = viewMatrix;
@@ -442,5 +448,15 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
 #else
     RenderSerial(m_defaultRenderPass, customRenderContext, root, m_debugRenderers);
 #endif
+}
+
+glm::mat4 MasterRenderer::AdjustProjection(const glm::mat4& projection) const
+{
+    if (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU) {
+        glm::mat4 result = projection;
+        result[1][1] *= -1.0f; // Undo Vulkan Y-flip; WebGPU clip space is Y-up
+        return result;
+    }
+    return projection;
 }
 } // namespace prev_test::render::renderer

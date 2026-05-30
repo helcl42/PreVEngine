@@ -1,218 +1,128 @@
-struct Light {
-    position: vec4<f32>,
-    color: vec4<f32>,
-    attenuation: vec4<f32>,
+struct _MatrixStorage_float4x4_ColMajorstd140_0
+{
+    @align(16) data_0 : array<vec4<f32>, i32(4)>,
+};
+
+struct _Array_std140_matrixx3Cfloatx2C4x2C4x3E100_0
+{
+    @align(16) data_1 : array<_MatrixStorage_float4x4_ColMajorstd140_0, i32(100)>,
+};
+
+struct _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0
+{
+    @align(16) data_2 : array<_MatrixStorage_float4x4_ColMajorstd140_0, i32(1)>,
+};
+
+struct Light_std140_0
+{
+    @align(16) position_0 : vec4<f32>,
+    @align(16) color_0 : vec4<f32>,
+    @align(16) attenuation_0 : vec4<f32>,
+};
+
+struct _Array_std140_Light4_0
+{
+    @align(16) data_3 : array<Light_std140_0, i32(4)>,
+};
+
+struct Lightning_std140_0
+{
+    @align(16) lights_0 : _Array_std140_Light4_0,
+    @align(16) realCountOfLights_0 : u32,
+    @align(4) ambientFactor_0 : f32,
+};
+
+struct AnimationVSParams_std140_0
+{
+    @align(16) bones_0 : _Array_std140_matrixx3Cfloatx2C4x2C4x3E100_0,
+    @align(16) modelMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) normalMatrix_0 : _MatrixStorage_float4x4_ColMajorstd140_0,
+    @align(16) viewMatrices_0 : _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0,
+    @align(16) projectionMatrices_0 : _Array_std140_matrixx3Cfloatx2C4x2C4x3E1_0,
+    @align(16) cameraPositions_0 : array<vec4<f32>, i32(1)>,
+    @align(16) clipPlane_0 : vec4<f32>,
+    @align(16) lightning_0 : Lightning_std140_0,
+    @align(16) textureOffset_0 : vec4<f32>,
+    @align(16) textureNumberOfRows_0 : u32,
+    @align(4) density_0 : f32,
+    @align(8) gradient_0 : f32,
+};
+
+@binding(0) @group(0) var<uniform> uboVS_0 : AnimationVSParams_std140_0;
+fn GetVisibility_0( viewPosition_0 : vec3<f32>,  gradient_1 : f32,  density_1 : f32) -> f32
+{
+    return clamp(exp(- pow(length(viewPosition_0) * density_1, gradient_1)), 0.0f, 1.0f);
 }
 
-struct Lightning {
-    lights: array<Light, 4>,
-    realCountOfLights: u32,
-    ambientFactor: f32,
-}
+struct Interpolants_0
+{
+    @builtin(position) position_1 : vec4<f32>,
+    @location(0) textureCoord_0 : vec2<f32>,
+    @location(10) normal_0 : vec3<f32>,
+    @location(1) worldPosition_0 : vec3<f32>,
+    @location(2) viewPosition_1 : vec3<f32>,
+    @location(3) toCameraVector_0 : vec3<f32>,
+    @location(4) visibility_0 : f32,
+    @location(5) toLightVector0_0 : vec3<f32>,
+    @location(6) toLightVector1_0 : vec3<f32>,
+    @location(7) toLightVector2_0 : vec3<f32>,
+    @location(8) toLightVector3_0 : vec3<f32>,
+    @location(9) clipDistance_0 : f32,
+};
 
-struct UniformBufferObject {
-    bones: array<mat4x4<f32>, 100>,
-    modelMatrix: mat4x4<f32>,
-    normalMatrix: mat4x4<f32>,
-    viewMatrices: array<mat4x4<f32>, 1>,
-    projectionMatrices: array<mat4x4<f32>, 1>,
-    cameraPositions: array<vec4<f32>, 1>,
-    clipPlane: vec4<f32>,
-    lightning: Lightning,
-    textureOffset: vec4<f32>,
-    textureNumberOfRows: u32,
-    density: f32,
-    gradient: f32,
-}
+struct vertexInput_0
+{
+    @location(0) position_2 : vec3<f32>,
+    @location(1) textureCoord_1 : vec2<f32>,
+    @location(2) normal_1 : vec3<f32>,
+    @location(3) boneIds_0 : vec4<i32>,
+    @location(4) weights_0 : vec4<f32>,
+};
 
-struct gl_PerVertex {
-    @builtin(position) gl_Position: vec4<f32>,
-    gl_PointSize: f32,
-    gl_ClipDistance: array<f32, 1>,
-    gl_CullDistance: array<f32, 1>,
-}
-
-struct VertexOutput {
-    @location(2) member: vec3<f32>,
-    @location(10) member_1: f32,
-    @location(3) member_2: vec3<f32>,
-    @builtin(position) gl_Position: vec4<f32>,
-    @location(0) member_3: vec2<f32>,
-    @location(1) member_4: vec3<f32>,
-    @location(4) member_5: vec3<f32>,
-    @location(5) member_6: f32,
-    @location(6) member_7: vec3<f32>,
-    @location(7) member_8: vec3<f32>,
-    @location(8) member_9: vec3<f32>,
-    @location(9) member_10: vec3<f32>,
-}
-
-@group(0) @binding(0) 
-var<uniform> uboVS: UniformBufferObject;
-var<private> inBoneIds_1: vec4<i32>;
-var<private> inWeights_1: vec4<f32>;
-var<private> inPosition_1: vec3<f32>;
-var<private> inNormal_1: vec3<f32>;
-var<private> outWorldPosition: vec3<f32>;
-var<private> outClipDistance: f32;
-var<private> outViewPosition: vec3<f32>;
-var<private> unnamed: gl_PerVertex = gl_PerVertex(vec4<f32>(0f, 0f, 0f, 1f), 1f, array<f32, 1>(), array<f32, 1>());
-var<private> outTextureCoord: vec2<f32>;
-var<private> inTextureCoord_1: vec2<f32>;
-var<private> outNormal: vec3<f32>;
-var<private> outToCameraVector: vec3<f32>;
-var<private> outVisibility: f32;
-var<private> outToLightVector0_: vec3<f32>;
-var<private> outToLightVector1_: vec3<f32>;
-var<private> outToLightVector2_: vec3<f32>;
-var<private> outToLightVector3_: vec3<f32>;
-
-fn GetVisibility_u0028_vf3_u003b_f1_u003b_f1_u003b(viewPosition: ptr<function, vec3<f32>>, gradient: ptr<function, f32>, density: ptr<function, f32>) -> f32 {
-    var vertexToCameraDistance: f32;
-    var visibility: f32;
-
-    let _e45 = (*viewPosition);
-    vertexToCameraDistance = length(_e45);
-    let _e47 = vertexToCameraDistance;
-    let _e48 = (*density);
-    let _e50 = (*gradient);
-    visibility = exp(-(pow((_e47 * _e48), _e50)));
-    let _e54 = visibility;
-    return clamp(_e54, 0f, 1f);
-}
-
-fn main_1() {
-    var boneTransform: mat4x4<f32>;
-    var positionL: vec4<f32>;
-    var normalL: vec4<f32>;
-    var worldPosition: vec4<f32>;
-    var viewPosition_1: vec4<f32>;
-    var i: i32;
-    var light: Light;
-    var outToLightVector_arr: array<vec3<f32>, 4>;
-    var param: vec3<f32>;
-    var param_1: f32;
-    var param_2: f32;
-
-    let _e52 = inBoneIds_1[0u];
-    let _e55 = uboVS.bones[_e52];
-    let _e57 = inWeights_1[0u];
-    boneTransform = (_e55 * _e57);
-    let _e60 = inBoneIds_1[1u];
-    let _e63 = uboVS.bones[_e60];
-    let _e65 = inWeights_1[1u];
-    let _e66 = (_e63 * _e65);
-    let _e67 = boneTransform;
-    boneTransform = mat4x4<f32>((_e67[0] + _e66[0]), (_e67[1] + _e66[1]), (_e67[2] + _e66[2]), (_e67[3] + _e66[3]));
-    let _e82 = inBoneIds_1[2u];
-    let _e85 = uboVS.bones[_e82];
-    let _e87 = inWeights_1[2u];
-    let _e88 = (_e85 * _e87);
-    let _e89 = boneTransform;
-    boneTransform = mat4x4<f32>((_e89[0] + _e88[0]), (_e89[1] + _e88[1]), (_e89[2] + _e88[2]), (_e89[3] + _e88[3]));
-    let _e104 = inBoneIds_1[3u];
-    let _e107 = uboVS.bones[_e104];
-    let _e109 = inWeights_1[3u];
-    let _e110 = (_e107 * _e109);
-    let _e111 = boneTransform;
-    boneTransform = mat4x4<f32>((_e111[0] + _e110[0]), (_e111[1] + _e110[1]), (_e111[2] + _e110[2]), (_e111[3] + _e110[3]));
-    let _e125 = boneTransform;
-    let _e126 = inPosition_1;
-    positionL = (_e125 * vec4<f32>(_e126.x, _e126.y, _e126.z, 1f));
-    let _e132 = boneTransform;
-    let _e133 = inNormal_1;
-    normalL = (_e132 * vec4<f32>(_e133.x, _e133.y, _e133.z, 0f));
-    let _e140 = uboVS.modelMatrix;
-    let _e141 = positionL;
-    let _e142 = _e141.xyz;
-    worldPosition = (_e140 * vec4<f32>(_e142.x, _e142.y, _e142.z, 1f));
-    let _e148 = worldPosition;
-    outWorldPosition = _e148.xyz;
-    let _e150 = worldPosition;
-    let _e152 = uboVS.clipPlane;
-    outClipDistance = dot(_e150, _e152);
-    let _e156 = uboVS.viewMatrices[0i];
-    let _e157 = worldPosition;
-    viewPosition_1 = (_e156 * _e157);
-    let _e159 = viewPosition_1;
-    outViewPosition = _e159.xyz;
-    let _e163 = uboVS.projectionMatrices[0i];
-    let _e164 = viewPosition_1;
-    unnamed.gl_Position = (_e163 * _e164);
-    let _e167 = inTextureCoord_1;
-    let _e169 = uboVS.textureNumberOfRows;
-    let _e174 = uboVS.textureOffset;
-    outTextureCoord = ((_e167 / vec2(f32(_e169))) + _e174.xy);
-    let _e178 = uboVS.normalMatrix;
-    let _e179 = normalL;
-    let _e180 = _e179.xyz;
-    outNormal = (_e178 * vec4<f32>(_e180.x, _e180.y, _e180.z, 0f)).xyz;
-    i = 0i;
-    loop {
-        let _e187 = i;
-        let _e191 = uboVS.lightning.realCountOfLights;
-        if (bitcast<u32>(_e187) < _e191) {
-            let _e193 = i;
-            let _e197 = uboVS.lightning.lights[_e193];
-            light.position = _e197.position;
-            light.color = _e197.color;
-            light.attenuation = _e197.attenuation;
-            let _e204 = i;
-            let _e206 = light.position;
-            let _e208 = worldPosition;
-            outToLightVector_arr[_e204] = (_e206.xyz - _e208.xyz);
-            continue;
-        } else {
+@vertex
+fn vertexMain( _S1 : vertexInput_0) -> Interpolants_0
+{
+    var _S2 : mat4x4<f32> = mat4x4<f32>(uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(0)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(1)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(2)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(3)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(0)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(1)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(2)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(3)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(0)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(1)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(2)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(3)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(0)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(1)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(2)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(0)]].data_0[i32(3)][i32(3)]);
+    var _S3 : mat4x4<f32> = mat4x4<f32>(_S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)], _S1.weights_0[i32(0)]);
+    var _S4 : mat4x4<f32> = mat4x4<f32>(uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(0)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(1)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(2)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(3)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(0)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(1)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(2)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(3)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(0)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(1)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(2)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(3)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(0)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(1)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(2)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(1)]].data_0[i32(3)][i32(3)]);
+    var _S5 : mat4x4<f32> = mat4x4<f32>(_S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)], _S1.weights_0[i32(1)]);
+    var _S6 : mat4x4<f32> = mat4x4<f32>(uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(0)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(1)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(2)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(3)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(0)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(1)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(2)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(3)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(0)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(1)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(2)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(3)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(0)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(1)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(2)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(2)]].data_0[i32(3)][i32(3)]);
+    var _S7 : mat4x4<f32> = mat4x4<f32>(_S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)], _S1.weights_0[i32(2)]);
+    var _S8 : mat4x4<f32> = mat4x4<f32>(uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(0)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(1)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(2)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(3)][i32(0)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(0)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(1)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(2)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(3)][i32(1)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(0)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(1)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(2)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(3)][i32(2)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(0)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(1)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(2)][i32(3)], uboVS_0.bones_0.data_1[_S1.boneIds_0[i32(3)]].data_0[i32(3)][i32(3)]);
+    var _S9 : mat4x4<f32> = mat4x4<f32>(_S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)], _S1.weights_0[i32(3)]);
+    var _S10 : mat4x4<f32> = mat4x4<f32>(_S2[0] * _S3[0], _S2[1] * _S3[1], _S2[2] * _S3[2], _S2[3] * _S3[3]) + mat4x4<f32>(_S4[0] * _S5[0], _S4[1] * _S5[1], _S4[2] * _S5[2], _S4[3] * _S5[3]) + mat4x4<f32>(_S6[0] * _S7[0], _S6[1] * _S7[1], _S6[2] * _S7[2], _S6[3] * _S7[3]) + mat4x4<f32>(_S8[0] * _S9[0], _S8[1] * _S9[1], _S8[2] * _S9[2], _S8[3] * _S9[3]);
+    var normalL_0 : vec4<f32> = (((vec4<f32>(_S1.normal_1, 0.0f)) * (_S10)));
+    var worldPosition_1 : vec4<f32> = (((vec4<f32>((((vec4<f32>(_S1.position_2, 1.0f)) * (_S10))).xyz, 1.0f)) * (mat4x4<f32>(uboVS_0.modelMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.modelMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.modelMatrix_0.data_0[i32(3)][i32(3)]))));
+    var output_0 : Interpolants_0;
+    var _S11 : vec3<f32> = worldPosition_1.xyz;
+    output_0.worldPosition_0 = _S11;
+    output_0.clipDistance_0 = dot(worldPosition_1, uboVS_0.clipPlane_0);
+    var viewPosition_2 : vec4<f32> = (((worldPosition_1) * (mat4x4<f32>(uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(0)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(0)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(0)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(0)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(1)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(1)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(1)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(1)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(2)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(2)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(2)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(2)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(3)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(3)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(3)], uboVS_0.viewMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(3)]))));
+    var _S12 : vec3<f32> = viewPosition_2.xyz;
+    output_0.viewPosition_1 = _S12;
+    output_0.position_1 = (((viewPosition_2) * (mat4x4<f32>(uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(0)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(0)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(0)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(0)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(1)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(1)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(1)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(1)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(2)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(2)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(2)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(2)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(0)][i32(3)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(1)][i32(3)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(2)][i32(3)], uboVS_0.projectionMatrices_0.data_2[i32(0)].data_0[i32(3)][i32(3)]))));
+    output_0.textureCoord_0 = _S1.textureCoord_1 / vec2<f32>(f32(uboVS_0.textureNumberOfRows_0)) + uboVS_0.textureOffset_0.xy;
+    output_0.normal_0 = (((vec4<f32>(normalL_0.xyz, 0.0f)) * (mat4x4<f32>(uboVS_0.normalMatrix_0.data_0[i32(0)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(0)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(1)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(2)], uboVS_0.normalMatrix_0.data_0[i32(0)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(1)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(2)][i32(3)], uboVS_0.normalMatrix_0.data_0[i32(3)][i32(3)])))).xyz;
+    var toLightVectors_0 : array<vec3<f32>, i32(4)>;
+    var i_0 : i32 = i32(0);
+    for(;;)
+    {
+        if(i_0 < i32(uboVS_0.lightning_0.realCountOfLights_0))
+        {
+        }
+        else
+        {
             break;
         }
-        continuing {
-            let _e212 = i;
-            i = (_e212 + 1i);
-        }
+        toLightVectors_0[i_0] = uboVS_0.lightning_0.lights_0.data_3[i_0].position_0.xyz - _S11;
+        i_0 = i_0 + i32(1);
     }
-    let _e216 = uboVS.cameraPositions[0i];
-    let _e218 = worldPosition;
-    outToCameraVector = (_e216.xyz - _e218.xyz);
-    let _e221 = viewPosition_1;
-    param = _e221.xyz;
-    let _e224 = uboVS.gradient;
-    param_1 = _e224;
-    let _e226 = uboVS.density;
-    param_2 = _e226;
-    let _e227 = GetVisibility_u0028_vf3_u003b_f1_u003b_f1_u003b((&param), (&param_1), (&param_2));
-    outVisibility = _e227;
-    let _e229 = outToLightVector_arr[0i];
-    outToLightVector0_ = _e229;
-    let _e231 = outToLightVector_arr[1i];
-    outToLightVector1_ = _e231;
-    let _e233 = outToLightVector_arr[2i];
-    outToLightVector2_ = _e233;
-    let _e235 = outToLightVector_arr[3i];
-    outToLightVector3_ = _e235;
-    return;
+    output_0.toCameraVector_0 = uboVS_0.cameraPositions_0[i32(0)].xyz - _S11;
+    output_0.visibility_0 = GetVisibility_0(_S12, uboVS_0.gradient_0, uboVS_0.density_0);
+    output_0.toLightVector0_0 = toLightVectors_0[i32(0)];
+    output_0.toLightVector1_0 = toLightVectors_0[i32(1)];
+    output_0.toLightVector2_0 = toLightVectors_0[i32(2)];
+    output_0.toLightVector3_0 = toLightVectors_0[i32(3)];
+    return output_0;
 }
 
-@vertex 
-fn main(@location(3) inBoneIds: vec4<i32>, @location(4) inWeights: vec4<f32>, @location(0) inPosition: vec3<f32>, @location(2) inNormal: vec3<f32>, @location(1) inTextureCoord: vec2<f32>) -> VertexOutput {
-    inBoneIds_1 = inBoneIds;
-    inWeights_1 = inWeights;
-    inPosition_1 = inPosition;
-    inNormal_1 = inNormal;
-    inTextureCoord_1 = inTextureCoord;
-    main_1();
-    let _e24 = unnamed.gl_Position.y;
-    unnamed.gl_Position.y = -(_e24);
-    let _e26 = outWorldPosition;
-    let _e27 = outClipDistance;
-    let _e28 = outViewPosition;
-    let _e29 = unnamed.gl_Position;
-    let _e30 = outTextureCoord;
-    let _e31 = outNormal;
-    let _e32 = outToCameraVector;
-    let _e33 = outVisibility;
-    let _e34 = outToLightVector0_;
-    let _e35 = outToLightVector1_;
-    let _e36 = outToLightVector2_;
-    let _e37 = outToLightVector3_;
-    return VertexOutput(_e26, _e27, _e28, _e29, _e30, _e31, _e32, _e33, _e34, _e35, _e36, _e37);
-}

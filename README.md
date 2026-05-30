@@ -34,7 +34,7 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 - **Multiple rendering backends**: Vulkan and WebGPU (via Dawn)
 - **Cross-platform**: Win32, XCB, Wayland, Cocoa (macOS), UIKit (iOS), Android native, Web (Emscripten/WASM)
 - **OpenXR integration** for VR/AR on Windows, Linux, and Android
-- **Shader pipeline**: GLSL → SPIR-V → WGSL conversion
+- **Shader pipeline**: Slang → SPIR-V / WGSL (via slangc)
 
 ## Clone
 
@@ -98,15 +98,46 @@ ninja
 
 ## Compile Shaders
 
+Shaders are written in [Slang](https://shader-slang.com/) and compiled directly to SPIR-V and WGSL using `slangc`.
+
+### Install Slang
+
+Download the latest release from [github.com/shader-slang/slang/releases](https://github.com/shader-slang/slang/releases) and add `bin/` to your PATH:
+
 ```bash
-# Standard (single view)
-python Scripts/compile_shaders.py --spirv --max-view-count 1
+# macOS (Apple Silicon)
+wget https://github.com/shader-slang/slang/releases/download/v2026.9.1/slang-2026.9.1-macos-aarch64.tar.gz
+tar -xzf slang-2026.9.1-macos-aarch64.tar.gz -C ~/slang --strip-components=1
+export PATH="$HOME/slang/bin:$PATH"
 
-# With OpenXR (stereo)
-python Scripts/compile_shaders.py --spirv --max-view-count 2 --enable-xr
+# Linux (x86_64)
+wget https://github.com/shader-slang/slang/releases/download/v2026.9.1/slang-2026.9.1-linux-x86_64-glibc-2.28.tar.gz
+tar -xzf slang-2026.9.1-linux-x86_64-glibc-2.28.tar.gz -C ~/slang --strip-components=1
+export PATH="$HOME/slang/bin:$PATH"
 
-# Convert SPIR-V to WGSL (for WebGPU)
+# Windows (PowerShell)
+Invoke-WebRequest -Uri "https://github.com/shader-slang/slang/releases/download/v2026.9.1/slang-2026.9.1-windows-x86_64.zip" -OutFile slang.zip
+Expand-Archive slang.zip -DestinationPath $env:USERPROFILE\slang
+$env:PATH = "$env:USERPROFILE\slang\bin;$env:PATH"
+```
+
+### Compile
+
+```bash
+# All targets (SPIR-V + WGSL)
+python Scripts/compile_shaders.py
+
+# SPIR-V only (Vulkan)
+python Scripts/compile_shaders.py --spirv
+
+# WGSL only (WebGPU)
 python Scripts/compile_shaders.py --wgsl
+
+# With OpenXR stereo rendering
+python Scripts/compile_shaders.py --enable-xr --max-view-count 2
+
+# List all shaders
+python Scripts/compile_shaders.py --list
 ```
 
 ## CMake Options
@@ -150,6 +181,7 @@ The example app supports command-line configuration:
 ## 3rd Party Dependencies
 
 - [gfx](https://github.com/helcl42/gfx): Graphics abstraction layer (Vulkan + WebGPU)
+- [Slang](https://github.com/shader-slang/slang): Shader language and compiler
 - [Assimp](https://github.com/assimp/assimp): Model loading
 - [GLM](https://github.com/g-truc/glm): Math library
 - [stb_image](https://github.com/nothings/stb): Image loading

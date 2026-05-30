@@ -36,7 +36,7 @@ GfxComputePipeline ComputePipelineBuilder::CreateComputePipeline() const
     GfxComputePipelineDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_COMPUTE_PIPELINE_DESCRIPTOR;
     desc.compute = gfxShader;
-    desc.entryPoint = "main";
+    desc.entryPoint = "computeMain";
     desc.bindGroupLayouts = &bindGroupLayout;
     desc.bindGroupLayoutCount = 1;
 

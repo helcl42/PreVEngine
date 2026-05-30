@@ -1,13 +1,12 @@
-var<private> outColor: vec4<f32>;
+struct pixelOutput_0
+{
+    @location(0) output_0 : vec4<f32>,
+};
 
-fn main_1() {
-    outColor = vec4<f32>(1f, 1f, 1f, 0f);
-    return;
+@fragment
+fn fragmentMain(@builtin(position) position_0 : vec4<f32>) -> pixelOutput_0
+{
+    var _S1 : pixelOutput_0 = pixelOutput_0( vec4<f32>(1.0f, 1.0f, 1.0f, 0.0f) );
+    return _S1;
 }
 
-@fragment 
-fn main() -> @location(0) vec4<f32> {
-    main_1();
-    let _e1 = outColor;
-    return _e1;
-}

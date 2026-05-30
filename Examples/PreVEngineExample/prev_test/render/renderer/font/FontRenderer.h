@@ -38,6 +38,7 @@ public:
 private:
     struct DEFAULT_ALIGNMENT UniformsVS {
         DEFAULT_ALIGNMENT glm::vec4 translation;
+        DEFAULT_ALIGNMENT glm::vec4 scale;
     };
 
     struct DEFAULT_ALIGNMENT UniformsFS {

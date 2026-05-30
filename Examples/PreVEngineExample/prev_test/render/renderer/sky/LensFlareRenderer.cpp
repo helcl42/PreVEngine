@@ -55,7 +55,7 @@ void LensFlareRenderer::Init()
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(GFX_POLYGON_MODE_FILL)
-        .SetCullingMode(GFX_CULL_MODE_BACK)
+        .SetCullingMode(GFX_CULL_MODE_NONE)
         .Build();
     // clang-format on
 
@@ -121,7 +121,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y)
         };
         const float xScale{ flare.GetScale() };
-        const float yScale{ xScale * aspectRatio };
+        const float yScale{ xScale * aspectRatio * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
 
         m_uniformsPoolVS->MoveToNext();
 

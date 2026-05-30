@@ -54,7 +54,7 @@ void FontRenderer::Init()
         .SetBlendingModeEnabled(true)
         .SetAdditiveBlendingEnabled(false)
         .SetPolygonMode(GFX_POLYGON_MODE_FILL)
-        .SetCullingMode(GFX_CULL_MODE_BACK)
+        .SetCullingMode(GFX_CULL_MODE_NONE)
         .Build();
     // clang-format on
 
@@ -105,12 +105,16 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
 
     const auto nodeFontRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>(node);
     for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
+        const float xScale{ 1.0f };
+        const float yScale{ xScale * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
+
         m_uniformsPoolVS->MoveToNext();
 
         auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
         UniformsVS uniformsVS{};
-        uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 1.0f);
+        uniformsVS.translation = glm::vec4(renderableText.text->GetPosition(), 0.0f, 0.0f);
+        uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
         uboVS.Write(uniformsVS);
 
         m_uniformsPoolFS->MoveToNext();

@@ -1,207 +1,269 @@
 #!/usr/bin/env python3
 """
-Shader compilation and management tool for PreVEngine
+Slang shader compilation tool for PreVEngine
+
+Compiles .slang shaders to SPIR-V and/or WGSL using slangc.
 
 Usage:
-    python compile_shaders.py              # Auto-detect and compile
-    python compile_shaders.py --spirv      # Compile GLSL → SPIR-V only
-    python compile_shaders.py --wgsl       # Convert SPIR-V → WGSL only
-    python compile_shaders.py --clean      # Remove compiled shaders
+    python compile_shaders.py              # Compile all targets
+    python compile_shaders.py --spirv      # SPIR-V only
+    python compile_shaders.py --wgsl       # WGSL only
+    python compile_shaders.py --clean      # Remove compiled outputs
     python compile_shaders.py --list       # List all shaders
+    python compile_shaders.py --enable-xr --max-view-count 2
 """
 
 import os
 import sys
 import subprocess
 import argparse
+import shutil
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-class ShaderCompiler:
+
+class SlangCompiler:
+    # Shaders that use geometry stage (SPIR-V only, no WGSL)
+    GEOMETRY_SHADERS = {"debug/raycast_debug.slang"}
+
     def __init__(self, shader_dir: Path, max_view_count: int, enable_xr: bool):
         self.shader_dir = shader_dir
-        self.src_dir = shader_dir / "src"
+        self.slang_dir = shader_dir / "slang"
         self.spirv_dir = shader_dir / "spirv"
         self.wgsl_dir = shader_dir / "wgsl"
         self.max_view_count = max_view_count
         self.enable_xr = enable_xr
-        
-    def find_glsl_files(self) -> List[Path]:
-        """Find all GLSL source files"""
-        # Compile only stage entry-point shaders. Include files (*.glsl)
-        # are intentionally excluded.
-        extensions = ["*.vert", "*.frag", "*.comp", "*.geom"]
-        glsl_files = []
-        for ext in extensions:
-            glsl_files.extend(self.src_dir.rglob(ext))
-        return sorted(glsl_files)
-    
-    def find_spirv_files(self) -> List[Path]:
-        """Find all compiled SPIR-V files"""
-        return sorted(self.spirv_dir.rglob("*.spv"))
-    
-    def find_wgsl_files(self) -> List[Path]:
-        """Find all WGSL files"""
-        return sorted(self.wgsl_dir.rglob("*.wgsl"))
-    
-    def compile_glsl_to_spirv(self, glsl_file: Path) -> bool:
-        """Compile single GLSL file to SPIR-V"""
-        # Determine relative path and output location
-        rel_path = glsl_file.relative_to(self.src_dir)
-        spirv_file = self.spirv_dir / self._to_legacy_compiled_name(rel_path, ".spv")
-        spirv_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Find glslc
-        glslc = self._find_executable("glslc")
-        if not glslc:
-            print(f"[ERROR] glslc not found. Install VulkanSDK to compile shaders.")
+
+    def find_slang_files(self) -> List[Path]:
+        """Find all Slang shader files that have entry points."""
+        all_files = sorted(self.slang_dir.rglob("*.slang"))
+        import re as _re
+        return [f for f in all_files if _re.search(r'\[shader\(', f.read_text())]
+
+    def _get_entry_points_and_stages(self, slang_file: Path) -> List[Tuple[str, str]]:
+        """Parse a .slang file and return (entry_name, stage) pairs."""
+        entries = []
+        stage_map = {
+            "vertex": "vertex",
+            "fragment": "fragment",
+            "compute": "compute",
+            "geometry": "geometry",
+        }
+        content = slang_file.read_text()
+        import re
+        for match in re.finditer(r'\[shader\("(\w+)"\)\]', content):
+            stage = match.group(1)
+            # Find the function name on the next non-empty line
+            pos = match.end()
+            rest = content[pos:]
+            func_match = re.search(r'(?:void|float4|float3|float2|float|\w+)\s+(\w+)\s*\(', rest)
+            if func_match:
+                entries.append((func_match.group(1), stage_map.get(stage, stage)))
+        return entries
+
+    def _stage_to_suffix(self, stage: str) -> str:
+        stage_suffixes = {
+            "vertex": "vert",
+            "fragment": "frag",
+            "compute": "comp",
+            "geometry": "geom",
+        }
+        return stage_suffixes.get(stage, stage)
+
+    def _output_name(self, rel_path: Path, stage: str, ext: str) -> Path:
+        """Map slang/<cat>/name.slang + stage -> <cat>/name_<stage>.<ext>"""
+        stem = rel_path.stem
+        suffix = self._stage_to_suffix(stage)
+        return rel_path.parent / f"{stem}_{suffix}{ext}"
+
+    def _find_slangc(self) -> Optional[str]:
+        """Find slangc executable."""
+        # Check PATH first
+        from shutil import which
+        result = which("slangc")
+        if result:
+            return result
+        # Check common install locations
+        candidates = [
+            "/tmp/slang-install/bin/slangc",
+            "/usr/local/bin/slangc",
+            Path.home() / ".local" / "bin" / "slangc",
+        ]
+        for c in candidates:
+            if Path(c).is_file() and os.access(c, os.X_OK):
+                return str(c)
+        return None
+
+    def _build_base_args(self, slang_file: Path) -> List[str]:
+        """Build common slangc arguments."""
+        args = [
+            f"-DMAX_VIEW_COUNT={self.max_view_count}",
+            "-I", str(self.slang_dir),
+        ]
+        if self.enable_xr:
+            args.append("-DENABLE_XR=1")
+        return args
+
+    def compile_to_spirv(self, slang_file: Path) -> bool:
+        """Compile a .slang file to SPIR-V (one .spv per entry point)."""
+        slangc = self._find_slangc()
+        if not slangc:
+            print("[ERROR] slangc not found. Install Slang SDK.")
             return False
-        
-        try:
-            print(f"Compiling: {rel_path} -> {spirv_file.relative_to(self.shader_dir)}")
-            cmd = [
-                glslc,
-                f"-DMAX_VIEW_COUNT={self.max_view_count}",
-            ]
-            if self.enable_xr:
-                cmd.append("-DENABLE_XR=1")
-            cmd.extend(["-o", str(spirv_file), str(glsl_file)])
-            subprocess.run(cmd,
-                          check=True, capture_output=True)
+
+        rel_path = slang_file.relative_to(self.slang_dir)
+        entries = self._get_entry_points_and_stages(slang_file)
+        if not entries:
+            print(f"[WARN] No entry points found in {rel_path}")
+            return False
+
+        success = True
+        for entry_name, stage in entries:
+            out_file = self.spirv_dir / self._output_name(rel_path, stage, ".spv")
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+
+            cmd = [slangc, str(slang_file)]
+            cmd.extend(self._build_base_args(slang_file))
+            cmd.extend([
+                "-target", "spirv",
+                "-profile", "glsl_450",
+                "-capability", "spirv_1_3",
+                "-fvk-use-entrypoint-name",
+                "-entry", entry_name,
+                "-stage", stage,
+                "-o", str(out_file),
+            ])
+
+            try:
+                print(f"  SPIR-V: {rel_path} [{entry_name}] -> {out_file.relative_to(self.shader_dir)}")
+                subprocess.run(cmd, check=True, capture_output=True)
+            except subprocess.CalledProcessError as e:
+                print(f"  [ERROR] {e.stderr.decode().strip()}")
+                success = False
+
+        return success
+
+    def compile_to_wgsl(self, slang_file: Path) -> bool:
+        """Compile a .slang file to WGSL (one .wgsl per entry point)."""
+        rel_path = slang_file.relative_to(self.slang_dir)
+
+        # Skip geometry shaders
+        if str(rel_path).replace(os.sep, "/") in self.GEOMETRY_SHADERS:
+            print(f"  [SKIP] {rel_path} (geometry shader, no WGSL support)")
             return True
-        except subprocess.CalledProcessError as e:
-            print(f"[ERROR] Failed: {e.stderr.decode()}")
+
+        slangc = self._find_slangc()
+        if not slangc:
+            print("[ERROR] slangc not found. Install Slang SDK.")
             return False
-    
-    def convert_spirv_to_wgsl(self, spirv_file: Path) -> bool:
-        """Convert SPIR-V to WGSL using naga"""
-        # Determine output location (replace .spv with .wgsl)
-        rel_path = spirv_file.relative_to(self.spirv_dir)
-        wgsl_file = self.wgsl_dir / rel_path.with_suffix(".wgsl")
-        wgsl_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Find naga
-        naga = self._find_executable("naga")
-        if not naga:
-            print(f"[WARN] naga not found - skipping WGSL generation. "
-                  f"Install: cargo install naga-cli")
+
+        entries = self._get_entry_points_and_stages(slang_file)
+        if not entries:
+            print(f"[WARN] No entry points found in {rel_path}")
             return False
-        
-        try:
-            print(f"Converting: {rel_path} -> {wgsl_file.relative_to(self.shader_dir)}")
-            subprocess.run([naga, str(spirv_file), str(wgsl_file)], 
-                          check=True, capture_output=True)
-            return True
-        except subprocess.CalledProcessError as e:
-            print(f"[WARN] Conversion failed (non-critical): {e.stderr.decode()[:100]}")
+
+        success = True
+        for entry_name, stage in entries:
+            if stage == "geometry":
+                continue
+
+            out_file = self.wgsl_dir / self._output_name(rel_path, stage, ".wgsl")
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+
+            cmd = [slangc, str(slang_file)]
+            cmd.extend(self._build_base_args(slang_file))
+            cmd.extend([
+                "-target", "wgsl",
+                "-entry", entry_name,
+                "-stage", stage,
+                "-o", str(out_file),
+            ])
+
+            try:
+                print(f"  WGSL:  {rel_path} [{entry_name}] -> {out_file.relative_to(self.shader_dir)}")
+                subprocess.run(cmd, check=True, capture_output=True)
+            except subprocess.CalledProcessError as e:
+                print(f"  [ERROR] {e.stderr.decode().strip()}")
+                success = False
+
+        return success
+
+    def compile_all(self, spirv: bool = True, wgsl: bool = True) -> bool:
+        """Compile all Slang shaders."""
+        slang_files = self.find_slang_files()
+        if not slang_files:
+            print("No .slang files found")
             return False
-    
-    def compile_all_spirv(self) -> bool:
-        """Compile all GLSL to SPIR-V"""
-        glsl_files = self.find_glsl_files()
-        if not glsl_files:
-            print("No GLSL files found in src/")
-            return False
-        
-        print(f"Found {len(glsl_files)} shader(s)")
-        success_count = 0
-        for glsl_file in glsl_files:
-            if self.compile_glsl_to_spirv(glsl_file):
-                success_count += 1
-        
-        print(f"Compiled {success_count}/{len(glsl_files)} shaders")
-        return success_count == len(glsl_files)
-    
-    def convert_all_wgsl(self) -> bool:
-        """Convert all SPIR-V to WGSL"""
-        spirv_files = self.find_spirv_files()
-        if not spirv_files:
-            print("No SPIR-V files found - compile GLSL first")
-            return False
-        
-        print(f"Found {len(spirv_files)} SPIR-V file(s)")
-        success_count = 0
-        for spirv_file in spirv_files:
-            if self.convert_spirv_to_wgsl(spirv_file):
-                success_count += 1
-        
-        print(f"Converted {success_count}/{len(spirv_files)} shaders (non-critical failures ignored)")
-        return True
-    
+
+        print(f"Found {len(slang_files)} shader file(s)\n")
+        total_ok = 0
+        total = len(slang_files)
+
+        for slang_file in slang_files:
+            rel = slang_file.relative_to(self.slang_dir)
+            print(f"[{rel}]")
+            ok = True
+            if spirv:
+                ok = self.compile_to_spirv(slang_file) and ok
+            if wgsl:
+                ok = self.compile_to_wgsl(slang_file) and ok
+            if ok:
+                total_ok += 1
+
+        print(f"\nResult: {total_ok}/{total} shaders compiled successfully")
+        return total_ok == total
+
     def clean(self):
-        """Remove all compiled shaders"""
-        import shutil
+        """Remove compiled outputs."""
         for directory in [self.spirv_dir, self.wgsl_dir]:
             if directory.exists():
                 shutil.rmtree(directory)
-                print(f"🗑️  Removed {directory}")
-    
-    def list_shaders(self):
-        """List all shaders and their compiled versions"""
-        print("\n📄 GLSL Sources (src/):")
-        for f in self.find_glsl_files():
-            print(f"  • {f.relative_to(self.src_dir)}")
-        
-        print("\n🔵 SPIR-V Compiled (spirv/):")
-        for f in self.find_spirv_files():
-            print(f"  • {f.relative_to(self.spirv_dir)}")
-        
-        print("\n🟢 WGSL Converted (wgsl/):")
-        for f in self.find_wgsl_files():
-            print(f"  • {f.relative_to(self.wgsl_dir)}")
-    
-    @staticmethod
-    def _find_executable(name: str) -> Optional[str]:
-        """Find executable in PATH"""
-        from shutil import which
-        return which(name)
+                print(f"Removed {directory}")
 
-    @staticmethod
-    def _to_legacy_compiled_name(rel_path: Path, out_ext: str) -> Path:
-        """Map src/<cat>/name.<stage> to <cat>/name_<stage>.<ext>."""
-        stage = rel_path.suffix.lstrip(".")
-        stem = rel_path.stem
-        return rel_path.with_name(f"{stem}_{stage}{out_ext}")
+    def list_shaders(self):
+        """List all Slang shaders and their entry points."""
+        slang_files = self.find_slang_files()
+        print(f"\nSlang shaders ({len(slang_files)} files):\n")
+        for f in slang_files:
+            rel = f.relative_to(self.slang_dir)
+            entries = self._get_entry_points_and_stages(f)
+            entry_str = ", ".join(f"{name}({stage})" for name, stage in entries)
+            print(f"  {rel}  [{entry_str}]")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PreVEngine shader compiler")
-    parser.add_argument("--spirv", action="store_true", help="Compile GLSL → SPIR-V only")
-    parser.add_argument("--wgsl", action="store_true", help="Convert SPIR-V → WGSL only")
+    parser = argparse.ArgumentParser(description="PreVEngine Slang shader compiler")
+    parser.add_argument("--spirv", action="store_true", help="Compile to SPIR-V only")
+    parser.add_argument("--wgsl", action="store_true", help="Compile to WGSL only")
     parser.add_argument("--clean", action="store_true", help="Remove compiled shaders")
     parser.add_argument("--list", action="store_true", help="List all shaders")
-    parser.add_argument("--max-view-count", type=int, default=1, help="Value for MAX_VIEW_COUNT define")
-    parser.add_argument("--enable-xr", action="store_true", help="Enable ENABLE_XR define")
-    
-    args = parser.parse_args()
-    
-    # Find shader directory
-    script_dir = Path(__file__).parent.absolute()
-    shader_dir = script_dir.parent / "Examples" / "PreVEngineExample" / "assets" / "Shaders"
+    parser.add_argument("--max-view-count", type=int, default=1, help="MAX_VIEW_COUNT define value")
+    parser.add_argument("--enable-xr", action="store_true", help="Enable XR defines")
+    parser.add_argument("--shader-dir", type=str, default=None, help="Override shader directory")
 
-    # Backward-compatible fallback for older layout.
-    if not shader_dir.exists():
-        shader_dir = script_dir / "assets" / "Shaders"
-    
+    args = parser.parse_args()
+
+    if args.shader_dir:
+        shader_dir = Path(args.shader_dir)
+    else:
+        script_dir = Path(__file__).parent.absolute()
+        shader_dir = script_dir.parent / "Examples" / "PreVEngineExample" / "assets" / "Shaders"
+
     if not shader_dir.exists():
         print(f"[ERROR] Shader directory not found: {shader_dir}")
         sys.exit(1)
-    
-    compiler = ShaderCompiler(shader_dir, args.max_view_count, args.enable_xr)
-    
-    if args.list:
-        compiler.list_shaders()
-    elif args.clean:
+
+    compiler = SlangCompiler(shader_dir, args.max_view_count, args.enable_xr)
+
+    if args.clean:
         compiler.clean()
-    elif args.spirv:
-        compiler.compile_all_spirv()
-    elif args.wgsl:
-        compiler.convert_all_wgsl()
-    else:
-        # Default: compile GLSL → SPIR-V → WGSL
-        compiler.compile_all_spirv()
-        compiler.convert_all_wgsl()
+    elif args.list:
         compiler.list_shaders()
+    else:
+        do_spirv = args.spirv or (not args.spirv and not args.wgsl)
+        do_wgsl = args.wgsl or (not args.spirv and not args.wgsl)
+        success = compiler.compile_all(spirv=do_spirv, wgsl=do_wgsl)
+        sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":

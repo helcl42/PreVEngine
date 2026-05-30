@@ -1,55 +1,36 @@
-struct PushConsts {
-    cascadeIndex: u32,
-    nearClippingPlane: f32,
-    farClippingPlane: f32,
+struct PushConsts_std430_0
+{
+    @align(4) cascadeIndex_0 : u32,
+    @align(4) nearClippingPlane_0 : f32,
+    @align(4) farClippingPlane_0 : f32,
+};
+
+var<uniform> pushConsts_0 : PushConsts_std430_0;
+@binding(0) @group(0) var depthTexture_0 : texture_2d_array<f32>;
+
+@binding(1) @group(0) var depthSampler_0 : sampler;
+
+fn LinearizeDepth_0( near_0 : f32,  far_0 : f32,  depth_0 : f32) -> f32
+{
+    return 2.0f * near_0 / (far_0 + near_0 - depth_0 * (far_0 - near_0));
 }
 
-@group(0) @binding(0) 
-var depthTexture: texture_2d_array<f32>;
-@group(0) @binding(1) 
-var depthSampler: sampler;
-var<private> textureCoord_1: vec2<f32>;
-var<immediate> pushConsts: PushConsts;
-var<private> outFragColor: vec4<f32>;
+struct pixelOutput_0
+{
+    @location(0) output_0 : vec4<f32>,
+};
 
-fn LinearizeDepth_u0028_f1_u003b_f1_u003b_f1_u003b(near: f32, far: f32, depth: f32) -> f32 {
-    var n: f32;
-    var f: f32;
-    var z: f32;
+struct pixelInput_0
+{
+    @location(0) textureCoord_0 : vec2<f32>,
+};
 
-    n = near;
-    f = far;
-    z = depth;
-    let _e17 = n;
-    let _e19 = f;
-    let _e20 = n;
-    let _e22 = z;
-    let _e23 = f;
-    let _e24 = n;
-    return ((2f * _e17) / ((_e19 + _e20) - (_e22 * (_e23 - _e24))));
+@fragment
+fn fragmentMain( _S1 : pixelInput_0, @builtin(position) position_0 : vec4<f32>) -> pixelOutput_0
+{
+    var _S2 : vec3<f32> = vec3<f32>(_S1.textureCoord_0, f32(pushConsts_0.cascadeIndex_0));
+    var value_0 : f32 = 1.0f - LinearizeDepth_0(pushConsts_0.nearClippingPlane_0, pushConsts_0.farClippingPlane_0, (textureSample((depthTexture_0), (depthSampler_0), ((_S2)).xy, i32(((_S2)).z))).x);
+    var _S3 : pixelOutput_0 = pixelOutput_0( vec4<f32>(value_0, value_0, value_0, 1.0f) );
+    return _S3;
 }
 
-fn main_1() {
-    var depth_1: f32;
-
-    let _e12 = textureCoord_1;
-    let _e14 = pushConsts.cascadeIndex;
-    let _e18 = vec3<f32>(_e12.x, _e12.y, f32(_e14));
-    let _e24 = textureSample(depthTexture, depthSampler, vec2<f32>(_e18.x, _e18.y), i32(_e18.z));
-    depth_1 = _e24.x;
-    let _e27 = pushConsts.nearClippingPlane;
-    let _e29 = pushConsts.farClippingPlane;
-    let _e30 = depth_1;
-    let _e31 = LinearizeDepth_u0028_f1_u003b_f1_u003b_f1_u003b(_e27, _e29, _e30);
-    let _e33 = vec3((1f - _e31));
-    outFragColor = vec4<f32>(_e33.x, _e33.y, _e33.z, 1f);
-    return;
-}
-
-@fragment 
-fn main(@location(0) textureCoord: vec2<f32>) -> @location(0) vec4<f32> {
-    textureCoord_1 = textureCoord;
-    main_1();
-    let _e3 = outFragColor;
-    return _e3;
-}

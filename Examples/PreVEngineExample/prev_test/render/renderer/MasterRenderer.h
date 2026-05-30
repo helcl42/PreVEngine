@@ -62,6 +62,8 @@ private:
 
     void RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root);
 
+    glm::mat4 AdjustProjection(const glm::mat4& projection) const;
+
     template <typename RenderContextType>
     void TraverseScene(const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node, const std::unique_ptr<IRenderer<RenderContextType>>& renderer);
 

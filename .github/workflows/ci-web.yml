@@ -18,6 +18,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SLANG_VERSION: "2026.9.1"
 
     steps:
     - uses: actions/checkout@v4
@@ -37,8 +39,11 @@ jobs:
       with:
         version: 'latest'
 
-    - name: Install naga-cli
-      run: cargo install naga-cli
+    - name: Install Slang
+      run: |
+        wget -q https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}/slang-${SLANG_VERSION}-linux-x86_64-glibc-2.28.tar.gz -O slang.tar.gz
+        mkdir -p $HOME/slang && tar -xzf slang.tar.gz -C $HOME/slang
+        echo "$HOME/slang/bin" >> $GITHUB_PATH
 
     - name: Set reusable strings
       id: strings
@@ -48,8 +53,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 1
-        python3 Scripts/compile_shaders.py --wgsl
+        python3 Scripts/compile_shaders.py --max-view-count 1
 
     - name: Configure CMake
       run: |

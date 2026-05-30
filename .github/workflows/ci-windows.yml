@@ -24,6 +24,7 @@ jobs:
 
     env:
       VULKAN_SDK: C:\VulkanSDK\
+      SLANG_VERSION: "2026.9.1"
 
     steps:
     - uses: actions/checkout@v4
@@ -59,6 +60,13 @@ jobs:
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Install Slang
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/shader-slang/slang/releases/download/v$env:SLANG_VERSION/slang-$env:SLANG_VERSION-windows-x86_64.zip" -OutFile slang.zip
+        Expand-Archive -Path slang.zip -DestinationPath $env:USERPROFILE\slang
+        echo "$env:USERPROFILE\slang\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Compile Shaders
       run: |
