@@ -47,7 +47,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 200 };
 
 private:
     prev::event::EventHandler<ShadowMapDebugRenderer, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };

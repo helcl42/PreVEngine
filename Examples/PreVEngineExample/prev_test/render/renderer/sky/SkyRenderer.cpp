@@ -113,9 +113,9 @@ void SkyRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddBindGroupEntries({
-            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_VIEW_COUNT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("colorSampler", 1, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_VIEW_COUNT, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
         })
         .SetBindGroupCapacity(m_descriptorCount)

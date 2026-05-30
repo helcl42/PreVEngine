@@ -35,7 +35,7 @@ public:
     void ShutDown() override;
 
 private:
-    const uint32_t m_descriptorCount{ 1000 };
+    const uint32_t m_descriptorCount{ 200 };
 
 private:
     prev::core::device::Device& m_device;

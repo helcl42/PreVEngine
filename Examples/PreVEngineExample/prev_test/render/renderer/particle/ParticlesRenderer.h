@@ -50,7 +50,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 20 };
+    const uint32_t m_descriptorCount{ 4 };
 
 private:
     prev::core::device::Device& m_device;
