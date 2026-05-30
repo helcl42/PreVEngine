@@ -133,7 +133,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     UniformsVS uniformsVS{};
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
-        uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH, 1.0f);
+        uniformsVS.translations[viewIndex] = glm::vec4(sunPosition, MAX_DEPTH - 0.0001f, 1.0f);
     }
     uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
     uboVS.Write(uniformsVS);

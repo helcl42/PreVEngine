@@ -439,7 +439,8 @@ void main()
 	}
 
 	vec4 fragColor = vec4(backgroundColor.rgb, 1.0);
-	vec4 depth = vec4(ComputeDepth(uboCS.projectionMatrix, uboCS.viewMatrix, raymarchResult.position), 0.0, 0.0, 0.0);
+	float cloudDepth = raymarchResult.color.a > 0.1 ? ComputeDepth(uboCS.projectionMatrix, uboCS.viewMatrix, raymarchResult.position) : uboCS.maxDepth;
+	vec4 depth = vec4(cloudDepth, 0.0, 0.0, 0.0);
 
 	imageStore(outFragColor, fragCoord, fragColor);
 	imageStore(outBloom, fragCoord, bloomColor);
