@@ -102,23 +102,32 @@ void DefaultEngineImpl::ResetDevice()
         throw std::runtime_error("No suitable GPU adapter found");
     }
 
-    // Build extension list based on what's actually supported by the adapter
-    std::vector<std::string> extensions{
-        GFX_DEVICE_EXTENSION_SWAPCHAIN,
-        GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
-        GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
-    };
-
     // Enable precise occlusion queries only when the selected adapter reports support.
     uint32_t extensionCount{ 0 };
     gfxAdapterEnumerateExtensions(*gpu, &extensionCount, nullptr);
     std::vector<const char*> availableExtensions(extensionCount);
     gfxAdapterEnumerateExtensions(*gpu, &extensionCount, availableExtensions.data());
-    const bool hasPreciseOcclusion = std::find_if(availableExtensions.begin(), availableExtensions.end(), [](const char* ext) {
-        return ext != nullptr && std::string(ext) == GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE;
-    }) != availableExtensions.end();
 
-    if (hasPreciseOcclusion) {
+    auto isExtensionAvailable = [&](const std::string& ext) {
+        return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&](const char* e) {
+            return e != nullptr && std::string(e) == ext;
+        }) != availableExtensions.end();
+    };
+
+    // Build extension list based on what's actually supported by the adapter
+    std::vector<std::string> extensions;
+
+    if (!m_config.headless) {
+        extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
+    }
+
+    if (isExtensionAvailable(GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING)) {
+        extensions.push_back(GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING);
+    }
+    if (isExtensionAvailable(GFX_DEVICE_EXTENSION_NON_SOLID_FILL)) {
+        extensions.push_back(GFX_DEVICE_EXTENSION_NON_SOLID_FILL);
+    }
+    if (isExtensionAvailable(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE)) {
         extensions.push_back(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE);
     }
 
