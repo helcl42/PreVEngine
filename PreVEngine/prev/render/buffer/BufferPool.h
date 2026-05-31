@@ -10,13 +10,13 @@ class BufferPoolBuilder;
 
 class BufferPool final {
 private:
-    explicit BufferPool(std::vector<std::unique_ptr<Buffer>>&& buffers);
+    explicit BufferPool(std::unique_ptr<Buffer> buffer, std::vector<Buffer>&& slices);
 
 public:
     ~BufferPool() = default;
 
 public:
-    Buffer& GetCurrent() const;
+    Buffer& GetCurrent();
 
     void MoveToNext();
 
@@ -24,7 +24,9 @@ public:
     friend class BufferPoolBuilder;
 
 private:
-    std::vector<std::unique_ptr<Buffer>> m_buffers;
+    std::unique_ptr<Buffer> m_buffer;
+
+    std::vector<Buffer> m_slices;
 
     prev::util::CircularIndex<uint32_t> m_index{ 0 };
 };

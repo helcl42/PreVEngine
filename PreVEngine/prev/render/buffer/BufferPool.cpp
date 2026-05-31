@@ -1,15 +1,16 @@
 #include "BufferPool.h"
 
 namespace prev::render::buffer {
-BufferPool::BufferPool(std::vector<std::unique_ptr<Buffer>>&& buffers)
-    : m_buffers{ std::move(buffers) }
-    , m_index{ prev::util::CircularIndex<uint32_t>(static_cast<uint32_t>(m_buffers.size())) }
+BufferPool::BufferPool(std::unique_ptr<Buffer> buffer, std::vector<Buffer>&& slices)
+    : m_buffer{ std::move(buffer) }
+    , m_slices{ std::move(slices) }
+    , m_index{ prev::util::CircularIndex<uint32_t>(static_cast<uint32_t>(m_slices.size())) }
 {
 }
 
-Buffer& BufferPool::GetCurrent() const
+Buffer& BufferPool::GetCurrent()
 {
-    return *m_buffers[m_index];
+    return m_slices[m_index];
 }
 
 void BufferPool::MoveToNext()

@@ -49,20 +49,27 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
     Validate();
 
     const uint64_t alignedItemSize{ prev::util::math::RoundUp(m_stride, m_alignment) };
+    const uint64_t totalSize{ alignedItemSize * m_count };
 
-    std::vector<std::unique_ptr<Buffer>> buffers;
-    buffers.reserve(m_count);
+    auto buffer = BufferBuilder(m_device, m_queue)
+                      .SetUsageFlags(m_usageFlags)
+                      .SetMemoryProperties(m_memoryProperties)
+                      .SetSize(totalSize)
+                      .SetAlignment(m_alignment)
+                      .Build();
+
+    GfxDevice gfxDevice = static_cast<GfxDevice>(m_device);
+    GfxQueue gfxQueue = static_cast<GfxQueue>(m_queue);
+    GfxBuffer gfxBuffer = static_cast<GfxBuffer>(*buffer);
+    const bool hostMapped = (m_memoryProperties & GFX_MEMORY_PROPERTY_HOST_VISIBLE) != 0;
+
+    std::vector<Buffer> slices;
+    slices.reserve(m_count);
     for (uint64_t i = 0; i < m_count; ++i) {
-        auto buf = BufferBuilder(m_device, m_queue)
-                       .SetUsageFlags(m_usageFlags)
-                       .SetMemoryProperties(m_memoryProperties)
-                       .SetSize(alignedItemSize)
-                       .SetAlignment(m_alignment)
-                       .Build();
-        buffers.push_back(std::move(buf));
+        slices.emplace_back(Buffer(gfxDevice, gfxQueue, gfxBuffer, hostMapped, alignedItemSize, i * alignedItemSize, false));
     }
 
-    return std::unique_ptr<BufferPool>(new BufferPool(std::move(buffers)));
+    return std::unique_ptr<BufferPool>(new BufferPool(std::move(buffer), std::move(slices)));
 }
 
 void BufferPoolBuilder::Validate() const

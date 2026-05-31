@@ -12,10 +12,15 @@ class BufferPoolBuilder;
 
 class Buffer final {
 private:
-    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size);
+    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size, uint64_t offset = 0, bool owning = true);
 
 public:
     ~Buffer();
+
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+    Buffer(Buffer&&) noexcept;
+    Buffer& operator=(Buffer&&) noexcept;
 
 public:
     void Write(const void* data, const uint64_t size, const uint64_t offset = 0);
@@ -24,6 +29,8 @@ public:
 
 public:
     uint64_t GetSize() const;
+
+    uint64_t GetOffset() const;
 
     template <typename T>
     void Write(const T& data)
@@ -39,15 +46,19 @@ public:
     friend class BufferPoolBuilder;
 
 protected:
-    GfxDevice m_device;
+    GfxDevice m_device{};
 
-    GfxQueue m_queue;
+    GfxQueue m_queue{};
 
-    GfxBuffer m_buffer;
+    GfxBuffer m_buffer{};
 
-    bool m_hostMapped;
+    bool m_hostMapped{};
 
-    uint64_t m_size;
+    uint64_t m_size{};
+
+    uint64_t m_offset{};
+
+    bool m_owning{ true };
 };
 } // namespace prev::render::buffer
 

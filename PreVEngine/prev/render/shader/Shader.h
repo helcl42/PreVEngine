@@ -36,6 +36,7 @@ public:
         GfxBindGroupEntryType type{};
         // Buffer
         GfxBuffer buffer{};
+        uint64_t bufferOffset{};
         uint64_t bufferSize{};
         // Combined image + sampler
         GfxTextureView textureView{};

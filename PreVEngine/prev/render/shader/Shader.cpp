@@ -77,7 +77,7 @@ GfxBindGroup Shader::UpdateNextBindGroup()
         entry.type = info.type;
         if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_BUFFER) {
             entry.resource.buffer.buffer = info.buffer;
-            entry.resource.buffer.offset = 0;
+            entry.resource.buffer.offset = info.bufferOffset;
             entry.resource.buffer.size = info.bufferSize;
         } else if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW) {
             entry.resource.textureView = info.textureView;
@@ -125,6 +125,7 @@ void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& b
     }
     auto& info{ it->second };
     info.buffer = static_cast<GfxBuffer>(buffer);
+    info.bufferOffset = buffer.GetOffset();
     info.bufferSize = buffer.GetSize();
 }
 
