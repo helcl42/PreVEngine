@@ -74,6 +74,10 @@ AndroidWindowImpl::~AndroidWindowImpl()
 
 bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 {
+    if (m_app->window != NULL) {
+        m_info.size = { static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window)) };
+    }
+
     if (!m_eventQueue.IsEmpty()) {
         outEvent = m_eventQueue.Pop(); // Pop message from message queue buffer
         return true;
