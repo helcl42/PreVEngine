@@ -87,6 +87,17 @@ bool OpenXrRender::BeginFrame()
     }
     m_frameState = frameState;
 
+    if (!frameState.shouldRender) {
+        // Submit empty frame to keep the session alive (e.g., when Oculus overlay is active)
+        XrFrameEndInfo frameEndInfo{ prev::xr::open_xr::util::CreateStruct<XrFrameEndInfo>(XR_TYPE_FRAME_END_INFO) };
+        frameEndInfo.displayTime = frameState.predictedDisplayTime;
+        frameEndInfo.environmentBlendMode = m_environmentBlendMode;
+        frameEndInfo.layerCount = 0;
+        frameEndInfo.layers = nullptr;
+        OPENXR_CHECK(xrEndFrame(m_session, &frameEndInfo), "Failed to end the XR Frame.");
+        return false;
+    }
+
     // Locate the views from the view configuration within the (reference) space at the display time.
     XrViewState viewState{ prev::xr::open_xr::util::CreateStruct<XrViewState>(XR_TYPE_VIEW_STATE) }; // Will contain information on whether the position and/or orientation is valid and/or tracked.
     XrViewLocateInfo viewLocateInfo{ prev::xr::open_xr::util::CreateStruct<XrViewLocateInfo>(XR_TYPE_VIEW_LOCATE_INFO) };
