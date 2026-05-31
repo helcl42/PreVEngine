@@ -24,6 +24,8 @@ public:
 
     void EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder);
 
+    void WriteTimestamp(GfxCommandEncoder commandEncoder, uint32_t queryIndex);
+
     void Reset(GfxCommandEncoder commandEncoder);
 
     void ResetAll(GfxCommandEncoder commandEncoder);

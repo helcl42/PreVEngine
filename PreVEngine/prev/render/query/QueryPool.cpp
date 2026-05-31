@@ -66,6 +66,11 @@ void QueryPool::EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderP
     gfxRenderPassEncoderEndOcclusionQuery(renderPassEncoder);
 }
 
+void QueryPool::WriteTimestamp(GfxCommandEncoder commandEncoder, uint32_t queryIndex)
+{
+    gfxCommandEncoderWriteTimestamp(commandEncoder, m_querySets[m_index], queryIndex);
+}
+
 void QueryPool::Reset(GfxCommandEncoder commandEncoder)
 {
     gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
