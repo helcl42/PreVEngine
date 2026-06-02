@@ -26,13 +26,14 @@ class SlangCompiler:
     # Shaders that use geometry stage (SPIR-V only, no WGSL)
     GEOMETRY_SHADERS = {"debug/raycast_debug.slang"}
 
-    def __init__(self, shader_dir: Path, max_view_count: int, enable_xr: bool):
+    def __init__(self, shader_dir: Path, max_view_count: int, enable_xr: bool, debug: bool = False):
         self.shader_dir = shader_dir
         self.slang_dir = shader_dir / "slang"
         self.spirv_dir = shader_dir / "spirv"
         self.wgsl_dir = shader_dir / "wgsl"
         self.max_view_count = max_view_count
         self.enable_xr = enable_xr
+        self.debug = debug
 
     def find_slang_files(self) -> List[Path]:
         """Find all Slang shader files that have entry points."""
@@ -102,6 +103,8 @@ class SlangCompiler:
         ]
         if self.enable_xr:
             args.append("-DENABLE_XR=1")
+        if self.debug:
+            args.extend(["-g2", "-O0"])
         return args
 
     def compile_to_spirv(self, slang_file: Path) -> bool:
@@ -239,6 +242,7 @@ def main():
     parser.add_argument("--list", action="store_true", help="List all shaders")
     parser.add_argument("--max-view-count", type=int, default=1, help="MAX_VIEW_COUNT define value")
     parser.add_argument("--enable-xr", action="store_true", help="Enable XR defines")
+    parser.add_argument("--debug", action="store_true", help="Emit debug info and disable optimizations (for RenderDoc, validation layers)")
     parser.add_argument("--shader-dir", type=str, default=None, help="Override shader directory")
 
     args = parser.parse_args()
@@ -253,7 +257,7 @@ def main():
         print(f"[ERROR] Shader directory not found: {shader_dir}")
         sys.exit(1)
 
-    compiler = SlangCompiler(shader_dir, args.max_view_count, args.enable_xr)
+    compiler = SlangCompiler(shader_dir, args.max_view_count, args.enable_xr, args.debug)
 
     if args.clean:
         compiler.clean()
