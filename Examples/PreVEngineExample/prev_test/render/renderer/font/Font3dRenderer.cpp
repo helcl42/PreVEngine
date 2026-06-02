@@ -108,11 +108,18 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
     for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
         m_uniformsPoolVS->MoveToNext();
 
+        // Text mesh faces +Z in model space (TextMeshFactory uses Y-down layout, shader negates Y → face normal becomes +Z).
+        // For non-billboard text, rotate 180° around Y so it faces -Z (toward the default camera direction).
+        // For billboard text, inverse view rotation naturally aligns +Z toward the camera.
+        static const glm::quat kFaceNegZ = glm::angleAxis(glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f));
+        const glm::quat finalOrientation = renderableText.text->IsAlwaysFacingCamera()
+            ? glm::inverse(glm::quat_cast(renderContext.viewMatrices[0])) * renderableText.text->GetOrientation()
+            : renderableText.text->GetOrientation() * kFaceNegZ;
+
         auto& uboVS = m_uniformsPoolVS->GetCurrent();
 
         UniformsVS uniformsVS{};
-        // TODO - get rid of this crap!!
-        uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), renderableText.text->IsAlwaysFacingCamera() ? (glm::inverse(glm::quat_cast(renderContext.viewMatrices[0])) * renderableText.text->GetOrientation()) : (renderableText.text->GetOrientation() * glm::quat(glm::radians(glm::vec3(0.0f, 180.0f, 0.0f)))));
+        uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(renderableText.text->GetPosition(), finalOrientation);
         for (uint32_t i = 0; i < renderContext.cameraCount; ++i) {
             uniformsVS.viewMatrices[i] = renderContext.viewMatrices[i];
             uniformsVS.projectionMatrices[i] = renderContext.projectionMatrices[i];
