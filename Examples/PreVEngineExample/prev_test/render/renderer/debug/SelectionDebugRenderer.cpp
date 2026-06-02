@@ -54,7 +54,7 @@ void SelectionDebugRenderer::Init()
         .SetDepthWriteEnabled(true)
         .SetBlendingModeEnabled(false)
         .SetAdditiveBlendingEnabled(false)
-        .SetPolygonMode(GFX_POLYGON_MODE_LINE)
+        .SetPolygonMode(m_device.HasExtension(GFX_DEVICE_EXTENSION_NON_SOLID_FILL) ? GFX_POLYGON_MODE_LINE : GFX_POLYGON_MODE_FILL)
         .SetCullingMode(GFX_CULL_MODE_BACK)
         .Build();
     // clang-format on
