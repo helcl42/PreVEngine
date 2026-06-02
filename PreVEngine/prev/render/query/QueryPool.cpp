@@ -47,6 +47,12 @@ QueryPool::~QueryPool()
 {
     m_device.WaitIdle();
 
+    // Unmap any pending async-mapped buffer before destroying
+    if (m_asyncMapPending && m_resultBuffers[m_asyncMapIndex]) {
+        gfxBufferUnmap(*m_resultBuffers[m_asyncMapIndex]);
+        m_asyncMapPending = false;
+    }
+
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         m_resultBuffers[i].reset();
         m_resolveBuffers[i].reset();
