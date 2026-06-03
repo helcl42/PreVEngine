@@ -22,6 +22,9 @@
 #include "text/Text.h"
 #include "text/Text3d.h"
 #include "water/WaterManager.h"
+#ifdef ENABLE_XR
+#include "HandTracking.h"
+#endif
 
 #include "../Tags.h"
 #include "../common/AssetManager.h"
@@ -79,6 +82,8 @@ void Root::Init()
 
 #ifdef ENABLE_XR
     auto player = std::make_shared<Camera>(m_viewCount);
+    auto handTracking = std::make_shared<HandTracking>(m_device);
+    AddChild(handTracking);
 #else
     auto player = std::make_shared<Player>(m_device, glm::vec3(0.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), glm::vec3(0.06f));
 #endif

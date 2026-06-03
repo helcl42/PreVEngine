@@ -30,6 +30,9 @@
 #include "terrain/TerrainNormalMappedRenderer.h"
 #include "terrain/TerrainRenderer.h"
 #include "water/WaterRenderer.h"
+#ifdef ENABLE_XR
+#include "xr/HandTrackingRenderer.h"
+#endif
 
 #include "../../Tags.h"
 #include "../../component/camera/ICameraComponent.h"
@@ -128,6 +131,9 @@ void MasterRenderer::InitDefault()
 #endif
 #ifdef RENDER_SELECTION
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::debug::SelectionDebugRenderer>(m_device, m_defaultRenderPass, m_scene));
+#endif
+#ifdef ENABLE_XR
+    m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::xr::HandTrackingRenderer>(m_device, m_defaultRenderPass, m_scene));
 #endif
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SunRenderer>(m_device, m_defaultRenderPass, m_scene));
     m_defaultRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::LensFlareRenderer>(m_device, m_defaultRenderPass, m_scene));

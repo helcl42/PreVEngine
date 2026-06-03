@@ -39,6 +39,7 @@ constexpr auto TAG_SELECTABLE_COMPONENT{ "SelectableComponent" };
 constexpr auto TAG_PARTICLE_SYSTEM_COMPONENT{ "ParticleSystemComponent" };
 constexpr auto TAG_SKY_RENDER_COMPONENT{ "SkyRenderComponent" };
 constexpr auto TAG_TIME_COMPONENT{ "TimeComponent" };
+constexpr auto TAG_HAND_TRACKING_RENDER_COMPONENT{ "HandTrackingRenderComponent" };
 } // namespace prev_test
 
 #endif
