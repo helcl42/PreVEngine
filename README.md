@@ -90,9 +90,9 @@ For the simulator, use `-DCMAKE_OSX_SYSROOT=iphonesimulator` instead.
 
 ```bash
 source /path/to/emsdk/emsdk_env.sh
-mkdir build && cd build
+mkdir build-web && cd build-web
 emcmake cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-ninja
+cmake --build . --target PreVEngineExample
 ```
 
 ## Compile Shaders

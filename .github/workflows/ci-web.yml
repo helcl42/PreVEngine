@@ -34,6 +34,9 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Install dependencies
+      run: sudo apt-get install -y ninja-build
+
     - name: Setup Emscripten
       uses: mymindstorm/setup-emsdk@v14
       with:
@@ -58,6 +61,7 @@ jobs:
     - name: Configure CMake
       run: |
         emcmake cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+        -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -S ${{ github.workspace }}
 
