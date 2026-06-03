@@ -75,17 +75,16 @@ Or import `Examples/PreVEngineExample/platform/android` into Android Studio.
 ### iOS
 
 ```bash
-mkdir build && cd build
+mkdir build-ios && cd build-ios
 cmake -G Xcode \
-  -DCMAKE_BUILD_TYPE=Debug \
   -DCMAKE_SYSTEM_NAME=iOS \
   -DCMAKE_OSX_SYSROOT=iphoneos \
   -DCMAKE_OSX_DEPLOYMENT_TARGET=16.3 \
-  -DCMAKE_OSX_ARCHITECTURES="arm64" \
-  -DENABLE_VK_LOADER=OFF ..
+  -DCMAKE_OSX_ARCHITECTURES="arm64" ..
+cmake --build . --target PreVEngineExample
 ```
 
-Open the generated Xcode project, add MoltenVK framework reference, and add assets to app bundle resources.
+For the simulator, use `-DCMAKE_OSX_SYSROOT=iphonesimulator` instead.
 
 ### Web (Emscripten)
 

@@ -269,7 +269,7 @@ void MasterRenderer::InitRefraction()
     const auto refractionComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
 
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyBoxRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene));
-    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene)); // TODO: compute sky outputs black
+    m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::sky::SkyRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::DefaultRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::TexturelessRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene));
     m_refractionRenderers.emplace_back(std::make_unique<prev_test::render::renderer::normal::NormalMappedRenderer>(m_device, *refractionComponent->GetRenderPass(), m_scene));

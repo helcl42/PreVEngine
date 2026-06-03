@@ -148,17 +148,7 @@ elseif(IOS)
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
     set(MACOSX_BUNDLE_BUNDLE_VERSION "1.0")
 
-    # set(MACOSX_BUNDLE_INFO_PLIST path/to/Info.plist)
-    # set(XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "NO")
-    # set(OUTPUT_NAME ${PROJECT_NAME})
-    # set(MACOSX_BUNDLE TRUE)
-    # set(MACOSX_BUNDLE_COPYRIGHT "(C) 2024")
-    # set(MACOSX_RPATH TRUE)
-    # set(MACOSX_FRAMEWORK_IDENTIFIER "com.prevengine.PreVEngineExample")
-    # set(XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/Libraries")
-    # set(RESOURCE "${RESOURCE_FILES}")
-    # set(XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME TRUE)
-    # set(XCODE_ATTRIBUTE_EXECUTABLE_NAME ${PROJECT_NAME})
+    set(IOS_LAUNCH_STORYBOARD "${CMAKE_CURRENT_SOURCE_DIR}/platform/ios/Launch Screen.storyboard")
 
     find_library(UIKIT_LIB UIKit)
     find_library(METALKIT_LIB METALKit)
@@ -173,6 +163,7 @@ elseif(IOS)
     add_executable(${PROJECT_NAME} 
         ${SRC_LIST}
         ${IOS_SRC_LIST}
+        ${IOS_LAUNCH_STORYBOARD}
     )
 
     target_link_libraries(${PROJECT_NAME} PreVEngine assimp)
@@ -199,8 +190,26 @@ elseif(IOS)
         ${FOUNDATION_LIB}
     )
 
-    #  Copy all files from ./Assets to the binary directory.
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets/" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets")
+    # Add assets as bundle resources for iOS (preserving directory structure)
+    file(GLOB_RECURSE ASSET_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/*")
+    target_sources(${PROJECT_NAME} PRIVATE ${ASSET_FILES})
+    foreach(ASSET_FILE ${ASSET_FILES})
+        file(RELATIVE_PATH REL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets" ${ASSET_FILE})
+        get_filename_component(REL_DIR ${REL_PATH} DIRECTORY)
+        if(REL_DIR)
+            set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/${REL_DIR}")
+        else()
+            set_source_files_properties(${ASSET_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+        endif()
+    endforeach()
+
+    set_source_files_properties(${IOS_LAUNCH_STORYBOARD} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/platform/ios/Info.plist"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER ${APP_BUNDLE_IDENTIFIER}
+    )
 
 elseif(APPLE)
     message("${PROJECT_NAME} - MacOS")

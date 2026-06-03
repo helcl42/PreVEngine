@@ -12,7 +12,7 @@ std::string AssetManager::GetAssetPath(const std::string& path) const
 #if defined(TARGET_PLATFORM_ANDROID)
     return path;
 #elif defined(TARGET_PLATFORM_IOS)
-    return GetResourcesRootPath() + "/" + prev::util::file::GetFileName(path);
+    return GetResourcesRootPath() + "/" + path;
 #else
     return "./assets/" + path;
 #endif
