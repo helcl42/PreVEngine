@@ -60,10 +60,10 @@ FragmentOutput fragmentMain(VertexOutput input
 
 #ifdef ENABLE_XR
     output.color = colorTex[viewIndex].Sample(colorSampler, uv);
-    output.depth = depthTex[viewIndex].Sample(depthSampler, uv).r;
+    output.depth = clamp(depthTex[viewIndex].Sample(depthSampler, uv).r, 0.0, 1.0);
 #else
     output.color = colorTex.Sample(colorSampler, uv);
-    output.depth = depthTex.Sample(depthSampler, uv).r;
+    output.depth = clamp(depthTex.Sample(depthSampler, uv).r, 0.0, 1.0);
 #endif
 
     return output;

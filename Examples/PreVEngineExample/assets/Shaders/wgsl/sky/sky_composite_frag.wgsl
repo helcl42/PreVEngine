@@ -22,7 +22,7 @@ fn fragmentMain( _S1 : pixelInput_0, @builtin(position) position_0 : vec4<f32>) 
 {
     var output_0 : FragmentOutput_0;
     output_0.color_0 = (textureSample((colorTex_0), (colorSampler_0), (_S1.textureCoord_0)));
-    output_0.depth_0 = (textureSample((depthTex_0), (depthSampler_0), (_S1.textureCoord_0))).x;
+    output_0.depth_0 = clamp((textureSample((depthTex_0), (depthSampler_0), (_S1.textureCoord_0))).x, 0.0f, 1.0f);
     return output_0;
 }
 
