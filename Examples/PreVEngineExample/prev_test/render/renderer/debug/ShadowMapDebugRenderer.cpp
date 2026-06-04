@@ -94,7 +94,7 @@ void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& render
 // make a node with quad model & shadowMap texture ???
 void ShadowMapDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    const auto shadows = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
+    const auto shadows = prev::scene::component::NodeComponentHelper::Find<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
 
     const auto& cascade{ shadows->GetCascadeFrameData(static_cast<uint32_t>(m_cascadeIndex)) };
     // TODO: Push constants not supported in gfx API - convert to UBO

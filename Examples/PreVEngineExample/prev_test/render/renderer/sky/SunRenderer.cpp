@@ -116,7 +116,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     }
 
     const auto sunComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISunComponent>(node) };
-    const auto lightComponent{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
+    const auto lightComponent{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
 
     const float aspectRatio{
         static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y)

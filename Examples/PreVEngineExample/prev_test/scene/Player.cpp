@@ -57,7 +57,7 @@ void Player::Init()
 
 void Player::Update(float deltaTime)
 {
-    const auto terrain{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
+    const auto terrain{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
 
     // set default animation
     m_animationRenderComponent->SetCurrentAnimationIndex(WALKING_ANIMATION_INDEX);

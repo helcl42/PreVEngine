@@ -30,8 +30,8 @@ void RayCaster::Update(float deltaTime)
     const auto rootNode{ GetRoot() };
 
     // TODO: use first view camera(left eye?)
-    const auto cameraComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::camera::ICameraComponent>(rootNode, { TAG_MAIN_CAMERA });
-    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::transform::ITransformComponent>(rootNode, { TAG_PLAYER });
+    const auto cameraComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::camera::ICameraComponent>(rootNode, { TAG_MAIN_CAMERA });
+    const auto playerTransformComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::transform::ITransformComponent>(rootNode, { TAG_PLAYER });
 
     if (m_inputFacade.IsMouseLocked()) {
 #ifdef ENABLE_XR

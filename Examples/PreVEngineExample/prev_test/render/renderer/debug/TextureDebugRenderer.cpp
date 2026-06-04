@@ -88,7 +88,7 @@ void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderCo
 
 void TextureDebugRenderer::Render(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
-    const auto component = prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT });
+    const auto component = prev::scene::component::NodeComponentHelper::Find<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT });
 
     m_shader->Bind("imageTexture", component->GetColorImageBuffer()->GetTextureView());
     m_shader->Bind("imageSampler", *m_colorSampler);

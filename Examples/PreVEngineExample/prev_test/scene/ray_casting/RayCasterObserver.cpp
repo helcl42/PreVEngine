@@ -38,7 +38,7 @@ void RayCastObserver::Update(float deltaTime)
         }
 
         if (intersectionType == IntersectionType::TERRAIN) {
-            auto terrainManagerNode{ prev::scene::graph::GraphTraversal::FindOneWithTags(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT, TAG_SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND) };
+            auto terrainManagerNode{ prev::scene::graph::GraphTraversal::FindByTags(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT, TAG_SELECTABLE_COMPONENT }, prev::scene::graph::LogicOperation::AND) };
             auto selectableComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::ISelectableComponent>(terrainManagerNode) };
             selectableComponent->SetSelected(true);
             selectableComponent->SetPosition(currentTerrainIntersectionPoint.value());
@@ -156,7 +156,7 @@ bool RayCastObserver::IsUnderGround(const prev_test::component::terrain::ITerrai
 
 std::shared_ptr<prev_test::component::terrain::ITerrainComponent> RayCastObserver::GetTerrain(const glm::vec3& position) const
 {
-    const auto terrainManager{ prev::scene::component::NodeComponentHelper::FindOne<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
+    const auto terrainManager{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::terrain::ITerrainManagerComponent>(GetRoot(), { TAG_TERRAIN_MANAGER_COMPONENT }) };
     return terrainManager->GetTerrainAt(position);
 }
 
@@ -164,7 +164,7 @@ std::optional<RayCastObserver::IntersectionNodeResult> RayCastObserver::FindTheC
 {
     std::optional<IntersectionNodeResult> theClosestNode;
     float minDistance{ std::numeric_limits<float>::max() };
-    auto selectableNodes{ prev::scene::graph::GraphTraversal::FindAllWithTags(GetRoot(), { TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND) };
+    auto selectableNodes{ prev::scene::graph::GraphTraversal::FindAllByTags(GetRoot(), { TAG_SELECTABLE_COMPONENT, TAG_BOUNDING_VOLUME_COMPONENT }, prev::scene::graph::LogicOperation::AND) };
     for (const auto& selectable : selectableNodes) {
         const auto boundingVolume{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::IBoundingVolumeComponent>(selectable) };
         prev::util::intersection::RayCastResult rayCastResult{};
@@ -180,7 +180,7 @@ std::optional<RayCastObserver::IntersectionNodeResult> RayCastObserver::FindTheC
 
 void RayCastObserver::ResetAllSelectableNodes() const
 {
-    auto selectableNodes{ prev::scene::graph::GraphTraversal::FindAllWithTags(GetRoot(), { TAG_SELECTABLE_COMPONENT }) };
+    auto selectableNodes{ prev::scene::graph::GraphTraversal::FindAllByTags(GetRoot(), { TAG_SELECTABLE_COMPONENT }) };
     for (auto& selectableNode : selectableNodes) {
         auto selectableComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::ISelectableComponent>(selectableNode) };
         selectableComponent->Reset();

@@ -20,7 +20,7 @@ public:
     template <typename ComponentType>
     std::shared_ptr<ComponentType> Get() const
     {
-        const auto result{ FindOne<ComponentType>() };
+        const auto result{ Find<ComponentType>() };
         if (!result) {
             throw std::runtime_error("Trying get component with tag = " + GetTypeName<ComponentType>() + " that does not exist in this repository.");
         }
@@ -67,7 +67,7 @@ public:
     }
 
     template <typename ComponentType>
-    std::shared_ptr<ComponentType> FindOne() const
+    std::shared_ptr<ComponentType> Find() const
     {
         auto iter{ m_components.find(GetTypeIndex<ComponentType>()) };
         if (iter == m_components.cend()) {
