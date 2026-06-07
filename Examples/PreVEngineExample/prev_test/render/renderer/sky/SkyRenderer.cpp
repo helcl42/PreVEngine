@@ -39,7 +39,11 @@ void SkyRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("perlinNoiseSampler", 5, GFX_SHADER_STAGE_COMPUTE),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("weatherTex", 6, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("weatherSampler", 7, GFX_SHADER_STAGE_COMPUTE),
-            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 8, GFX_SHADER_STAGE_COMPUTE)
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 8, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("prevColorTex", 9, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("prevColorSampler", 10, GFX_SHADER_STAGE_COMPUTE),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("prevDepthTex", 11, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("prevDepthSampler", 12, GFX_SHADER_STAGE_COMPUTE, true)
         })
         .SetBindGroupCapacity(m_descriptorCount)
         .Build();
@@ -173,11 +177,17 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
         auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
 
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyColorImageBuffer);
+        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyColorImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
         UpdateImageBufferExtents(extent, COLOR_FORMAT, skyBloomImageBuffer);
         UpdateImageBufferExtents(extent, COLOR_FORMAT, skyAlphanessImageBuffer);
-        UpdateImageBufferExtents(extent, DEPTH_FORMAT, skyCloudDistanceImageBuffer);
+        UpdateImageBufferExtents(extent, DEPTH_FORMAT, skyCloudDistanceImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
         UpdateImageBufferExtents(extent, COLOR_FORMAT, skyPostProcessColorImageBuffer);
+
+        // History buffers for reprojection
+        static constexpr uint32_t REPROJ_WARMUP_FRAMES = 5;
+        bool historyValid = m_frameCounter >= REPROJ_WARMUP_FRAMES && m_skyHistoryColorImageBuffer[viewIndex].image != nullptr && m_skyHistoryColorImageBuffer[viewIndex].image->GetExtent().width == extent.width && m_skyHistoryColorImageBuffer[viewIndex].image->GetExtent().height == extent.height;
+        UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyHistoryColorImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
+        UpdateImageBufferExtents(extent, DEPTH_FORMAT, m_skyHistoryDepthImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
 
         auto& skyColorImageSampler{ m_samplers[skyColorImageBuffer.samplerType] };
         auto& skyBloomImageSampler{ m_samplers[skyBloomImageBuffer.samplerType] };
@@ -199,40 +209,71 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         const auto fov{ prev::util::math::CreateFovFromProjectionMatrix(renderContext.projectionMatrices[viewIndex]) };
         const prev_test::render::ViewFrustum skyViewFrustum(fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, skyNearClippingPlane, skyFarClippingPlane);
         const auto projectionMatrix{ skyViewFrustum.CreateProjectionMatrix() };
-
         // const auto projectionMatrix{ renderContext.projectionMatrices[viewIndex] };
+
+        const uint32_t enableCheckerboard{ 0 };
+        const uint32_t enableTemporalBlend{ 0 };
+        const uint32_t enableFullReproject{ 1 };
+        const float reprojectionBlend{ 0.9f };
 
         m_uniformsPoolSkyCS->MoveToNext();
 
         auto& uboCS = m_uniformsPoolSkyCS->GetCurrent();
 
         UniformsSkyCS uniformsCS{};
+        // View & Matrices
         uniformsCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
         uniformsCS.projectionMatrix = projectionMatrix;
         uniformsCS.inverseProjectionMatrix = glm::inverse(projectionMatrix);
         uniformsCS.viewMatrix = renderContext.viewMatrices[viewIndex];
         uniformsCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrices[viewIndex]);
+
+        // Light & Color
         uniformsCS.lightColor = glm::vec4(mainLightComponent->GetColor(), 1.0f);
         uniformsCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
-        uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPositions[viewIndex], 1.0f);
         uniformsCS.baseCloudColor = glm::vec4(skyComponent->GetCloudBaseColor(), 1.0f);
         uniformsCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
         uniformsCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
-        uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
+
+        // Camera & World
+        uniformsCS.cameraPosition = glm::vec4(renderContext.cameraPositions[viewIndex], 1.0f);
         uniformsCS.worldOrigin = glm::vec4(renderContext.cameraPositions[0].x, 0.0f, renderContext.cameraPositions[0].z, 1.0f);
-        uniformsCS.time = skyComponent->GetElapsedTime();
-        uniformsCS.coverageFactor = 0.45f;
-        uniformsCS.cloudSpeed = 450.0f;
-        uniformsCS.crispiness = 40.0f;
-        uniformsCS.absorption = 0.0035f;
-        uniformsCS.curliness = 0.1f;
-        uniformsCS.enablePowder = 0;
-        uniformsCS.densityFactor = 0.02f;
+        uniformsCS.windDirection = glm::normalize(glm::vec4(0.5f, 0.0f, 0.1f, 0.0f));
         uniformsCS.earthRadius = 600000.0f;
         uniformsCS.sphereInnerRadius = uniformsCS.earthRadius + 5000.0f;
         uniformsCS.sphereOuterRadius = uniformsCS.sphereInnerRadius + 17000.0f;
         uniformsCS.cloudTopOffset = 750.0f;
+
+        // Cloud Shape
+        uniformsCS.coverageFactor = 0.42f;
+        uniformsCS.crispiness = 37.0f;
+        uniformsCS.curliness = 0.102f;
+        uniformsCS.densityFactor = 0.016f;
+        uniformsCS.cloudSpeed = 450.0f;
+        uniformsCS.absorption = 0.0029f;
         uniformsCS.maxDepth = MAX_DEPTH;
+        uniformsCS.time = skyComponent->GetElapsedTime();
+
+        // Rendering Quality
+        uniformsCS.cloudSteps = 80;
+        uniformsCS.lightSteps = 6;
+        uniformsCS.useIGN = 1;
+        uniformsCS.frameCounter = m_frameCounter;
+
+        // Effects
+        uniformsCS.enablePowder = 1;
+        uniformsCS.powderWeight = 0.15f;
+        uniformsCS.lodScale = 2.0f;
+        uniformsCS.ambientScale = 1.35f;
+
+        // Reprojection
+        uniformsCS.prevViewProjectionMatrix = m_prevViewProjectionMatrix[viewIndex];
+        uniformsCS.currentViewProjectionMatrix = projectionMatrix * renderContext.viewMatrices[viewIndex];
+        uniformsCS.prevInverseViewProjectionMatrix = glm::inverse(m_prevViewProjectionMatrix[viewIndex]);
+        uniformsCS.enableCheckerboard = (enableCheckerboard && historyValid) ? 1 : 0;
+        uniformsCS.reprojectionBlend = reprojectionBlend;
+        uniformsCS.enableTemporalBlend = (enableTemporalBlend && historyValid) ? 1 : 0;
+        uniformsCS.enableFullReproject = (enableFullReproject && historyValid) ? 1 : 0;
 
         uboCS.Write(uniformsCS);
 
@@ -248,6 +289,12 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         m_skyShader->Bind("outAlphaness", skyAlphanessImageBuffer.image->GetTextureView());
         m_skyShader->Bind("outCloudDistance", skyCloudDistanceImageBuffer.image->GetTextureView());
 
+        // Bind previous frame history for reprojection
+        m_skyShader->Bind("prevColorTex", m_skyHistoryColorImageBuffer[viewIndex].image->GetTextureView());
+        m_skyShader->Bind("prevColorSampler", *m_samplers[SamplerType::LINEAR]);
+        m_skyShader->Bind("prevDepthTex", m_skyHistoryDepthImageBuffer[viewIndex].image->GetTextureView());
+        m_skyShader->Bind("prevDepthSampler", *m_samplers[SamplerType::NEAREST]);
+
         const GfxBindGroup descriptorSetCompute = m_skyShader->UpdateNextBindGroup();
 
         GfxComputePassEncoder computePassEncoder{};
@@ -261,10 +308,29 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         gfxComputePassEncoderDispatch(computePassEncoder, dispatchX, dispatchY, 1);
         gfxComputePassEncoderEnd(computePassEncoder);
 
+        // Copy current cloud output to history buffers for next frame's reprojection.
+        // This keeps history coherent and avoids stale half-frames.
+        if (enableCheckerboard || enableTemporalBlend || enableFullReproject) {
+            skyColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_TRANSFER_SRC, renderContext.commandEncoder);
+            skyCloudDistanceImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_TRANSFER_SRC, renderContext.commandEncoder);
+
+            m_skyHistoryColorImageBuffer[viewIndex].image->UpdateLayout(GFX_TEXTURE_LAYOUT_TRANSFER_DST, renderContext.commandEncoder);
+            m_skyHistoryDepthImageBuffer[viewIndex].image->UpdateLayout(GFX_TEXTURE_LAYOUT_TRANSFER_DST, renderContext.commandEncoder);
+
+            CopyImageBuffer(skyColorImageBuffer, m_skyHistoryColorImageBuffer[viewIndex], renderContext.commandEncoder);
+            CopyImageBuffer(skyCloudDistanceImageBuffer, m_skyHistoryDepthImageBuffer[viewIndex], renderContext.commandEncoder);
+
+            m_skyHistoryColorImageBuffer[viewIndex].image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+            m_skyHistoryDepthImageBuffer[viewIndex].image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+        }
+
         skyColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
         skyBloomImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
         skyAlphanessImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
         skyCloudDistanceImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
+
+        // Store current VP matrix for next frame's reprojection
+        m_prevViewProjectionMatrix[viewIndex] = projectionMatrix * renderContext.viewMatrices[viewIndex];
 
         // sky post process render
         skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
@@ -280,9 +346,17 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         UniformsSkyPostProcessCS uniformsPostCS{};
         uniformsPostCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
         uniformsPostCS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
+        uniformsPostCS.inverseProjectionMatrix = glm::inverse(renderContext.projectionMatrices[viewIndex]);
+        uniformsPostCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrices[viewIndex]);
+        uniformsPostCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
+        uniformsPostCS.skyColorBottom = glm::vec4(skyComponent->GetBottomColor(), 1.0f);
+        uniformsPostCS.skyColorTop = glm::vec4(skyComponent->GetTopColor(), 1.0f);
         uniformsPostCS.enableGodRays = 1;
-        uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()),
-            glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
+        uniformsPostCS.enableBlur = 1;
+        uniformsPostCS.lightDotCameraForward = glm::dot(glm::normalize(renderContext.cameraPositions[viewIndex] - mainLightComponent->GetPosition()), glm::normalize(prev::util::math::GetForwardVector(renderContext.viewMatrices[viewIndex])));
+        uniformsPostCS.godRaySamples = 64;
+        uniformsPostCS.enableCheckerboardResolve = enableCheckerboard;
+        uniformsPostCS.frameCounter = m_frameCounter;
 
         uboPostCS.Write(uniformsPostCS);
 
@@ -308,6 +382,8 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
 
         skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, renderContext.commandEncoder);
     }
+
+    m_frameCounter++;
 }
 
 void SkyRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -371,6 +447,8 @@ void SkyRenderer::ShutDown()
     }
 
     for (uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
+        m_skyHistoryDepthImageBuffer[viewIndex] = {};
+        m_skyHistoryColorImageBuffer[viewIndex] = {};
         m_skyPostProcessColorImageBuffer[viewIndex] = {};
         m_skyCloudDistanceImageBuffer[viewIndex] = {};
         m_skyAlphanessImageBuffer[viewIndex] = {};
@@ -391,19 +469,36 @@ void SkyRenderer::ShutDown()
     m_skyShader.reset();
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer)
+void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags)
 {
     if (imageBuffer.image == nullptr || imageBuffer.image->GetExtent().width != extent.width || imageBuffer.image->GetExtent().height != extent.height) {
         imageBuffer.image = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                 .SetExtent({ extent.width, extent.height, 1 })
                                 .SetFormat(format)
                                 .SetType(GFX_TEXTURE_TYPE_2D)
-                                .SetUsageFlags(GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING)
+                                .SetUsageFlags(usageFlags)
                                 .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
                                 .Build();
 
         // TODO: gfx API doesn't expose format feature queries - assume linear filtering is available
         imageBuffer.samplerType = (format == DEPTH_FORMAT) ? SamplerType::NEAREST : SamplerType::LINEAR;
     }
+}
+
+void SkyRenderer::CopyImageBuffer(const ImageBufferData& src, const ImageBufferData& dst, GfxCommandEncoder commandEncoder)
+{
+    GfxCopyTextureToTextureDescriptor copyDesc{};
+    copyDesc.source = src.image->GetTexture();
+    copyDesc.sourceOrigin = { 0, 0, 0 };
+    copyDesc.sourceMipLevel = 0;
+    copyDesc.sourceArrayLayer = 0;
+    copyDesc.sourceFinalLayout = GFX_TEXTURE_LAYOUT_TRANSFER_SRC;
+    copyDesc.destination = dst.image->GetTexture();
+    copyDesc.destinationOrigin = { 0, 0, 0 };
+    copyDesc.destinationMipLevel = 0;
+    copyDesc.destinationArrayLayer = 0;
+    copyDesc.destinationFinalLayout = GFX_TEXTURE_LAYOUT_TRANSFER_DST;
+    copyDesc.extent = src.image->GetExtent();
+    gfxCommandEncoderCopyTextureToTexture(commandEncoder, &copyDesc);
 }
 } // namespace prev_test::render::renderer::sky

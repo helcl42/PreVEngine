@@ -27,11 +27,18 @@ float NoiseInterpolation(float2 iCoord, float iSize)
 {
     float2 grid = iCoord * iSize;
     float2 randomInput = floor(grid);
+    float2 gridSize = float2(iSize, iSize);
 
-    float p0 = Random2D(randomInput);
-    float p1 = Random2D(randomInput + float2(1.0, 0.0));
-    float p2 = Random2D(randomInput + float2(0.0, 1.0));
-    float p3 = Random2D(randomInput + float2(1.0, 1.0));
+    // Wrap grid cells so noise tiles seamlessly at texture boundaries
+    float2 c0 = randomInput - floor(randomInput / gridSize) * gridSize;
+    float2 c1 = (randomInput + float2(1.0, 0.0)) - floor((randomInput + float2(1.0, 0.0)) / gridSize) * gridSize;
+    float2 c2 = (randomInput + float2(0.0, 1.0)) - floor((randomInput + float2(0.0, 1.0)) / gridSize) * gridSize;
+    float2 c3 = (randomInput + float2(1.0, 1.0)) - floor((randomInput + float2(1.0, 1.0)) / gridSize) * gridSize;
+
+    float p0 = Random2D(c0);
+    float p1 = Random2D(c1);
+    float p2 = Random2D(c2);
+    float p3 = Random2D(c3);
 
     float2 gridFraction = frac(grid);
     float2 weights = smoothstep(float2(0.0, 0.0), float2(1.0, 1.0), gridFraction);

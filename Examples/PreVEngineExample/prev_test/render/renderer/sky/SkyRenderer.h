@@ -62,16 +62,20 @@ private:
 
     ImageBufferData m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
 
+    uint32_t m_frameCounter{ 0 };
+
 private:
     static const inline GfxFormat COLOR_FORMAT{ GFX_FORMAT_R8G8B8A8_UNORM };
 
     static const inline GfxFormat DEPTH_FORMAT{ GFX_FORMAT_R32_FLOAT };
 
 private:
-    void UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer);
+    void UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags = GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING);
+    void CopyImageBuffer(const ImageBufferData& src, const ImageBufferData& dst, GfxCommandEncoder commandEncoder);
 
 private:
     struct DEFAULT_ALIGNMENT UniformsSkyCS {
+        // View & Matrices
         DEFAULT_ALIGNMENT glm::vec4 resolution;
 
         DEFAULT_ALIGNMENT glm::mat4 projectionMatrix;
@@ -79,40 +83,71 @@ private:
         DEFAULT_ALIGNMENT glm::mat4 viewMatrix;
         DEFAULT_ALIGNMENT glm::mat4 inverseViewMatrix;
 
+        // Light & Color
         DEFAULT_ALIGNMENT glm::vec4 lightColor;
         DEFAULT_ALIGNMENT glm::vec4 lightDirection;
-        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
-
         DEFAULT_ALIGNMENT glm::vec4 baseCloudColor;
         DEFAULT_ALIGNMENT glm::vec4 skyColorBottom;
         DEFAULT_ALIGNMENT glm::vec4 skyColorTop;
-        DEFAULT_ALIGNMENT glm::vec4 windDirection;
 
+        // Camera & World
+        DEFAULT_ALIGNMENT glm::vec4 cameraPosition;
         DEFAULT_ALIGNMENT glm::vec4 worldOrigin;
-
-        DEFAULT_ALIGNMENT float time;
-        float coverageFactor;
-        float cloudSpeed;
-        float crispiness;
-
-        DEFAULT_ALIGNMENT float absorption;
-        float curliness;
-        uint32_t enablePowder;
-        float densityFactor;
-
+        DEFAULT_ALIGNMENT glm::vec4 windDirection;
         DEFAULT_ALIGNMENT float earthRadius;
         float sphereInnerRadius;
         float sphereOuterRadius;
         float cloudTopOffset;
 
-        DEFAULT_ALIGNMENT float maxDepth;
+        // Cloud Shape
+        DEFAULT_ALIGNMENT float coverageFactor;
+        float crispiness;
+        float curliness;
+        float densityFactor;
+
+        DEFAULT_ALIGNMENT float cloudSpeed;
+        float absorption;
+        float maxDepth;
+        float time;
+
+        // Rendering Quality
+        DEFAULT_ALIGNMENT uint32_t cloudSteps;
+        uint32_t lightSteps;
+        uint32_t useIGN;
+        uint32_t frameCounter;
+
+        // Effects
+        DEFAULT_ALIGNMENT uint32_t enablePowder;
+        float powderWeight;
+        float lodScale;
+        float ambientScale;
+
+        // Reprojection
+        DEFAULT_ALIGNMENT glm::mat4 prevViewProjectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 currentViewProjectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 prevInverseViewProjectionMatrix;
+        DEFAULT_ALIGNMENT uint32_t enableCheckerboard;
+        float reprojectionBlend;
+        uint32_t enableTemporalBlend;
+        uint32_t enableFullReproject;
     };
 
     struct DEFAULT_ALIGNMENT UniformsSkyPostProcessCS {
         DEFAULT_ALIGNMENT glm::vec4 resolution;
         DEFAULT_ALIGNMENT glm::vec4 lisghtPosition;
+        DEFAULT_ALIGNMENT glm::mat4 inverseProjectionMatrix;
+        DEFAULT_ALIGNMENT glm::mat4 inverseViewMatrix;
+        DEFAULT_ALIGNMENT glm::vec4 lightDirection;
+        DEFAULT_ALIGNMENT glm::vec4 skyColorBottom;
+        DEFAULT_ALIGNMENT glm::vec4 skyColorTop;
         DEFAULT_ALIGNMENT uint32_t enableGodRays;
+        uint32_t enableBlur;
         float lightDotCameraForward;
+        uint32_t godRaySamples;
+        DEFAULT_ALIGNMENT uint32_t enableCheckerboardResolve;
+        uint32_t frameCounter;
+        float pad0;
+        float pad1;
     };
 
 private:
@@ -141,6 +176,11 @@ private:
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
+
+    // Reprojection history
+    ImageBufferData m_skyHistoryColorImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyHistoryDepthImageBuffer[MAX_VIEW_COUNT];
+    glm::mat4 m_prevViewProjectionMatrix[MAX_VIEW_COUNT]{};
 };
 } // namespace prev_test::render::renderer::sky
 

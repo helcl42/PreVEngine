@@ -203,8 +203,8 @@ fn noise_0( x_2 : vec3<f32>) -> f32
 
 fn cells_0( p_1 : vec3<f32>,  cellCount_0 : f32) -> f32
 {
-    var _S31 : vec3<f32>;
-    var _S32 : vec3<f32> = p_1 * vec3<f32>(cellCount_0);
+    var _S31 : vec3<f32> = vec3<f32>(cellCount_0);
+    var _S32 : vec3<f32> = p_1 * _S31;
     var d_0 : f32 = 1.0e+10f;
     var xo_0 : i32 = i32(-1);
     for(;;)
@@ -238,35 +238,15 @@ fn cells_0( p_1 : vec3<f32>,  cellCount_0 : f32) -> f32
                     break;
                 }
                 var tp_0 : vec3<f32> = floor(_S32) + vec3<f32>(f32(xo_0), f32(yo_0), f32(zo_0));
-                var _S33 : vec3<f32> = _S32 - tp_0;
-                for(;;)
-                {
-                    var result_2 : vec3<f32>;
-                    var i_1 : i32 = i32(0);
-                    for(;;)
-                    {
-                        if(i_1 < i32(3))
-                        {
-                        }
-                        else
-                        {
-                            break;
-                        }
-                        result_2[i_1] = ((((tp_0[i_1])) % ((cellCount_0))));
-                        i_1 = i_1 + i32(1);
-                    }
-                    _S31 = result_2;
-                    break;
-                }
-                var tp_1 : vec3<f32> = _S33 - vec3<f32>(noise_0(_S31));
-                var _S34 : f32 = min(d_1, dot(tp_1, tp_1));
-                var _S35 : i32 = zo_0 + i32(1);
-                d_1 = _S34;
-                zo_0 = _S35;
+                var tp_1 : vec3<f32> = _S32 - tp_0 - vec3<f32>(noise_0(tp_0 - floor(tp_0 / _S31) * _S31));
+                var _S33 : f32 = min(d_1, dot(tp_1, tp_1));
+                var _S34 : i32 = zo_0 + i32(1);
+                d_1 = _S33;
+                zo_0 = _S34;
             }
-            var _S36 : i32 = yo_0 + i32(1);
+            var _S35 : i32 = yo_0 + i32(1);
             d_0 = d_1;
-            yo_0 = _S36;
+            yo_0 = _S35;
         }
         xo_0 = xo_0 + i32(1);
     }
@@ -287,20 +267,20 @@ fn stackable3DNoise_0( pixel_0 : vec3<i32>) -> vec4<f32>
 {
     var coord_0 : vec3<f32> = vec3<f32>(f32(pixel_0.x) / 128.0f, f32(pixel_0.y) / 128.0f, f32(pixel_0.z) / 128.0f);
     var worleyNoise1_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 32.0f);
-    var _S37 : f32 = (1.0f - worleyNoise3D_0(coord_0, 8.0f)) * 0.625f;
-    var _S38 : f32 = worleyNoise1_0 * 0.25f;
-    var PerlinWorleyNoise_0 : f32 = remap_0(perlinNoise3D_0(coord_0, 8.0f, i32(3)), 0.0f, 1.0f, _S37 + _S38 + (1.0f - worleyNoise3D_0(coord_0, 56.0f)) * 0.125f, 1.0f);
+    var _S36 : f32 = (1.0f - worleyNoise3D_0(coord_0, 8.0f)) * 0.625f;
+    var _S37 : f32 = worleyNoise1_0 * 0.25f;
+    var PerlinWorleyNoise_0 : f32 = remap_0(perlinNoise3D_0(coord_0, 8.0f, i32(3)), 0.0f, 1.0f, _S36 + _S37 + (1.0f - worleyNoise3D_0(coord_0, 56.0f)) * 0.125f, 1.0f);
     var w2_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 16.0f);
     var w4_0 : f32 = 1.0f - worleyNoise3D_0(coord_0, 64.0f);
-    return vec4<f32>(PerlinWorleyNoise_0 * PerlinWorleyNoise_0, _S37 + w2_0 * 0.25f + worleyNoise1_0 * 0.125f, w2_0 * 0.625f + _S38 + w4_0 * 0.125f, worleyNoise1_0 * 0.75f + w4_0 * 0.25f);
+    return vec4<f32>(PerlinWorleyNoise_0 * PerlinWorleyNoise_0, _S36 + w2_0 * 0.25f + worleyNoise1_0 * 0.125f, w2_0 * 0.625f + _S37 + w4_0 * 0.125f, worleyNoise1_0 * 0.75f + w4_0 * 0.25f);
 }
 
 @compute
 @workgroup_size(4, 4, 4)
 fn computeMain(@builtin(global_invocation_id) dispatchThreadID_0 : vec3<u32>)
 {
-    var _S39 : vec3<i32> = vec3<i32>(dispatchThreadID_0.xyz);
-    textureStore((outVolumeTexture_0), (vec3<u32>(_S39)), (stackable3DNoise_0(_S39)));
+    var _S38 : vec3<i32> = vec3<i32>(dispatchThreadID_0.xyz);
+    textureStore((outVolumeTexture_0), (vec3<u32>(_S38)), (stackable3DNoise_0(_S38)));
     return;
 }
 
