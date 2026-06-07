@@ -20,13 +20,17 @@ fn NoiseInterpolation_0( iCoord_0 : vec2<f32>,  iSize_0 : f32) -> f32
 {
     var grid_0 : vec2<f32> = iCoord_0 * vec2<f32>(iSize_0);
     var randomInput_0 : vec2<f32> = floor(grid_0);
-    var p0_0 : f32 = Random2D_0(randomInput_0);
-    var p1_0 : f32 = Random2D_0(randomInput_0 + vec2<f32>(1.0f, 0.0f));
-    const _S1 : vec2<f32> = vec2<f32>(1.0f, 1.0f);
-    var weights_0 : vec2<f32> = smoothstep(vec2<f32>(0.0f, 0.0f), _S1, fract(grid_0));
-    var _S2 : f32 = weights_0.x;
-    var _S3 : f32 = weights_0.y;
-    return p0_0 + (p1_0 - p0_0) * _S2 + (Random2D_0(randomInput_0 + vec2<f32>(0.0f, 1.0f)) - p0_0) * _S3 * (1.0f - _S2) + (Random2D_0(randomInput_0 + _S1) - p1_0) * (_S3 * _S2);
+    var gridSize_0 : vec2<f32> = vec2<f32>(iSize_0, iSize_0);
+    var _S1 : vec2<f32> = randomInput_0 + vec2<f32>(1.0f, 0.0f);
+    var _S2 : vec2<f32> = randomInput_0 + vec2<f32>(0.0f, 1.0f);
+    const _S3 : vec2<f32> = vec2<f32>(1.0f, 1.0f);
+    var _S4 : vec2<f32> = randomInput_0 + _S3;
+    var p0_0 : f32 = Random2D_0(randomInput_0 - floor(randomInput_0 / gridSize_0) * gridSize_0);
+    var p1_0 : f32 = Random2D_0(_S1 - floor(_S1 / gridSize_0) * gridSize_0);
+    var weights_0 : vec2<f32> = smoothstep(vec2<f32>(0.0f, 0.0f), _S3, fract(grid_0));
+    var _S5 : f32 = weights_0.x;
+    var _S6 : f32 = weights_0.y;
+    return p0_0 + (p1_0 - p0_0) * _S5 + (Random2D_0(_S2 - floor(_S2 / gridSize_0) * gridSize_0) - p0_0) * _S6 * (1.0f - _S5) + (Random2D_0(_S4 - floor(_S4 / gridSize_0) * gridSize_0) - p1_0) * (_S6 * _S5);
 }
 
 fn PerlinNoise_0( uv_0 : vec2<f32>,  sc_0 : f32,  f_0 : f32,  a_0 : f32,  o_0 : i32) -> f32
@@ -59,9 +63,9 @@ fn PerlinNoise_0( uv_0 : vec2<f32>,  sc_0 : f32,  f_0 : f32,  a_0 : f32,  o_0 : 
 @workgroup_size(16, 16, 1)
 fn computeMain(@builtin(global_invocation_id) dispatchThreadID_0 : vec3<u32>)
 {
-    var _S4 : vec2<i32> = vec2<i32>(dispatchThreadID_0.xy);
-    var uv_1 : vec2<f32> = vec2<f32>(_S4) / uboCS_0.outputTextureSize_0.xy;
-    textureStore((outWeatherTexture_0), (vec2<u32>(_S4)), (vec4<f32>(clamp(PerlinNoise_0(uv_1, uboCS_0.perlinScale_0, uboCS_0.perlinFrequency_0, uboCS_0.perlinAmplitude_0, uboCS_0.perlinOctaves_0), 0.0f, 1.0f), clamp(PerlinNoise_0(uv_1 + vec2<f32>(5.5f, 5.5f), uboCS_0.perlinScale_0 * 3.0f, 0.30000001192092896f, 0.69999998807907104f, i32(10)), 0.0f, 1.0f), 0.0f, 1.0f)));
+    var _S7 : vec2<i32> = vec2<i32>(dispatchThreadID_0.xy);
+    var uv_1 : vec2<f32> = vec2<f32>(_S7) / uboCS_0.outputTextureSize_0.xy;
+    textureStore((outWeatherTexture_0), (vec2<u32>(_S7)), (vec4<f32>(clamp(PerlinNoise_0(uv_1, uboCS_0.perlinScale_0, uboCS_0.perlinFrequency_0, uboCS_0.perlinAmplitude_0, uboCS_0.perlinOctaves_0), 0.0f, 1.0f), clamp(PerlinNoise_0(uv_1 + vec2<f32>(5.5f, 5.5f), uboCS_0.perlinScale_0 * 3.0f, 0.30000001192092896f, 0.69999998807907104f, i32(10)), 0.0f, 1.0f), 0.0f, 1.0f)));
     return;
 }
 

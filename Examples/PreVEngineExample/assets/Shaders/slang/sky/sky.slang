@@ -7,32 +7,59 @@ import common.utils;
 
 struct SkyCloudParams
 {
+    // View & Matrices
     float4 resolution;
     float4x4 projectionMatrix;
     float4x4 inverseProjectionMatrix;
     float4x4 viewMatrix;
     float4x4 inverseViewMatrix;
+
+    // Light & Color
     float4 lightColor;
     float4 lightDirection;
-    float4 cameraPosition;
     float4 baseCloudColor;
     float4 skyColorBottom;
     float4 skyColorTop;
-    float4 windDirection;
+
+    // Camera & World
+    float4 cameraPosition;
     float4 worldOrigin;
-    float time;
-    float coverageFactor;
-    float cloudSpeed;
-    float crispiness;
-    float absorption;
-    float curliness;
-    uint enablePowder;
-    float densityFactor;
+    float4 windDirection;
     float earthRadius;
     float sphereInnerRadius;
     float sphereOuterRadius;
     float cloudTopOffset;
+
+    // Cloud Shape
+    float coverageFactor;
+    float crispiness;
+    float curliness;
+    float densityFactor;
+    float cloudSpeed;
+    float absorption;
     float maxDepth;
+    float time;
+
+    // Rendering Quality
+    uint cloudSteps;
+    uint lightSteps;
+    uint useIGN;
+    uint frameCounter;
+
+    // Effects
+    uint enablePowder;
+    float powderWeight;
+    float lodScale;
+    float ambientScale;
+
+    // Reprojection
+    float4x4 prevViewProjectionMatrix;
+    float4x4 currentViewProjectionMatrix;
+    float4x4 prevInverseViewProjectionMatrix;
+    uint enableCheckerboard;
+    float reprojectionBlend;
+    uint enableTemporalBlend;
+    uint enableFullReproject;
 };
 
 [[vk::binding(0), vk::image_format("rgba8")]] WTexture2D<float4> outFragColor;
@@ -44,6 +71,10 @@ struct SkyCloudParams
 [[vk::binding(6)]] Texture2D weatherTex;
 [[vk::binding(7)]] SamplerState weatherSampler;
 [[vk::binding(8)]] ConstantBuffer<SkyCloudParams> uboCS;
+[[vk::binding(9)]] Texture2D prevColorTex;
+[[vk::binding(10)]] SamplerState prevColorSampler;
+[[vk::binding(11)]] Texture2D prevDepthTex;
+[[vk::binding(12)]] SamplerState prevDepthSampler;
 
 // Cone sampling random offsets
 static const float3 noiseKernel[6] = {
@@ -62,9 +93,34 @@ static const float bayerFilter[16] = {
     15.0 / 16.0, 7.0 / 16.0, 13.0 / 16.0, 5.0 / 16.0
 };
 
+float BayerDither(uint2 fragCoord)
+{
+    int a = int(fragCoord.x) % 4;
+    int b = int(fragCoord.y) % 4;
+    return bayerFilter[a * 4 + b];
+}
+
+float InterleavedGradientNoise(float2 fragCoord)
+{
+    float3 magic = float3(0.06711056, 0.00583715, 52.9829189);
+    return fract(magic.z * fract(dot(fragCoord, magic.xy)));
+}
+
+float GetDitherOffset(uint2 fragCoord)
+{
+    if (uboCS.useIGN != 0)
+    {
+        return InterleavedGradientNoise(float2(fragCoord));
+    }
+    else
+    {
+        return BayerDither(fragCoord);
+    }
+}
+
 // Cloud types height density gradients
-static const float4 statusGradient = float4(0.0, 0.1, 0.2, 0.3);
-static const float4 stratoCumusGradient = float4(0.02, 0.2, 0.48, 0.625);
+static const float4 stratusGradient = float4(0.0, 0.1, 0.2, 0.3);
+static const float4 stratoCumulusGradient = float4(0.02, 0.2, 0.48, 0.625);
 static const float4 cumulusGradient = float4(0.00, 0.1625, 0.88, 0.98);
 
 static const float cloudsMinTransmitance = 0.1;
@@ -127,7 +183,7 @@ float GetDensityForCloud(float heightFraction, float cloudType)
     float stratoCumulusFactor = 1.0 - abs(cloudType - 0.5) * 2.0;
     float cumulusFactor = clamp(cloudType - 0.5, 0.0, 1.0) * 2.0;
 
-    float4 baseGradient = stratusFactor * statusGradient + stratoCumulusFactor * stratoCumusGradient + cumulusFactor * cumulusGradient;
+    float4 baseGradient = stratusFactor * stratusGradient + stratoCumulusFactor * stratoCumulusGradient + cumulusFactor * cumulusGradient;
 
     return smoothstep(baseGradient.x, baseGradient.y, heightFraction) - smoothstep(baseGradient.z, baseGradient.w, heightFraction);
 }
@@ -150,6 +206,7 @@ float SampleCloudDensity(float3 inPos, bool expensive, float lod)
     }
 
     float3 noiseScaler = float3(0.625, 0.25, 0.125);
+    // Base noise: static world position — fixed 3D noise field
     float4 lowFrequencyNoise = perlinNoiseTex.SampleLevel(perlinNoiseSampler, float3(uv * uboCS.crispiness, heightFraction), lod);
     float lowFreqFBM = dot(lowFrequencyNoise.gba, noiseScaler);
     float baseCloud = Remap(lowFrequencyNoise.r, -(1.0 - lowFreqFBM), 1.0, 0.0, 1.0);
@@ -157,6 +214,7 @@ float SampleCloudDensity(float3 inPos, bool expensive, float lod)
     float density = GetDensityForCloud(heightFraction, 1.0);
     baseCloud *= density / max(heightFraction, 0.001);
 
+    // Weather moves with wind — slides over static noise field → natural evolution
     float3 weatherData = weatherTex.SampleLevel(weatherSampler, movingUV, 0.0).rgb;
     float cloudCoverage = weatherData.r * uboCS.coverageFactor;
     float baseCloudWithCoverage = Remap(baseCloud, cloudCoverage, 1.0, 0.0, 1.0);
@@ -164,7 +222,8 @@ float SampleCloudDensity(float3 inPos, bool expensive, float lod)
 
     if (expensive)
     {
-        float3 erodeCloudNoise = perlinNoiseTex.SampleLevel(perlinNoiseSampler, float3(movingUV * uboCS.crispiness, heightFraction) * uboCS.curliness, lod).rgb;
+        // Erosion moves with wind — detail drifts across cloud edges
+        float3 erodeCloudNoise = perlinNoiseTex.SampleLevel(perlinNoiseSampler, float3(movingUV * uboCS.crispiness * uboCS.curliness, heightFraction), lod).rgb;
         float highFreqFBM = dot(erodeCloudNoise.rgb, noiseScaler);
         float highFreqNoiseModifier = lerp(highFreqFBM, 1.0 - highFreqFBM, clamp(heightFraction * 10.0, 0.0, 1.0));
 
@@ -182,28 +241,33 @@ float GetPowder(float density)
 
 float RaymarchToLight(float3 inPos, float stepSize, float3 lightDir, float originalDensity, float lightDotEye)
 {
-    float ds = stepSize * 6.0;
+    int lightSteps = int(uboCS.lightSteps);
+    float ds = stepSize * float(lightSteps);
     float3 rayStep = lightDir * ds;
-    float coneStep = 1.0 / 6.0;
+    float coneStep = 1.0 / float(lightSteps);
     float sigmaDs = -ds * uboCS.absorption;
 
     float coneRadius = 1.0;
     float density = 0.0;
     float3 startPos = inPos;
     float T = 1.0;
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < lightSteps; i++)
     {
-        float3 pos = startPos + coneRadius * noiseKernel[i] * float(i);
+        float3 pos = startPos + coneRadius * noiseKernel[i % 6] * float(i);
         float heightFraction = GetHeightFraction(pos);
         if (heightFraction >= 0)
         {
-            float cloudDensity = SampleCloudDensity(pos, density > 0.3, i / 16);
+            float cloudDensity = SampleCloudDensity(pos, density > 0.3, float(i) / float(lightSteps));
             if (cloudDensity > 0.0)
             {
                 float Ti = exp(cloudDensity * sigmaDs);
                 T *= Ti;
                 density += cloudDensity;
             }
+        }
+        if (T < 0.01)
+        {
+            break;
         }
         startPos += rayStep;
         coneRadius += coneStep;
@@ -220,16 +284,14 @@ struct RaymarchToCloudResult
 
 RaymarchToCloudResult RaymarchToCloud(float3 startPos, float3 endPos, float3 bg, uint2 fragCoord)
 {
-    const int countOfSteps = 64;
+    int countOfSteps = int(uboCS.cloudSteps);
     float3 path = endPos - startPos;
     float pathLength = length(path);
     float stepVal = pathLength / countOfSteps;
     float3 dir = normalize(path);
     float3 stepVector = dir * stepVal;
 
-    int a = int(fragCoord.x) % 4;
-    int b = int(fragCoord.y) % 4;
-    float3 pos = startPos + stepVector * bayerFilter[a * 4 + b];
+    float3 pos = startPos + stepVector * GetDitherOffset(fragCoord);
     float density = 0.0;
     float lightDotEye = dot(normalize(uboCS.lightDirection.xyz), dir);
 
@@ -241,9 +303,13 @@ RaymarchToCloudResult RaymarchToCloud(float3 startPos, float3 endPos, float3 bg,
     result.position = float3(1e12, 1e12, 1e12);
     result.color = float4(0.0);
 
+    float cloudLayerThickness = uboCS.sphereOuterRadius - uboCS.sphereInnerRadius;
     for (int i = 0; i < countOfSteps; i++)
     {
-        float densitySample = SampleCloudDensity(pos, true, i / 16);
+        float distFromStart = float(i) * stepVal;
+        // LOD 0 at ray start, ramps based on lodScale (higher = faster LOD falloff = less detail)
+        float lod = clamp(distFromStart / (cloudLayerThickness * uboCS.lodScale), 0.0, 1.0);
+        float densitySample = SampleCloudDensity(pos, true, lod);
         if (densitySample > 0.0)
         {
             if (!result.hit)
@@ -253,15 +319,28 @@ RaymarchToCloudResult RaymarchToCloud(float3 startPos, float3 endPos, float3 bg,
             }
 
             float3 ambientLight = uboCS.baseCloudColor.xyz;
+            // Ambient occlusion from height: darker at base, brighter at top
+            float heightFrac = GetHeightFraction(pos);
+            ambientLight *= lerp(0.8, 1.0, heightFrac);
+            ambientLight *= uboCS.ambientScale;
+
             float lightDensity = RaymarchToLight(pos, stepVal * 0.1, uboCS.lightDirection.xyz, densitySample, lightDotEye);
+            // Multi-scattering approximation: fake second bounce brightens deep cloud interiors
+            float multiScatter = 1.0 - 0.5 * exp(-densitySample * 2.0);
+            lightDensity = max(lightDensity, multiScatter * 0.15);
+
             float scattering = lerp(HG(lightDotEye, -0.08), HG(lightDotEye, 0.08), clamp(lightDotEye * 0.5 + 0.5, 0.0, 1.0));
-            scattering = max(scattering, 1.0);
+            scattering = max(scattering, 0.035);
+            // Beer-powder: subtle darkening of forward-scattering edges near sun
             float powderTerm = 1.0;
             if (uboCS.enablePowder == 1)
             {
-                powderTerm = GetPowder(densitySample);
+                float powder = GetPowder(densitySample);
+                // Only apply in forward-scattering direction (looking toward sun)
+                float sunFacing = clamp(lightDotEye * 0.5 + 0.5, 0.0, 1.0);
+                powderTerm = 1.0 - sunFacing * (1.0 - powder) * uboCS.powderWeight;
             }
-            float3 S = 0.6 * lerp(lerp(ambientLight * 1.8, bg, 0.2), scattering * uboCS.lightColor.rgb, powderTerm * lightDensity) * densitySample;
+            float3 S = 0.7 * lerp(lerp(ambientLight, bg, 0.2), scattering * uboCS.lightColor.rgb, lightDensity) * densitySample * powderTerm;
             float dTrans = exp(densitySample * sigmaDs);
             float3 Sint = (S - S * dTrans) * (1.0 / densitySample);
             result.color.rgb += T * Sint;
@@ -345,61 +424,183 @@ void computeMain(uint3 dispatchThreadID : SV_DispatchThreadID)
 
     float3 startPos, endPos, fogRay;
     float camDistFromCenter = length(uboCS.cameraPosition.xyz - sphereCenter);
-    if (camDistFromCenter < uboCS.sphereInnerRadius)
-    {
-        RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, startPos);
-        RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
-        fogRay = startPos;
-    }
-    else if (camDistFromCenter >= uboCS.sphereInnerRadius && camDistFromCenter < uboCS.sphereOuterRadius)
+    if (camDistFromCenter < uboCS.sphereOuterRadius)
     {
         startPos = uboCS.cameraPosition.xyz;
-        float3 innerHit;
-        bool hitInner = RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, innerHit);
-        if (hitInner)
+        RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
+        if (camDistFromCenter < uboCS.sphereInnerRadius)
         {
-            endPos = innerHit;
-            fogRay = innerHit;
+            RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, fogRay);
+            // Advance startPos toward the cloud shell to preserve sampling quality.
+            // Blend between camera and inner sphere entry based on altitude so there's no jump.
+            float distBelowInner = uboCS.sphereInnerRadius - camDistFromCenter;
+            float fadeRange = (uboCS.sphereOuterRadius - uboCS.sphereInnerRadius) * 0.1;
+            float blendFactor = clamp(distBelowInner / fadeRange, 0.0, 1.0);
+            startPos = lerp(uboCS.cameraPosition.xyz, fogRay, blendFactor);
         }
         else
         {
-            RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, endPos);
-            fogRay = startPos;
+            fogRay = uboCS.cameraPosition.xyz;
         }
     }
     else
     {
-        RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, startPos);
-        RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, endPos);
+        bool hitOuter = RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereOuterRadius, startPos);
+        if (!hitOuter)
+        {
+            outFragColor.Store(fragCoord, float4(0.0));
+            outBloom.Store(fragCoord, float4(GetSunColor(worldDir, 128) * 1.3, 1.0));
+            outAlphaness.Store(fragCoord, float4(0.0));
+            outCloudDistance.Store(fragCoord, float4(uboCS.maxDepth, 0.0, 0.0, 0.0));
+            return;
+        }
+
+        bool hitInner = RaySphereIntersection(uboCS.cameraPosition.xyz, worldDir, sphereCenter, uboCS.sphereInnerRadius, endPos);
+        if (!hitInner)
+        {
+            float3 L = uboCS.cameraPosition.xyz - sphereCenter;
+            float a = dot(worldDir, worldDir);
+            float b = 2.0 * dot(worldDir, L);
+            float c = dot(L, L) - uboCS.sphereOuterRadius * uboCS.sphereOuterRadius;
+            float discr = b * b - 4.0 * a * c;
+            float t2 = (-b + sqrt(discr)) / (2.0 * a);
+            endPos = uboCS.cameraPosition.xyz + worldDir * t2;
+        }
         fogRay = startPos;
     }
 
     float fogAmount = ComputeFogAmount(fogRay, 0.00006);
+    // Gradually reduce fog as camera approaches inner sphere so there's no sudden change
+    // when entering the shell. Fade happens over the last 10% of the distance to inner sphere.
+    if (camDistFromCenter < uboCS.sphereOuterRadius)
+    {
+        float distBelowInner = uboCS.sphereInnerRadius - camDistFromCenter;
+        float fadeRange = (uboCS.sphereOuterRadius - uboCS.sphereInnerRadius) * 0.1;
+        float fogFade = clamp(distBelowInner / fadeRange, 0.0, 1.0);
+        fogAmount *= fogFade;
+    }
     if (fogAmount > 0.965)
     {
-        outFragColor.Store(fragCoord, backgroundColor);
-        outBloom.Store(fragCoord, backgroundColor);
+        outFragColor.Store(fragCoord, float4(0.0));
+        outBloom.Store(fragCoord, float4(GetSunColor(worldDir, 128) * 1.3, 1.0));
         outAlphaness.Store(fragCoord, float4(0.0));
         outCloudDistance.Store(fragCoord, float4(uboCS.maxDepth, 0.0, 0.0, 0.0));
         return;
     }
 
+    // --- Reprojection ---
+    bool doCheckerboard = uboCS.enableCheckerboard != 0;
+    bool doTemporalBlend = uboCS.enableTemporalBlend != 0;
+    bool doFullReproject = uboCS.enableFullReproject != 0;
+    // Checkerboard/full reproject path can early-return without raymarching.
+    // Temporal blend is handled later after raymarching using hit-position reprojection.
+    bool isCheckerRender = true;
+    float4 reprojColor = float4(0.0);
+    float reprojDepthVal = uboCS.maxDepth;
+    bool reprojValid = false;
+
+    if (doCheckerboard || doFullReproject)
+    {
+        float2 currentUV = float2(fragCoord.xy) / uboCS.resolution.xy;
+
+        // Checkerboard: alternate which pixels are rendered vs reprojected each frame
+        if (doCheckerboard)
+        {
+            isCheckerRender = ((fragCoord.x + fragCoord.y) & 1) == int(uboCS.frameCounter & 1);
+        }
+
+        // Depth-based reprojection: solve previous-frame UV using prev depth + matrix reconstruction.
+        // Fixed-point iterations map current pixel to previous pixel robustly under camera motion.
+        float2 prevUV = currentUV;
+        float2 currUVPred = currentUV;
+        reprojValid = false;
+        for (int iter = 0; iter < 2; ++iter)
+        {
+            if (prevUV.x <= 0.001 || prevUV.x >= 0.999 || prevUV.y <= 0.001 || prevUV.y >= 0.999)
+            {
+                reprojValid = false;
+                break;
+            }
+
+            reprojDepthVal = prevDepthTex.SampleLevel(prevDepthSampler, prevUV, 0).r;
+            if (reprojDepthVal >= (uboCS.maxDepth - 1e-6))
+            {
+                reprojValid = false;
+                break;
+            }
+
+            float2 prevNDCxy = prevUV * 2.0 - 1.0;
+            float prevNDCz = reprojDepthVal * 2.0 - 1.0;
+            float4 prevClipPos = float4(prevNDCxy, prevNDCz, 1.0);
+            float4 prevWorldPosH = mul(uboCS.prevInverseViewProjectionMatrix, prevClipPos);
+            if (abs(prevWorldPosH.w) < 1e-6)
+            {
+                reprojValid = false;
+                break;
+            }
+
+            float3 prevWorldPos = prevWorldPosH.xyz / prevWorldPosH.w;
+            float4 currClip = mul(uboCS.currentViewProjectionMatrix, float4(prevWorldPos, 1.0));
+            if (currClip.w <= 0.0)
+            {
+                reprojValid = false;
+                break;
+            }
+
+            currUVPred = currClip.xy / currClip.w * 0.5 + 0.5;
+            prevUV += (currentUV - currUVPred);
+            reprojValid = true;
+        }
+
+        if (reprojValid && prevUV.x > 0.001 && prevUV.x < 0.999 && prevUV.y > 0.001 && prevUV.y < 0.999)
+        {
+            // Reject if reprojection error is too large (roughly >2 pixels)
+            float2 uvErr = abs(currentUV - currUVPred);
+            float2 uvMaxErr = 2.0 / uboCS.resolution.xy;
+            reprojValid = (uvErr.x <= uvMaxErr.x && uvErr.y <= uvMaxErr.y);
+            if (reprojValid)
+            {
+                reprojColor = prevColorTex.SampleLevel(prevColorSampler, prevUV, 0);
+            }
+        }
+
+        // Skip pixel: use reprojected previous frame data
+        bool reproject1 = doCheckerboard && !isCheckerRender && reprojValid;
+        // Full reproject: on odd frames, reproject ALL pixels (no raymarching)
+        bool reproject2 = doFullReproject && (uboCS.frameCounter & 1) == 1 && reprojValid;
+        if (reproject1 || reproject2)
+        {
+            float4 bloomColor = float4(GetSunColor(worldDir, 128) * 1.3, 1.0);
+            float cloudAlpha = clamp(reprojColor.a, 0.0, 1.0);
+            float4 alphaness = float4(max(cloudAlpha, 0.2), 0.0, 0.0, 1.0);
+            if (cloudAlpha > 0.1)
+            {
+                float fogAmt = ComputeFogAmount(startPos, 0.00003);
+                float3 cloud = lerp(float3(0.0), bloomColor.rgb, clamp(fogAmt, 0.0, 1.0));
+                bloomColor.rgb = bloomColor.rgb * (1.0 - cloudAlpha) + cloud.rgb;
+            }
+            //outFragColor.Store(fragCoord, float4(1.0, 0.0, 0.0, 1.0));
+            outFragColor.Store(fragCoord, reprojColor);
+            outBloom.Store(fragCoord, bloomColor);
+            outAlphaness.Store(fragCoord, alphaness);
+            outCloudDistance.Store(fragCoord, float4(reprojDepthVal, 0.0, 0.0, 0.0));
+            return;
+        }
+    }
+
     RaymarchToCloudResult raymarchResult = RaymarchToCloud(startPos, endPos, backgroundColor.rgb, uint2(fragCoord));
 
-    raymarchResult.color.rgb = raymarchResult.color.rgb * 1.8 - 0.1;
+    raymarchResult.color.rgb = raymarchResult.color.rgb * 1.8 - 0.1 * raymarchResult.color.a;
     raymarchResult.color.rgb = lerp(raymarchResult.color.rgb, backgroundColor.rgb * raymarchResult.color.a, clamp(fogAmount, 0.0, 1.0));
 
     float sun = clamp(dot(uboCS.lightDirection.xyz, normalize(endPos - startPos)), 0.0, 1.0);
     float3 s = 0.8 * float3(1.0, 0.4, 0.2) * pow(sun, 256.0);
     raymarchResult.color.rgb += s * raymarchResult.color.a;
 
-    backgroundColor.rgb = backgroundColor.rgb * (1.0 - raymarchResult.color.a) + raymarchResult.color.rgb;
-    backgroundColor.a = 1.0;
-
     float4 bloomColor = float4(GetSunColor(worldDir, 128) * 1.3, 1.0);
 
-    float cloudAlphaness = clamp(raymarchResult.color.a, 0.2, 1.0);
-    float4 alphaness = float4(cloudAlphaness, 0.0, 0.0, 1.0);
+    float cloudAlphaness = clamp(raymarchResult.color.a, 0.0, 1.0);
+    float4 alphaness = float4(max(cloudAlphaness, 0.2), 0.0, 0.0, 1.0);
     if (cloudAlphaness > 0.1)
     {
         float fogAmt = ComputeFogAmount(startPos, 0.00003);
@@ -407,7 +608,27 @@ void computeMain(uint3 dispatchThreadID : SV_DispatchThreadID)
         bloomColor.rgb = bloomColor.rgb * (1.0 - cloudAlphaness) + cloud.rgb;
     }
 
-    float4 fragColor = float4(backgroundColor.rgb, 1.0);
+    // Store cloud-only color + alpha (pre-composite, no background baked in).
+    // Background compositing happens in the post-process shader.
+    float4 fragColor = float4(raymarchResult.color.rgb, raymarchResult.color.a);
+
+    // Temporal blend: reproject using the actual current cloud hit position.
+    // This is more stable than the far-point approximation used for checkerboard fill.
+    if (doTemporalBlend && raymarchResult.hit)
+    {
+        float4 prevClip = mul(uboCS.prevViewProjectionMatrix, float4(raymarchResult.position, 1.0));
+        if (prevClip.w > 0.0)
+        {
+            float2 prevNDC = prevClip.xy / prevClip.w;
+            float2 prevUV = prevNDC * 0.5 + 0.5;
+            if (prevUV.x > 0.001 && prevUV.x < 0.999 && prevUV.y > 0.001 && prevUV.y < 0.999)
+            {
+                float4 temporalColor = prevColorTex.SampleLevel(prevColorSampler, prevUV, 0);
+                fragColor = lerp(temporalColor, fragColor, uboCS.reprojectionBlend);
+            }
+        }
+    }
+
     float4 depth = float4(ComputeDepth(uboCS.projectionMatrix, uboCS.viewMatrix, raymarchResult.position), 0.0, 0.0, 0.0);
 
     outFragColor.Store(fragCoord, fragColor);

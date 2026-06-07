@@ -44,7 +44,9 @@ float cells(float3 p, float cellCount)
             for (int zo = -1; zo <= 1; zo++)
             {
                 float3 tp = floor(pCell) + float3(xo, yo, zo);
-                tp = pCell - tp - noise(fmod(tp, cellCount / 1.0));
+                // Use floor-based modulo that handles negatives for seamless tiling
+                float3 wrappedTP = tp - floor(tp / float3(cellCount)) * float3(cellCount);
+                tp = pCell - tp - noise(wrappedTP);
                 d = min(d, dot(tp, tp));
             }
         }
