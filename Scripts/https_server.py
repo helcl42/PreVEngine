@@ -21,7 +21,15 @@ serve_dir = os.path.abspath(serve_dir)
 os.chdir(serve_dir)
 
 server_address = ('0.0.0.0', 8443)
-httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
+
+class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
+
+httpd = http.server.HTTPServer(server_address, NoCacheHandler)
 
 # Load SSL certificate (always from the script's directory)
 script_dir = os.path.dirname(os.path.abspath(__file__))
