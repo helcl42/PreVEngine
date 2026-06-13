@@ -130,8 +130,17 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::Build() const
     // Upload layer data per layer
     if (!m_layersData.empty() && m_layerDataSize > 0) {
         for (uint32_t layer = 0; layer < m_layerCount && layer < static_cast<uint32_t>(m_layersData.size()); ++layer) {
-            GfxOrigin3D origin{ 0, 0, 0 };
-            gfxQueueWriteTexture(m_queue, texture, &origin, &m_extent, 0 /* mipLevel */, layer, m_layersData[layer], m_layerDataSize, 0, GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY);
+            GfxWriteTextureDescriptor writeDesc{};
+            writeDesc.texture = texture;
+            writeDesc.origin = GfxOrigin3D{ 0, 0, 0 };
+            writeDesc.extent = m_extent;
+            writeDesc.mipLevel = 0;
+            writeDesc.arrayLayer = layer;
+            writeDesc.aspect = GFX_TEXTURE_ASPECT_ALL;
+            writeDesc.bytesPerRow = 0; // tightly packed
+            writeDesc.rowsPerImage = 0; // tightly packed
+            writeDesc.finalLayout = GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY;
+            gfxQueueWriteTexture(m_queue, &writeDesc, m_layersData[layer], m_layerDataSize);
         }
     }
 

@@ -33,6 +33,7 @@ class Shader final {
 public:
     struct BindingInfo {
         uint32_t binding{};
+        uint32_t arrayElement{};
         GfxBindGroupEntryType type{};
         // Buffer
         GfxBuffer buffer{};

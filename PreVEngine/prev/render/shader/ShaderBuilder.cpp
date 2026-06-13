@@ -145,6 +145,7 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
             for (uint32_t i = 0; i < ds.count; ++i) {
                 Shader::BindingInfo info{};
                 info.binding = ds.binding;
+                info.arrayElement = i;
                 info.type = entryType;
                 bindingInfos[ds.name + "[" + std::to_string(i) + "]"] = info;
             }

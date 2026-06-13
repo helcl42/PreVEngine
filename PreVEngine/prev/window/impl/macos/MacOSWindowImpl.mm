@@ -332,7 +332,7 @@ void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
 
 GfxPlatformWindowHandle MacOSWindowImpl::GetNativeWindowHandle() const
 {
-    return gfxPlatformWindowHandleFromMetal((__bridge void*)m_state->window);
+    return gfxPlatformWindowHandleFromCocoaWindow((__bridge void*)m_state->window);
 }
 }
 

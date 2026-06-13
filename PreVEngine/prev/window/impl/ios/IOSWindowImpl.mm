@@ -152,7 +152,7 @@ void IOSWindowImpl::SetMouseCursorVisible(bool visible)
 
 GfxPlatformWindowHandle IOSWindowImpl::GetNativeWindowHandle() const
 {
-    return gfxPlatformWindowHandleFromMetal((__bridge void*)m_state->view.layer);
+    return gfxPlatformWindowHandleFromMetalLayer((__bridge void*)m_state->view.layer);
 }
 }
 

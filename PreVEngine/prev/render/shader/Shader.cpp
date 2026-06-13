@@ -69,11 +69,12 @@ GfxBindGroup Shader::UpdateNextBindGroup()
 {
     CheckBindings();
 
-    // Gather entries sorted by binding index (array entries auto-indexed by backend)
+    // Gather entries sorted by binding index (one entry per array element, addressed via arrayElement)
     std::map<std::string, GfxBindGroupEntry> entriesByName;
     for (auto& [name, info] : m_bindingInfos) {
         GfxBindGroupEntry entry{};
         entry.binding = info.binding;
+        entry.arrayElement = info.arrayElement;
         entry.type = info.type;
         if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_BUFFER) {
             entry.resource.buffer.buffer = info.buffer;
@@ -95,7 +96,7 @@ GfxBindGroup Shader::UpdateNextBindGroup()
 
     // Sort entries by binding index to ensure correct descriptor ordering
     std::sort(entries.begin(), entries.end(), [](const GfxBindGroupEntry& a, const GfxBindGroupEntry& b) {
-        return a.binding < b.binding;
+        return std::tie(a.binding, a.arrayElement) < std::tie(b.binding, b.arrayElement);
     });
 
     if (m_bindGroups[m_currentSlot]) {
