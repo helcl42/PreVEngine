@@ -63,7 +63,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 1
+        python3 Scripts/compile_shaders.py --max-view-count 1
 
     - name: Configure CMake
       run: |
@@ -81,15 +81,28 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-linux-xcb-${{ matrix.compiler }}
+        mkdir example-linux-xcb-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-xcb-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-xcb-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-linux-xcb-${{ matrix.compiler }}
-        path: build-linux-xcb-${{ matrix.compiler }}
+        name: example-linux-xcb-${{ matrix.compiler }}
+        path: example-linux-xcb-${{ matrix.compiler }}
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-linux-xcb-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-xcb-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-xcb-${{ matrix.compiler }}
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-linux-xcb-${{ matrix.compiler }}
+        path: sandbox-linux-xcb-${{ matrix.compiler }}
         retention-days: 7
 
     - name: Setup xvfb for screen 0

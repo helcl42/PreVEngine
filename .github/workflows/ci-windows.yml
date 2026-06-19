@@ -70,7 +70,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 1
+        python3 Scripts/compile_shaders.py --max-view-count 1
 
     - name: Configure CMake
       run: >
@@ -86,15 +86,28 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe build-win32
+        mkdir example-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe example-win32
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-win32
-        path: build-win32
+        name: example-win32
+        path: example-win32
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-win32
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.exe sandbox-win32
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-win32
+        path: sandbox-win32
         retention-days: 7
 
     - name: Run Tests

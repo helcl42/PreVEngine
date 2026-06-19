@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreVEngine - WebGPU</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+
+        #canvas {
+            border: 2px solid #404040;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            margin: 20px 0;
+        }
+
+        #output {
+            width: 800px;
+            max-width: 90vw;
+            margin: 20px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #b0b0b0;
+        }
+
+        .info {
+            color: #808080;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        .controls input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: #4fc3f7;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: #4fc3f7;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .controls button:hover {
+            background: #81d4fa;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>PreVEngine WebGPU Example</h1>
+
+    <div class="controls">
+        <label>
+            <input type="checkbox" id="resize">
+            Resize canvas
+        </label>
+        <label>
+            <input type="checkbox" id="pointerLock" checked>
+            Lock/hide mouse pointer
+        </label>
+        <button onclick="document.getElementById('canvas').requestFullscreen()">
+            Fullscreen
+        </button>
+    </div>
+
+    <canvas id="canvas" width="1280" height="720"></canvas>
+    <div class="info">PreVEngine rendering with WebGPU via Emscripten</div>
+    <div id="output"></div>
+
+    <script type="text/javascript">
+        var Module = {
+            canvas: (function () {
+                var canvas = document.getElementById('canvas');
+                canvas.addEventListener("webglcontextlost", function (e) {
+                    alert('WebGL context lost. You will need to reload the page.');
+                    e.preventDefault();
+                }, false);
+                return canvas;
+            })(),
+            print: function (text) {
+                console.log(text);
+                var output = document.getElementById('output');
+                var atBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 4;
+                output.appendChild(document.createTextNode(text));
+                output.appendChild(document.createElement('br'));
+                if (atBottom) {
+                    output.scrollTop = output.scrollHeight;
+                }
+            },
+            printErr: function (text) {
+                console.error(text);
+                var output = document.getElementById('output');
+                var atBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 4;
+                var span = document.createElement('span');
+                span.style.color = '#ff6b6b';
+                span.appendChild(document.createTextNode(text));
+                output.appendChild(span);
+                output.appendChild(document.createElement('br'));
+                if (atBottom) {
+                    output.scrollTop = output.scrollHeight;
+                }
+            },
+            setStatus: function (text) {
+                if (text) {
+                    console.log('Status: ' + text);
+                }
+            }
+        };
+
+        var canvas = document.getElementById('canvas');
+        var pointerLockCheckbox = document.getElementById('pointerLock');
+
+        pointerLockCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                canvas.requestPointerLock = canvas.requestPointerLock ||
+                    canvas.mozRequestPointerLock ||
+                    canvas.webkitRequestPointerLock;
+                canvas.requestPointerLock();
+            } else {
+                document.exitPointerLock = document.exitPointerLock ||
+                    document.mozExitPointerLock ||
+                    document.webkitExitPointerLock;
+                document.exitPointerLock();
+            }
+        });
+
+        document.addEventListener('pointerlockchange', updatePointerLockState, false);
+        document.addEventListener('mozpointerlockchange', updatePointerLockState, false);
+        document.addEventListener('webkitpointerlockchange', updatePointerLockState, false);
+
+        function updatePointerLockState() {
+            var locked = document.pointerLockElement === canvas ||
+                document.mozPointerLockElement === canvas ||
+                document.webkitPointerLockElement === canvas;
+            pointerLockCheckbox.checked = locked;
+        }
+
+        canvas.addEventListener('click', function () {
+            if (pointerLockCheckbox.checked &&
+                document.pointerLockElement !== canvas &&
+                document.mozPointerLockElement !== canvas &&
+                document.webkitPointerLockElement !== canvas) {
+                canvas.requestPointerLock = canvas.requestPointerLock ||
+                    canvas.mozRequestPointerLock ||
+                    canvas.webkitRequestPointerLock;
+                canvas.requestPointerLock();
+            }
+        });
+    </script>
+
+    {{{ SCRIPT }}}
+</body>
+
+</html>

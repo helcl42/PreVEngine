@@ -82,15 +82,28 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-linux-wayland-openxr-${{ matrix.compiler }}
+        mkdir example-linux-wayland-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-wayland-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-wayland-openxr-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-linux-wayland-openxr-${{ matrix.compiler }}
-        path: build-linux-wayland-openxr-${{ matrix.compiler }}
+        name: example-linux-wayland-openxr-${{ matrix.compiler }}
+        path: example-linux-wayland-openxr-${{ matrix.compiler }}
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+        path: sandbox-linux-wayland-openxr-${{ matrix.compiler }}
         retention-days: 7
 
     - name: Run Tests

@@ -78,12 +78,30 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-android-openxr-arm64-v8a
-        cp Examples/PreVEngineExample/platform/android/app/build/outputs/apk/debug/app-debug.apk build-android-openxr-arm64-v8a
+        mkdir example-android-openxr-arm64-v8a
+        cp Examples/PreVEngineExample/platform/android/app/build/outputs/apk/debug/app-debug.apk example-android-openxr-arm64-v8a
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-android-openxr-arm64-v8a
-        path: build-android-openxr-arm64-v8a
+        name: example-android-openxr-arm64-v8a
+        path: example-android-openxr-arm64-v8a
+        retention-days: 7
+
+    - name: Build Sandbox
+      run: |
+        cd Examples/Sandbox/platform/android
+        chmod a+x gradlew
+        ./gradlew clean assembleDebug -PenableXr
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-android-openxr-arm64-v8a
+        cp Examples/Sandbox/platform/android/app/build/outputs/apk/debug/app-debug.apk sandbox-android-openxr-arm64-v8a/Sandbox-debug.apk
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-android-openxr-arm64-v8a
+        path: sandbox-android-openxr-arm64-v8a
         retention-days: 7

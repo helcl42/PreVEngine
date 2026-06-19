@@ -70,23 +70,39 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir -p build-web
-        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.html build-web/
-        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.js build-web/
-        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.wasm build-web/
-        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.data build-web/
+        mkdir -p example-web
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.html example-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.js example-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.wasm example-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.data example-web/
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-web
-        path: build-web
+        name: example-web
+        path: example-web
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir -p sandbox-web
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.html sandbox-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.js sandbox-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.wasm sandbox-web/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.data sandbox-web/
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-web
+        path: sandbox-web
         retention-days: 7
 
     - name: Prepare Pages
       run: |
         mkdir -p public
-        cp build-web/* public/
+        cp example-web/* public/
+        cp sandbox-web/* public/
         cp public/PreVEngineExample.html public/index.html
 
     - name: Upload Pages Artifact
@@ -97,7 +113,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
