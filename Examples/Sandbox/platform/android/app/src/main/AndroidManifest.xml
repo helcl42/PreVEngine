@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      android:versionCode="1"
+      android:versionName="1.0">
+
+  <uses-feature
+      android:name="android.hardware.vulkan.version"
+      android:version="0x400003"
+      android:required="true" />
+
+  <!-- XR: works in 3DOF or 6DOF, and on devices that are not all-in-ones. Kept optional
+       (required=false) so the same APK still installs on a plain phone. -->
+  <uses-feature
+      android:name="android.hardware.vr.headtracking"
+      android:required="false" />
+
+  <!-- This .apk has no Java code itself; NativeActivity drives the NDK code. -->
+  <application
+      android:allowBackup="false"
+      android:label="Sandbox"
+      android:hasCode="false">
+
+    <activity android:name="android.app.NativeActivity"
+              android:label="Sandbox"
+              android:configChanges="orientation|keyboardHidden|screenSize"
+              android:launchMode="singleTask"
+              android:exported="true">
+      <!-- Name of our shared library (libSandbox.so). -->
+      <meta-data android:name="android.app.lib_name" android:value="Sandbox" />
+
+      <!-- Standard launcher + Khronos OpenXR immersive-HMD intent filter. -->
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+        <category android:name="org.khronos.openxr.intent.category.IMMERSIVE_HMD" />
+      </intent-filter>
+
+      <!-- Meta Quest-specific (non-standard) VR launch category. -->
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+        <category android:name="com.oculus.intent.category.VR" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

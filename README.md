@@ -29,6 +29,10 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
   </a>
 </p>
 
+<p align="center">
+  Or try the minimal <a href="https://helcl42.github.io/PreVEngine/Sandbox.html"><strong>Sandbox demo</strong></a> — minimal end-to-end example (see <a href="Examples/Sandbox">Examples/Sandbox</a>).
+</p>
+
 ## Features
 
 - **Multiple rendering backends**: Vulkan and WebGPU (via Dawn)

@@ -22,6 +22,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17"
+                targets "PreVEngineExample" // build/package only this app's native lib (top-level CMake has others)
                 abiFilters "arm64-v8a"/*, "x86", "x86_64"*/
                 arguments '-DANDROID_STL=c++_static',
                           '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'

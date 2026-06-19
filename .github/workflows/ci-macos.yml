@@ -65,7 +65,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 1
+        python3 Scripts/compile_shaders.py --max-view-count 1
 
     - name: Configure CMake
       run: |
@@ -81,16 +81,30 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-macos
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-macos
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample build-macos
-        cp -r $VULKAN_SDK/lib/libvulkan*.dylib build-macos
+        mkdir example-macos
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-macos
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-macos
+        cp -r $VULKAN_SDK/lib/libvulkan*.dylib example-macos
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-macos
-        path: build-macos
+        name: example-macos
+        path: example-macos
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-macos
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-macos
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-macos
+        cp -r $VULKAN_SDK/lib/libvulkan*.dylib sandbox-macos
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-macos
+        path: sandbox-macos
         retention-days: 7
 
     - name: Run Tests

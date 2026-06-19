@@ -87,15 +87,28 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir build-win32-openxr
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets build-win32-openxr
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe build-win32-openxr
+        mkdir example-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.exe example-win32-openxr
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-win32-openxr
-        path: build-win32-openxr
+        name: example-win32-openxr
+        path: example-win32-openxr
+        retention-days: 7
+
+    - name: Create Sandbox Artifact
+      run: |
+        mkdir sandbox-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-win32-openxr
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox.exe sandbox-win32-openxr
+
+    - name: Publish Sandbox Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sandbox-win32-openxr
+        path: sandbox-win32-openxr
         retention-days: 7
 
     - name: Run Tests
