@@ -46,6 +46,14 @@ void DefaultCamera::Update(float deltaTime)
         m_position += worldUp * distance;
     }
 
+    // Touch move pad (forward/backward only).
+    if (m_touchMoveForward) {
+        m_position += forward * distance;
+    }
+    if (m_touchMoveBackward) {
+        m_position -= forward * distance;
+    }
+
     UpdateView();
 
     SceneNode::Update(deltaTime);
@@ -72,11 +80,33 @@ void DefaultCamera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 
 void DefaultCamera::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
-    if (touchEvent.action == prev::input::touch::TouchActionType::MOVE) {
+    using prev::input::touch::TouchActionType;
+
+    // Screen corner/edge regions (quarter of each side), mirroring Player's layout.
+    const float regionRatio{ 0.25f };
+    const glm::vec2 maxPoint{ touchEvent.extent * regionRatio };          // near top-left
+    const glm::vec2 minPoint{ touchEvent.extent - maxPoint };            // near bottom-right
+
+    // Tap the top-left corner to reset (touch equivalent of the R key).
+    if (touchEvent.action == TouchActionType::DOWN && touchEvent.position.x < maxPoint.x && touchEvent.position.y < maxPoint.y) {
+        Reset();
+    }
+
+    // Right-edge move pad (mirrors Player): top-right moves forward, bottom-right moves backward.
+    if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
+        m_touchMoveForward = touchEvent.position.x > minPoint.x && touchEvent.position.y < maxPoint.y;
+        m_touchMoveBackward = touchEvent.position.x > minPoint.x && touchEvent.position.y > minPoint.y;
+    } else {
+        m_touchMoveForward = false;
+        m_touchMoveBackward = false;
+    }
+
+    // Drag anywhere to look around.
+    if (touchEvent.action == TouchActionType::MOVE) {
         const glm::vec2 deltaDegrees{ (touchEvent.position - m_prevTouchPosition) * m_sensitivity };
         AddLook(deltaDegrees);
     }
-    if (touchEvent.action == prev::input::touch::TouchActionType::MOVE || touchEvent.action == prev::input::touch::TouchActionType::DOWN) {
+    if (touchEvent.action == TouchActionType::MOVE || touchEvent.action == TouchActionType::DOWN) {
         m_prevTouchPosition = touchEvent.position;
     }
 }
@@ -96,6 +126,8 @@ void DefaultCamera::Reset()
     m_dragging = false;
     m_prevMousePosition = glm::vec2{ 0.0f };
     m_prevTouchPosition = glm::vec2{ 0.0f };
+    m_touchMoveForward = false;
+    m_touchMoveBackward = false;
     UpdateView();
 }
 
