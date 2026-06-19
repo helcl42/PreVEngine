@@ -61,6 +61,11 @@ private:
     glm::vec2 m_prevMousePosition{ 0.0f };
     glm::vec2 m_prevTouchPosition{ 0.0f };
 
+    // Touch move pad (mirrors Player): touching the right edge drives forward/backward movement,
+    // consumed in Update; drag anywhere still looks around.
+    bool m_touchMoveForward{ false };
+    bool m_touchMoveBackward{ false };
+
     prev::input::InputsFacade m_inputFacade;
     prev::event::EventHandler<DefaultCamera, prev::input::mouse::MouseEvent> m_mouseHandler{ *this };
     prev::event::EventHandler<DefaultCamera, prev::input::touch::TouchEvent> m_touchHandler{ *this };
