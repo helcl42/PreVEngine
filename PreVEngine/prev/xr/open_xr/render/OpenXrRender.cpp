@@ -122,12 +122,16 @@ bool OpenXrRender::BeginFrame()
     }
 
     CameraEvent event{};
-    for (size_t i = 0; i < viewCount; ++i) {
+    const uint32_t cameraViewCount{ viewCount < MAX_VIEW_COUNT ? viewCount : MAX_VIEW_COUNT };
+    if (viewCount > MAX_VIEW_COUNT) {
+        LOGW("OpenXR reported %u views but MAX_VIEW_COUNT is %u; truncating the camera event.", viewCount, MAX_VIEW_COUNT);
+    }
+    for (uint32_t i = 0; i < cameraViewCount; ++i) {
         const auto& view{ views[i] };
         event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
         event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
     }
-    event.count = viewCount;
+    event.count = cameraViewCount;
     prev::event::EventChannel::Post(event);
 
     m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
