@@ -41,7 +41,7 @@ public:
 public:
     bool IsKeyPressed(const KeyCode keyCode) const;
 
-    const std::set<KeyCode> GetPressedKeys() const;
+    std::set<KeyCode> GetPressedKeys() const;
 
 public:
     void operator()(const KeyEvent& keyEvent);

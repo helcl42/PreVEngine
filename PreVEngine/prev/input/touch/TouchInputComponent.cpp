@@ -38,15 +38,18 @@ bool TouchInputComponent::IsPointerTouched(const uint8_t pointerId) const
 
 void TouchInputComponent::operator()(const TouchEvent& touchEvent)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    if (touchEvent.action == TouchActionType::DOWN) {
-        m_touchedDownPointers[touchEvent.pointerId] = Touch{ touchEvent.pointerId, touchEvent.position };
-    } else if (touchEvent.action == TouchActionType::UP) {
-        m_touchedDownPointers.erase(touchEvent.pointerId);
+    std::set<ITouchActionListener*> observers;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (touchEvent.action == TouchActionType::DOWN) {
+            m_touchedDownPointers[touchEvent.pointerId] = Touch{ touchEvent.pointerId, touchEvent.position };
+        } else if (touchEvent.action == TouchActionType::UP) {
+            m_touchedDownPointers.erase(touchEvent.pointerId);
+        }
+        observers = m_touchObservers.GetObservers();
     }
 
-    for (auto& listener : m_touchObservers.GetObservers()) {
+    for (auto* listener : observers) {
         listener->OnTouchAction(touchEvent);
     }
 }

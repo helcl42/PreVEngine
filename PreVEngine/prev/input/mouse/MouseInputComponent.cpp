@@ -43,7 +43,7 @@ bool MouseInputComponent::IsMouseScrollListenerRegistered(IMouseScrollListener& 
     return m_mouseScrollObservers.IsRegistered(listener);
 }
 
-const std::set<MouseButtonType>& MouseInputComponent::GetPressedButtons() const
+std::set<MouseButtonType> MouseInputComponent::GetPressedButtons() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -98,26 +98,32 @@ void MouseInputComponent::SetCursorVisible(bool visible)
 
 void MouseInputComponent::operator()(const MouseEvent& action)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    m_mousePosition = action.position;
-
-    if (action.action == MouseActionType::PRESS) {
-        m_pressedButtons.insert(action.button);
-    } else if (action.action == MouseActionType::RELEASE) {
-        m_pressedButtons.erase(action.button);
+    std::set<IMouseActionListener*> observers;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_mousePosition = action.position;
+        if (action.action == MouseActionType::PRESS) {
+            m_pressedButtons.insert(action.button);
+        } else if (action.action == MouseActionType::RELEASE) {
+            m_pressedButtons.erase(action.button);
+        }
+        observers = m_mouseActionObservers.GetObservers();
     }
 
-    for (auto listener : m_mouseActionObservers.GetObservers()) {
+    for (auto* listener : observers) {
         listener->OnMouseAction(action);
     }
 }
 
 void MouseInputComponent::operator()(const MouseScrollEvent& scrollAction)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    std::set<IMouseScrollListener*> observers;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        observers = m_mouseScrollObservers.GetObservers();
+    }
 
-    for (auto& listener : m_mouseScrollObservers.GetObservers()) {
+    for (auto* listener : observers) {
         listener->OnMouseScroll(scrollAction);
     }
 }

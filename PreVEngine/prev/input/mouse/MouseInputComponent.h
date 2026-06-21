@@ -40,7 +40,7 @@ public:
     bool IsMouseScrollListenerRegistered(IMouseScrollListener& listener) const;
 
 public:
-    const std::set<MouseButtonType>& GetPressedButtons() const;
+    std::set<MouseButtonType> GetPressedButtons() const;
 
     glm::vec2 GetMousePosition() const;
 
