@@ -1,5 +1,7 @@
 #include "PickList.h"
 
+#include <algorithm>
+
 namespace prev::common {
 PickList::PickList(const std::string& name, const std::vector<std::string>& names)
     : m_name{ name }
@@ -77,22 +79,24 @@ bool PickList::Pick(const uint32_t index)
 
 bool PickList::UnPick(const std::string& name)
 {
-    bool found{ false };
-    for (uint32_t i = 0; i < GetPickCount(); ++i) {
-        const auto& nameAtIndex{ m_pickListNames[i] };
-        if (nameAtIndex == name) {
-            m_pickListIndices.erase(m_pickListIndices.begin() + i);
-            found = true;
-        }
+    const auto index{ IndexOf(name) }; // index into the full name list
+    if (index < 0) {
+        return false; // not a known name
     }
 
+    const auto it{ std::find(m_pickListIndices.begin(), m_pickListIndices.end(), static_cast<uint32_t>(index)) };
+    if (it == m_pickListIndices.end()) {
+        return false; // known, but not currently picked
+    }
+
+    m_pickListIndices.erase(it);
     Refresh();
-    return found;
+    return true;
 }
 
 void PickList::PickAll()
 {
-    for (uint32_t i = 0; i < GetPickCount(); ++i) {
+    for (uint32_t i = 0; i < GetCount(); ++i) {
         Pick(i);
     }
 }
