@@ -45,7 +45,6 @@ void SkyRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("prevDepthTex", 11, GFX_SHADER_STAGE_COMPUTE, GFX_TEXTURE_VIEW_TYPE_2D, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("prevDepthSampler", 12, GFX_SHADER_STAGE_COMPUTE, true)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -61,10 +60,10 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyCS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                               .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                               .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                              .SetCount(m_descriptorCount)
+                              .SetChunkSize(m_descriptorCount)
                               .SetStride(sizeof(UniformsSkyCS))
                               .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                              .Build();
+                              .BuildFrameScoped();
 
     // compute sky post process
     // clang-format off
@@ -80,7 +79,6 @@ void SkyRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("bloomSampler", 4, GFX_SHADER_STAGE_COMPUTE),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 5, GFX_SHADER_STAGE_COMPUTE)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -96,10 +94,10 @@ void SkyRenderer::Init()
     m_uniformsPoolSkyPostProcessCS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                                         .SetCount(m_descriptorCount)
+                                         .SetChunkSize(m_descriptorCount)
                                          .SetStride(sizeof(UniformsSkyPostProcessCS))
                                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                                         .Build();
+                                         .BuildFrameScoped();
 
     // compositor
     // clang-format off
@@ -122,7 +120,6 @@ void SkyRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_VIEW_COUNT, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -158,8 +155,14 @@ void SkyRenderer::Init()
     LOGI("Sky Samplers created");
 }
 
-void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void SkyRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_skyShader->BeginFrame(renderContext.frameInFlightIndex);
+    m_skyPostProcessShader->BeginFrame(renderContext.frameInFlightIndex);
+    m_compositeShader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolSkyCS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolSkyPostProcessCS->BeginFrame(renderContext.frameInFlightIndex);
+
     const auto skyComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::sky::ISkyComponent>(m_scene.GetRootNode(), { TAG_SKY_RENDER_COMPONENT });
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT });
 
@@ -216,9 +219,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         const uint32_t enableFullReproject{ 1 };
         const float reprojectionBlend{ 0.9f };
 
-        m_uniformsPoolSkyCS->MoveToNext();
-
-        auto& uboCS = m_uniformsPoolSkyCS->GetCurrent();
+        auto& uboCS = m_uniformsPoolSkyCS->Next();
 
         UniformsSkyCS uniformsCS{};
         // View & Matrices
@@ -335,9 +336,7 @@ void SkyRenderer::BeforeRender(const NormalRenderContext& renderContext)
         // sky post process render
         skyPostProcessColorImageBuffer.image->UpdateLayout(GFX_TEXTURE_LAYOUT_GENERAL, renderContext.commandEncoder);
 
-        m_uniformsPoolSkyPostProcessCS->MoveToNext();
-
-        auto& uboPostCS = m_uniformsPoolSkyPostProcessCS->GetCurrent();
+        auto& uboPostCS = m_uniformsPoolSkyPostProcessCS->Next();
 
         glm::vec4 lightPositionClipSpace = renderContext.projectionMatrices[viewIndex] * renderContext.viewMatrices[viewIndex] * glm::vec4(mainLightComponent->GetPosition(), 1.0f);
         glm::vec3 lightPositionNdc = lightPositionClipSpace / lightPositionClipSpace.w;
@@ -436,8 +435,13 @@ void SkyRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SkyRenderer::AfterRender(const NormalRenderContext& renderContext)
+void SkyRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_skyShader->EndFrame();
+    m_skyPostProcessShader->EndFrame();
+    m_compositeShader->EndFrame();
+    m_uniformsPoolSkyCS->EndFrame();
+    m_uniformsPoolSkyPostProcessCS->EndFrame();
 }
 
 void SkyRenderer::ShutDown()

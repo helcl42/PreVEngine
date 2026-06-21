@@ -8,7 +8,7 @@
 #include "../../../component/shadow/ShadowsCommon.h"
 
 #include <prev/core/device/Device.h>
-#include <prev/render/buffer/BufferPool.h>
+#include <prev/render/buffer/FrameScopedBufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/sampler/Sampler.h>
@@ -26,7 +26,7 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const NormalRenderContext& renderContext) override;
+    void BeginFrame(const NormalRenderContext& renderContext) override;
 
     void PreRender(const NormalRenderContext& renderContext) override;
 
@@ -34,7 +34,7 @@ public:
 
     void PostRender(const NormalRenderContext& renderContext) override;
 
-    void AfterRender(const NormalRenderContext& renderContext) override;
+    void EndFrame(const NormalRenderContext& renderContext) override;
 
     void ShutDown() override;
 
@@ -141,7 +141,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 200 };
+    const uint32_t m_descriptorCount{ 16 };
 
 private:
     prev::core::device::Device& m_device;
@@ -155,9 +155,9 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
 
-    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolVS;
+    std::unique_ptr<prev::render::buffer::FrameScopedBufferPool> m_uniformsPoolVS;
 
-    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolFS;
+    std::unique_ptr<prev::render::buffer::FrameScopedBufferPool> m_uniformsPoolFS;
 
     std::unique_ptr<prev::render::sampler::Sampler> m_depthSampler;
 };

@@ -8,13 +8,10 @@ BufferPool::BufferPool(std::unique_ptr<Buffer> buffer, std::vector<Buffer>&& sli
 {
 }
 
-Buffer& BufferPool::GetCurrent()
+Buffer& BufferPool::Next()
 {
-    return m_slices[m_index];
-}
-
-void BufferPool::MoveToNext()
-{
+    Buffer& slice{ m_slices[m_index] };
     ++m_index;
+    return slice;
 }
 } // namespace prev::render::buffer

@@ -10,7 +10,7 @@ class IRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void BeforeRender(const RenderContextType& renderContext) = 0;
+    virtual void BeginFrame(const RenderContextType& renderContext) = 0;
 
     virtual void PreRender(const RenderContextType& renderContext) = 0;
 
@@ -18,7 +18,7 @@ public:
 
     virtual void PostRender(const RenderContextType& renderContext) = 0;
 
-    virtual void AfterRender(const RenderContextType& renderContext) = 0;
+    virtual void EndFrame(const RenderContextType& renderContext) = 0;
 
     virtual void ShutDown() = 0;
 

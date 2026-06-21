@@ -49,7 +49,6 @@ void TerrainRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTexture", 4, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 5, GFX_SHADER_STAGE_FRAGMENT, true)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -72,18 +71,18 @@ void TerrainRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("Terrain Uniforms Pools created");
 
@@ -100,8 +99,11 @@ void TerrainRenderer::Init()
     LOGI("Terrain Samplers created");
 }
 
-void TerrainRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void TerrainRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolFS->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void TerrainRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -134,9 +136,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
-    m_uniformsPoolVS->MoveToNext();
-
-    auto& uboVS = m_uniformsPoolVS->GetCurrent();
+    auto& uboVS = m_uniformsPoolVS->Next();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -158,9 +158,7 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
 
     uboVS.Write(uniformsVS);
 
-    m_uniformsPoolFS->MoveToNext();
-
-    auto& uboFS = m_uniformsPoolFS->GetCurrent();
+    auto& uboFS = m_uniformsPoolFS->Next();
 
     UniformsFS uniformsFS{};
     // shadows
@@ -216,8 +214,11 @@ void TerrainRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void TerrainRenderer::AfterRender(const NormalRenderContext& renderContext)
+void TerrainRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
+    m_uniformsPoolFS->EndFrame();
 }
 
 void TerrainRenderer::ShutDown()

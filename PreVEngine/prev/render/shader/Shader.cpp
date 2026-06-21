@@ -3,7 +3,6 @@
 #include "../../common/Logger.h"
 
 #include <algorithm>
-#include <stdexcept>
 
 namespace prev::render::shader {
 Shader::Shader(GfxDevice device,
@@ -11,25 +10,24 @@ Shader::Shader(GfxDevice device,
     const std::vector<VertexInputBinding>& vertexBindings,
     const std::vector<VertexInputAttribute>& vertexAttributes,
     GfxBindGroupLayout bindGroupLayout,
-    const std::map<std::string, BindingInfo>& bindingInfos)
+    const std::map<std::string, BindingInfo>& bindingInfos,
+    std::unique_ptr<IBindGroupPool> bindGroupPool)
     : m_device{ device }
     , m_shaderModules{ shaderModules }
     , m_vertexInputBindings{ vertexBindings }
     , m_vertexInputAttributes{ vertexAttributes }
     , m_bindGroupLayout{ bindGroupLayout }
     , m_bindingInfos{ bindingInfos }
+    , m_bindGroupPool{ std::move(bindGroupPool) }
 {
 }
 
 Shader::~Shader()
 {
-    GFXERRCHECK(gfxDeviceWaitIdle(m_device));
+    GFXERRCHECK(gfxDeviceWaitIdle(m_device)); // pools destroy their bind groups; the GPU must be idle first
 
-    for (auto& bg : m_bindGroups) {
-        if (bg) {
-            gfxBindGroupDestroy(bg);
-        }
-    }
+    m_bindGroupPool.reset();
+
     if (m_bindGroupLayout) {
         gfxBindGroupLayoutDestroy(m_bindGroupLayout);
     }
@@ -38,40 +36,18 @@ Shader::~Shader()
     }
 }
 
-bool Shader::ShouldAdjustCapacity(uint32_t size) const
+void Shader::BeginFrame(uint32_t frameInFlightIndex)
 {
-    const float MIN_CAPACITY_RATIO_TO_SHRINK{ 0.5f };
-    if (size > m_poolCapacity) {
-        return true;
-    }
-    if (m_poolCapacity > 0 && float(size) / float(m_poolCapacity) < MIN_CAPACITY_RATIO_TO_SHRINK) {
-        return true;
-    }
-    return false;
+    m_bindGroupPool->BeginFrame(frameInFlightIndex);
 }
 
-bool Shader::AdjustBindGroupCapacity(uint32_t size)
+void Shader::EndFrame()
 {
-    if (!ShouldAdjustCapacity(size)) {
-        return false;
-    }
-    for (auto& bg : m_bindGroups) {
-        if (bg) {
-            gfxBindGroupDestroy(bg);
-        }
-    }
-    m_bindGroups.assign(size, nullptr);
-    m_poolCapacity = size;
-    m_currentSlot = 0;
-    return true;
+    m_bindGroupPool->EndFrame();
 }
 
 GfxBindGroup Shader::UpdateNextBindGroup()
 {
-    if (m_poolCapacity == 0) {
-        throw std::runtime_error("Shader::UpdateNextBindGroup: no bind-group capacity. Call ShaderBuilder::SetBindGroupCapacity(n) (n >= frames-in-flight) before Build().");
-    }
-
     CheckBindings();
 
     // Gather entries sorted by binding index (one entry per array element, addressed via arrayElement)
@@ -104,22 +80,13 @@ GfxBindGroup Shader::UpdateNextBindGroup()
         return std::tie(a.binding, a.arrayElement) < std::tie(b.binding, b.arrayElement);
     });
 
-    if (m_bindGroups[m_currentSlot]) {
-        gfxBindGroupDestroy(m_bindGroups[m_currentSlot]);
-        m_bindGroups[m_currentSlot] = nullptr;
-    }
-
     GfxBindGroupDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_BIND_GROUP_DESCRIPTOR;
     desc.layout = m_bindGroupLayout;
     desc.entries = entries.data();
     desc.entryCount = static_cast<uint32_t>(entries.size());
 
-    GFXERRCHECK(gfxDeviceCreateBindGroup(m_device, &desc, &m_bindGroups[m_currentSlot]));
-
-    GfxBindGroup result = m_bindGroups[m_currentSlot];
-    m_currentSlot = (m_currentSlot + 1) % m_poolCapacity;
-    return result;
+    return m_bindGroupPool->UpdateNext(desc);
 }
 
 void Shader::Bind(const std::string& name, const prev::render::buffer::Buffer& buffer)
@@ -162,8 +129,6 @@ void Shader::CheckBindings() const
     for (const auto& [name, info] : m_bindingInfos) {
         if (info.type == GFX_BIND_GROUP_ENTRY_TYPE_BUFFER && !info.buffer) {
             LOGE("Shader item: \"%s\" was not bound. Set a binding before calling UpdateNextBindGroup.", name.c_str());
-            PAUSE;
-            exit(0);
         }
     }
 }

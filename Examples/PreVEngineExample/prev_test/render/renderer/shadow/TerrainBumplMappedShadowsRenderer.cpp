@@ -40,7 +40,6 @@ void TerrainBumplMappedShadowsRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -63,16 +62,18 @@ void TerrainBumplMappedShadowsRenderer::Init()
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                         .SetCount(m_descriptorCount)
+                         .SetChunkSize(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                         .Build();
+                         .BuildFrameScoped();
 
     LOGI("Terrain Bump Mapped Shadows Uniforms Pools created");
 }
 
-void TerrainBumplMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
+void TerrainBumplMappedShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPool->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void TerrainBumplMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
@@ -101,9 +102,7 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
-    m_uniformsPool->MoveToNext();
-
-    auto& ubo = m_uniformsPool->GetCurrent();
+    auto& ubo = m_uniformsPool->Next();
 
     Uniforms uniforms{};
     uniforms.projectionMatrix = renderContext.projectionMatrix;
@@ -127,8 +126,10 @@ void TerrainBumplMappedShadowsRenderer::PostRender(const ShadowsRenderContext& r
 {
 }
 
-void TerrainBumplMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
+void TerrainBumplMappedShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPool->EndFrame();
 }
 
 void TerrainBumplMappedShadowsRenderer::ShutDown()

@@ -39,7 +39,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 0, GFX_SHADER_STAGE_COMPUTE),
             prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outWeatherTexture", 1, GFX_SHADER_STAGE_COMPUTE, GFX_FORMAT_R8G8B8A8_UNORM)
         })
-	    .SetBindGroupCapacity(1)
+        .SetBindGroupCapacity(1)
         .Build();
     // clang-format on
 

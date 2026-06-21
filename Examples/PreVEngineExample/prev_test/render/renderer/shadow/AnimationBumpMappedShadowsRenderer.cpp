@@ -43,7 +43,6 @@ void AnimationBumpMappedShadowsRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -66,16 +65,18 @@ void AnimationBumpMappedShadowsRenderer::Init()
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                         .SetCount(m_descriptorCount)
+                         .SetChunkSize(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                         .Build();
+                         .BuildFrameScoped();
 
     LOGI("Animation Bump Mapped Shadows Uniforms Pools created");
 }
 
-void AnimationBumpMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
+void AnimationBumpMappedShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPool->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void AnimationBumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
@@ -118,9 +119,7 @@ void AnimationBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& rend
             const auto& meshPart = meshParts[meshPartIndex];
             const auto& animationClip = animation->GetClip(meshPartIndex);
 
-            m_uniformsPool->MoveToNext();
-
-            auto& ubo = m_uniformsPool->GetCurrent();
+            auto& ubo = m_uniformsPool->Next();
 
             Uniforms uniforms{};
             const auto& bones = animationClip.GetBoneTransforms();
@@ -156,8 +155,10 @@ void AnimationBumpMappedShadowsRenderer::PostRender(const ShadowsRenderContext& 
 {
 }
 
-void AnimationBumpMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
+void AnimationBumpMappedShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPool->EndFrame();
 }
 
 void AnimationBumpMappedShadowsRenderer::ShutDown()

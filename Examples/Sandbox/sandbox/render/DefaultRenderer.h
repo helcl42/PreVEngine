@@ -2,7 +2,7 @@
 #define __SANDBOX_DEFAULT_RENDERER_H__
 
 #include <prev/core/device/Device.h>
-#include <prev/render/buffer/BufferPool.h>
+#include <prev/render/buffer/FrameScopedBufferPool.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
 #include <prev/render/shader/Shader.h>
@@ -34,6 +34,10 @@ public:
 public:
     void Init();
 
+    void BeginFrame(uint32_t frameInFlightIndex);
+
+    void EndFrame();
+
     void Render(GfxRenderPassEncoder encoder, const GfxScissorRect& rect, const ViewData& views, const std::shared_ptr<prev::scene::graph::ISceneNode>& node);
 
     void ShutDown();
@@ -51,15 +55,16 @@ private:
         glm::vec4 color;
     };
 
-    // Ring of bind groups / uniform buffers; must comfortably exceed (nodes * frames-in-flight).
-    static constexpr uint32_t m_descriptorCount{ 64 };
+    // Uniform pool growth granularity (slices per allocated chunk). Not a hard cap: the pool is
+    // frame-scoped and grows on demand, so any value is correct — this only tunes allocation size.
+    static constexpr uint32_t m_uniformPoolChunk{ 16 };
 
     prev::core::device::Device& m_device;
     prev::render::pass::RenderPass& m_renderPass;
 
     std::unique_ptr<prev::render::shader::Shader> m_shader;
     std::unique_ptr<prev::render::pipeline::Pipeline> m_pipeline;
-    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPool;
+    std::unique_ptr<prev::render::buffer::FrameScopedBufferPool> m_uniformsPool;
 };
 } // namespace sandbox::render
 

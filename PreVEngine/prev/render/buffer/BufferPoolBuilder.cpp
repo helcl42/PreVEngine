@@ -3,7 +3,6 @@
 #include "BufferBuilder.h"
 
 #include "../../util/MathUtils.h"
-#include "../../util/Utils.h"
 
 #include <stdexcept>
 
@@ -44,9 +43,19 @@ BufferPoolBuilder& BufferPoolBuilder::SetAlignment(const uint64_t alignment)
     return *this;
 }
 
+BufferPoolBuilder& BufferPoolBuilder::SetChunkSize(const uint32_t chunkSize)
+{
+    m_chunkSize = chunkSize;
+    return *this;
+}
+
 std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
 {
     Validate();
+
+    if (m_count == 0) {
+        throw std::runtime_error("Could not create buffer pool ring with count 0 (call SetCount)");
+    }
 
     const uint64_t alignedItemSize{ prev::util::math::RoundUp(m_stride, m_alignment) };
     const uint64_t totalSize{ alignedItemSize * m_count };
@@ -58,28 +67,34 @@ std::unique_ptr<BufferPool> BufferPoolBuilder::Build() const
                       .SetAlignment(m_alignment)
                       .Build();
 
-    GfxDevice gfxDevice = static_cast<GfxDevice>(m_device);
-    GfxQueue gfxQueue = static_cast<GfxQueue>(m_queue);
-    GfxBuffer gfxBuffer = static_cast<GfxBuffer>(*buffer);
-    const bool hostMapped = (m_memoryProperties & GFX_MEMORY_PROPERTY_HOST_VISIBLE) != 0;
-
     std::vector<Buffer> slices;
     slices.reserve(m_count);
     for (uint64_t i = 0; i < m_count; ++i) {
-        slices.emplace_back(Buffer(gfxDevice, gfxQueue, gfxBuffer, hostMapped, alignedItemSize, i * alignedItemSize, false));
+        slices.push_back(buffer->Slice(i * alignedItemSize, alignedItemSize));
     }
 
     return std::unique_ptr<BufferPool>(new BufferPool(std::move(buffer), std::move(slices)));
+}
+
+std::unique_ptr<FrameScopedBufferPool> BufferPoolBuilder::BuildFrameScoped() const
+{
+    Validate();
+
+    if (m_chunkSize == 0) {
+        throw std::runtime_error("Could not create frame-scoped buffer pool with chunk size 0 (call SetChunkSize)");
+    }
+
+    // No backing is allocated up front — the first Next() allocates a chunk of m_chunkSize slices.
+    const uint64_t alignedItemSize{ prev::util::math::RoundUp(m_stride, m_alignment) };
+
+    return std::unique_ptr<FrameScopedBufferPool>(new FrameScopedBufferPool(m_device, m_queue, m_usageFlags,
+        m_memoryProperties, alignedItemSize, m_alignment, m_chunkSize));
 }
 
 void BufferPoolBuilder::Validate() const
 {
     if (m_usageFlags == 0) {
         throw std::runtime_error("Could not create buffer pool with usage flags 0");
-    }
-
-    if (m_count == 0) {
-        throw std::runtime_error("Could not create buffer pool with count 0");
     }
 
     if (m_stride == 0) {

@@ -41,7 +41,6 @@ void LensFlareRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTexture", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("colorSampler", 3, GFX_SHADER_STAGE_FRAGMENT)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -64,18 +63,18 @@ void LensFlareRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("LensFlare Uniforms Pools created");
 
@@ -85,8 +84,11 @@ void LensFlareRenderer::Init()
     LOGI("LensFlare Sampler created");
 }
 
-void LensFlareRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void LensFlareRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolFS->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void LensFlareRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -123,9 +125,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         const float xScale{ flare.GetScale() };
         const float yScale{ xScale * aspectRatio * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
 
-        m_uniformsPoolVS->MoveToNext();
-
-        auto& uboVS = m_uniformsPoolVS->GetCurrent();
+        auto& uboVS = m_uniformsPoolVS->Next();
         UniformsVS uniformsVS{};
         for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
             uniformsVS.translations[viewIndex] = glm::vec4(flarePositions[viewIndex][i], MIN_DEPTH, 1.0f);
@@ -133,9 +133,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
         uniformsVS.scale = glm::vec4(xScale, yScale, 0.0f, 0.0f);
         uboVS.Write(uniformsVS);
 
-        m_uniformsPoolFS->MoveToNext();
-
-        auto& uboFS = m_uniformsPoolFS->GetCurrent();
+        auto& uboFS = m_uniformsPoolFS->Next();
         UniformsFS uniformsFS{};
         uniformsFS.brightness = glm::vec4(m_sunVisibilityFactor);
         uboFS.Write(uniformsFS);
@@ -160,8 +158,11 @@ void LensFlareRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void LensFlareRenderer::AfterRender(const NormalRenderContext& renderContext)
+void LensFlareRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
+    m_uniformsPoolFS->EndFrame();
 }
 
 void LensFlareRenderer::ShutDown()

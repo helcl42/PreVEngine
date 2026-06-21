@@ -1,6 +1,8 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
+#include "IBindGroupPool.h"
+
 #include "../buffer/Buffer.h"
 #include "../buffer/ImageBufferView.h"
 #include "../sampler/Sampler.h"
@@ -8,6 +10,7 @@
 #include "../../core/Core.h"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -45,24 +48,35 @@ public:
     };
 
 private:
+    // The bind-group pool (ring vs frame-scoped) is chosen by the builder and injected here, so the
+    // shader depends only on the IBindGroupPool interface, not the concrete strategies.
     Shader(GfxDevice device,
         const std::map<GfxShaderStageFlags, GfxShader>& shaderModules,
         const std::vector<VertexInputBinding>& vertexBindings,
         const std::vector<VertexInputAttribute>& vertexAttributes,
         GfxBindGroupLayout bindGroupLayout,
-        const std::map<std::string, BindingInfo>& bindingInfos);
+        const std::map<std::string, BindingInfo>& bindingInfos,
+        std::unique_ptr<IBindGroupPool> bindGroupPool);
 
 public:
     ~Shader();
 
 public:
-    bool AdjustBindGroupCapacity(uint32_t size);
-
     void Bind(const std::string& name, const prev::render::buffer::Buffer& buffer);
 
     void Bind(const std::string& name, const prev::render::buffer::ImageBufferView& imageBufferView);
 
     void Bind(const std::string& name, const prev::render::sampler::Sampler& sampler);
+
+    // Frame-scoped pools only (built with capacity 0): call once per frame with the swapchain's
+    // frame-in-flight index. UpdateNextBindGroup() then draws from that frame's grow-on-demand
+    // region; reuse of a frame index is fenced by the swapchain, so recreating its bind groups is
+    // safe. No-ops for a fixed-ring shader.
+    void BeginFrame(uint32_t frameInFlightIndex);
+
+    // Optional pair to BeginFrame: trims this frame's region back to what it actually used so a
+    // one-off object spike doesn't pin memory forever. No-ops for a fixed-ring shader.
+    void EndFrame();
 
     GfxBindGroup UpdateNextBindGroup();
 
@@ -81,8 +95,6 @@ public:
 private:
     void CheckBindings() const;
 
-    bool ShouldAdjustCapacity(uint32_t size) const;
-
 private:
     GfxDevice m_device;
 
@@ -96,11 +108,8 @@ private:
 
     std::map<std::string, BindingInfo> m_bindingInfos;
 
-    std::vector<GfxBindGroup> m_bindGroups;
-
-    uint32_t m_poolCapacity{};
-
-    uint32_t m_currentSlot{};
+    // Owns the bind-group slots: a fixed ring or a frame-scoped pool, chosen at construction.
+    std::unique_ptr<IBindGroupPool> m_bindGroupPool;
 };
 
 } // namespace prev::render::shader

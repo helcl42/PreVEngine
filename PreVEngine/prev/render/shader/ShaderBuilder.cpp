@@ -1,5 +1,8 @@
 #include "ShaderBuilder.h"
 
+#include "BindGroupPool.h"
+#include "FrameScopedBindGroupPool.h"
+
 #include "../../common/Logger.h"
 #include "../../util/MathUtils.h"
 #include "../../util/Utils.h"
@@ -157,18 +160,23 @@ std::unique_ptr<Shader> ShaderBuilder::Build() const
         }
     }
 
-    auto shader{ std::unique_ptr<Shader>(new Shader(
+    // A capacity selects a fixed-size ring; 0 selects a frame-scoped, grow-on-demand pool driven by
+    // Shader::BeginFrame()/EndFrame().
+    std::unique_ptr<IBindGroupPool> bindGroupPool;
+    if (m_bindGroupCapacity > 0) {
+        bindGroupPool = std::make_unique<BindGroupPool>(m_device, m_bindGroupCapacity);
+    } else {
+        bindGroupPool = std::make_unique<FrameScopedBindGroupPool>(m_device);
+    }
+
+    return std::unique_ptr<Shader>(new Shader(
         m_device,
         std::move(shaderModules),
         m_vertexInputBindings,
         m_vertexInputAttributes,
         bindGroupLayout,
-        std::move(bindingInfos))) };
-
-    if (m_bindGroupCapacity > 0) {
-        shader->AdjustBindGroupCapacity(m_bindGroupCapacity);
-    }
-    return shader;
+        std::move(bindingInfos),
+        std::move(bindGroupPool)));
 }
 
 GfxShader ShaderBuilder::CreateShaderModule(const std::vector<char>& code, GfxShaderSourceType sourceType) const

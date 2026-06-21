@@ -44,12 +44,17 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
         views.projectionMatrices[view] = AdjustProjectionForBackend(camera->GetProjectionMatrix(view), backend);
     }
 
+    // Reset the renderer's bind-group pool to this frame's region (grow-on-demand), once per frame.
+    m_defaultRenderer->BeginFrame(renderContext.frameInFlightIndex);
+
     m_renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder);
 
     const GfxRenderPassEncoder encoder{ m_renderPass.GetEncoder() };
     TraverseScene(encoder, renderContext.rect, views, scene.GetRootNode());
 
     m_renderPass.End();
+
+    m_defaultRenderer->EndFrame(); // trim this frame's bind-group region back to what it used
 }
 
 void MasterRenderer::TraverseScene(GfxRenderPassEncoder encoder, const GfxScissorRect& rect, const ViewData& views, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)

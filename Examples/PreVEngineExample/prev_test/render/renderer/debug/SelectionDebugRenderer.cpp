@@ -41,7 +41,6 @@ void SelectionDebugRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -64,18 +63,18 @@ void SelectionDebugRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("Selection Debug Uniforms Pools created");
 
@@ -86,8 +85,11 @@ void SelectionDebugRenderer::Init()
     m_selectionPointModel = modelFactoru.Create(std::move(mesh));
 }
 
-void SelectionDebugRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void SelectionDebugRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolFS->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void SelectionDebugRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -107,9 +109,7 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
 
     const auto selectableComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::ray_casting::ISelectableComponent>(node);
     if (selectableComponent->IsSelected()) {
-        m_uniformsPoolVS->MoveToNext();
-
-        auto& uboVS = m_uniformsPoolVS->GetCurrent();
+        auto& uboVS = m_uniformsPoolVS->Next();
 
         UniformsVS uniformsVS{};
         uniformsVS.modelMatrix = prev::util::math::CreateTransformationMatrix(selectableComponent->GetPostiion(), glm::quat(), 0.6f);
@@ -119,9 +119,7 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
         }
         uboVS.Write(uniformsVS);
 
-        m_uniformsPoolFS->MoveToNext();
-
-        auto& uboFS = m_uniformsPoolFS->GetCurrent();
+        auto& uboFS = m_uniformsPoolFS->Next();
 
         UniformsFS uniformsFS{};
         uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
@@ -145,8 +143,11 @@ void SelectionDebugRenderer::PostRender(const NormalRenderContext& renderContext
 {
 }
 
-void SelectionDebugRenderer::AfterRender(const NormalRenderContext& renderContext)
+void SelectionDebugRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
+    m_uniformsPoolFS->EndFrame();
 }
 
 void SelectionDebugRenderer::ShutDown()

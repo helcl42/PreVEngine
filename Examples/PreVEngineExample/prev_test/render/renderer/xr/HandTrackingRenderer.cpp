@@ -40,7 +40,6 @@ void HandTrackingRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboFS", 1, GFX_SHADER_STAGE_FRAGMENT)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -63,24 +62,27 @@ void HandTrackingRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("Hand Tracking Uniforms Pools created");
 }
 
-void HandTrackingRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void HandTrackingRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolFS->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void HandTrackingRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -127,8 +129,7 @@ void HandTrackingRenderer::Render(const NormalRenderContext& renderContext, cons
             const glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
             const glm::mat4 modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
 
-            m_uniformsPoolVS->MoveToNext();
-            auto& uboVS = m_uniformsPoolVS->GetCurrent();
+            auto& uboVS = m_uniformsPoolVS->Next();
 
             UniformsVS uniformsVS{};
             uniformsVS.modelMatrix = modelMatrix;
@@ -138,8 +139,7 @@ void HandTrackingRenderer::Render(const NormalRenderContext& renderContext, cons
             }
             uboVS.Write(uniformsVS);
 
-            m_uniformsPoolFS->MoveToNext();
-            auto& uboFS = m_uniformsPoolFS->GetCurrent();
+            auto& uboFS = m_uniformsPoolFS->Next();
 
             UniformsFS uniformsFS{};
             uniformsFS.color = HAND_COLORS[handIdx];
@@ -164,8 +164,11 @@ void HandTrackingRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void HandTrackingRenderer::AfterRender(const NormalRenderContext& renderContext)
+void HandTrackingRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
+    m_uniformsPoolFS->EndFrame();
 }
 
 void HandTrackingRenderer::ShutDown()

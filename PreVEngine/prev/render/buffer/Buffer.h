@@ -8,7 +8,6 @@
 
 namespace prev::render::buffer {
 class BufferBuilder;
-class BufferPoolBuilder;
 
 class Buffer final {
 private:
@@ -32,6 +31,11 @@ public:
 
     uint64_t GetOffset() const;
 
+    // Returns a non-owning view into this buffer at [offset, offset+size), sharing the backing
+    // GfxBuffer. The view never frees the GPU buffer (the owning Buffer does), so it is safe to
+    // outlive nothing beyond its parent. Used to carve a backing buffer into pool slices.
+    Buffer Slice(uint64_t offset, uint64_t size) const;
+
     template <typename T>
     void Write(const T& data)
     {
@@ -42,8 +46,7 @@ public:
     operator GfxBuffer() const;
 
 public:
-    friend class BufferBuilder;
-    friend class BufferPoolBuilder;
+    friend class BufferBuilder; // constructs the owning buffer
 
 protected:
     GfxDevice m_device{};

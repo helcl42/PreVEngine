@@ -41,7 +41,6 @@ void ShadowMapDebugRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTexture", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D_ARRAY, 1, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 1, GFX_SHADER_STAGE_FRAGMENT, true)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -78,8 +77,9 @@ void ShadowMapDebugRenderer::Init()
     m_quadModel = modelFactory.Create(std::move(quadMesh));
 }
 
-void ShadowMapDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext)
+void ShadowMapDebugRenderer::BeginFrame(const prev::render::RenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void ShadowMapDebugRenderer::PreRender(const prev::render::RenderContext& renderContext)
@@ -118,8 +118,9 @@ void ShadowMapDebugRenderer::PostRender(const prev::render::RenderContext& rende
 {
 }
 
-void ShadowMapDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext)
+void ShadowMapDebugRenderer::EndFrame(const prev::render::RenderContext& renderContext)
 {
+    m_shader->EndFrame();
 }
 
 void ShadowMapDebugRenderer::ShutDown()

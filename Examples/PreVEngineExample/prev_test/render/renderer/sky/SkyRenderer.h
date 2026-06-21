@@ -4,7 +4,7 @@
 #include "../IRenderer.h"
 #include "../RenderContexts.h"
 
-#include <prev/render/buffer/BufferPool.h>
+#include <prev/render/buffer/FrameScopedBufferPool.h>
 #include <prev/render/buffer/ImageBuffer.h>
 #include <prev/render/pass/RenderPass.h>
 #include <prev/render/pipeline/Pipeline.h>
@@ -25,7 +25,7 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const NormalRenderContext& renderContext) override;
+    void BeginFrame(const NormalRenderContext& renderContext) override;
 
     void PreRender(const NormalRenderContext& renderContext) override;
 
@@ -33,7 +33,7 @@ public:
 
     void PostRender(const NormalRenderContext& renderContext) override;
 
-    void AfterRender(const NormalRenderContext& renderContext) override;
+    void EndFrame(const NormalRenderContext& renderContext) override;
 
     void ShutDown() override;
 
@@ -151,7 +151,7 @@ private:
     };
 
 private:
-    const uint32_t m_descriptorCount{ 30 };
+    const uint32_t m_descriptorCount{ 16 };
 
 private:
     prev::core::device::Device& m_device;
@@ -165,13 +165,13 @@ private:
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPipeline;
 
-    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolSkyCS;
+    std::unique_ptr<prev::render::buffer::FrameScopedBufferPool> m_uniformsPoolSkyCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_skyPostProcessShader;
 
     std::unique_ptr<prev::render::pipeline::Pipeline> m_skyPostProcessPipeline;
 
-    std::unique_ptr<prev::render::buffer::BufferPool> m_uniformsPoolSkyPostProcessCS;
+    std::unique_ptr<prev::render::buffer::FrameScopedBufferPool> m_uniformsPoolSkyPostProcessCS;
 
     std::unique_ptr<prev::render::shader::Shader> m_compositeShader;
 

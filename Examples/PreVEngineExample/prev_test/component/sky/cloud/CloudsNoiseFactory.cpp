@@ -29,7 +29,7 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outVolumeTexture", 0, GFX_SHADER_STAGE_COMPUTE, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D)
         })
-	    .SetBindGroupCapacity(1)
+        .SetBindGroupCapacity(1)
         .Build();
     // clang-format on
 

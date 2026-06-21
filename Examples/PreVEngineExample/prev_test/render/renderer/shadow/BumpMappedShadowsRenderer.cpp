@@ -41,7 +41,6 @@ void BumpMappedShadowsRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -64,16 +63,18 @@ void BumpMappedShadowsRenderer::Init()
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                         .SetCount(m_descriptorCount)
+                         .SetChunkSize(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                         .Build();
+                         .BuildFrameScoped();
 
     LOGI("Bump Mapped Shadows Uniforms Pools created");
 }
 
-void BumpMappedShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
+void BumpMappedShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPool->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void BumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
@@ -114,9 +115,7 @@ void BumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext
         for (const auto meshPartIndex : meshNode.meshPartIndices) {
             const auto& meshPart = meshParts[meshPartIndex];
 
-            m_uniformsPool->MoveToNext();
-
-            auto& ubo = m_uniformsPool->GetCurrent();
+            auto& ubo = m_uniformsPool->Next();
 
             Uniforms uniforms{};
             uniforms.projectionMatrix = renderContext.projectionMatrix;
@@ -148,8 +147,10 @@ void BumpMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderCon
 {
 }
 
-void BumpMappedShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
+void BumpMappedShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPool->EndFrame();
 }
 
 void BumpMappedShadowsRenderer::ShutDown()

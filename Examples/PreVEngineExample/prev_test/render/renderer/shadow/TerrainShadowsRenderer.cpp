@@ -38,7 +38,6 @@ void TerrainShadowsRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -61,16 +60,18 @@ void TerrainShadowsRenderer::Init()
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                         .SetCount(m_descriptorCount)
+                         .SetChunkSize(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                         .Build();
+                         .BuildFrameScoped();
 
     LOGI("Terrain Shadows Uniforms Pools created");
 }
 
-void TerrainShadowsRenderer::BeforeRender(const ShadowsRenderContext& renderContext)
+void TerrainShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPool->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void TerrainShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
@@ -99,9 +100,7 @@ void TerrainShadowsRenderer::Render(const ShadowsRenderContext& renderContext, c
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
 
-    m_uniformsPool->MoveToNext();
-
-    auto& ubo = m_uniformsPool->GetCurrent();
+    auto& ubo = m_uniformsPool->Next();
 
     Uniforms uniforms{};
     uniforms.projectionMatrix = renderContext.projectionMatrix;
@@ -125,8 +124,10 @@ void TerrainShadowsRenderer::PostRender(const ShadowsRenderContext& renderContex
 {
 }
 
-void TerrainShadowsRenderer::AfterRender(const ShadowsRenderContext& renderContext)
+void TerrainShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPool->EndFrame();
 }
 
 void TerrainShadowsRenderer::ShutDown()

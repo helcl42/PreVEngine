@@ -40,7 +40,6 @@ void SunRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboVS", 0, GFX_SHADER_STAGE_VERTEX)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -63,10 +62,10 @@ void SunRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("Sun Uniforms Pools created");
 
@@ -81,8 +80,11 @@ void SunRenderer::Init()
     LOGI("Sun Query Pool created");
 }
 
-void SunRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void SunRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+
     m_renderPass.SetOcclusionQuerySet(*m_queryPool);
 
     if (m_queryPool->IsAsyncResultReady()) {
@@ -127,9 +129,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y));
     m_queryPool->BeginQuery(0, renderContext.renderPassEncoder);
 
-    m_uniformsPoolVS->MoveToNext();
-
-    auto& uboVS = m_uniformsPoolVS->GetCurrent();
+    auto& uboVS = m_uniformsPoolVS->Next();
     UniformsVS uniformsVS{};
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         const auto sunPosition{ sunComponent->ComputeFlarePosition(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition()) };
@@ -156,9 +156,12 @@ void SunRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void SunRenderer::AfterRender(const NormalRenderContext& renderContext)
+void SunRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
     m_queryPool->Resolve(renderContext.commandEncoder);
+
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
 }
 
 void SunRenderer::ShutDown()

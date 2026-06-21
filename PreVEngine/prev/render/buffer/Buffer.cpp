@@ -87,6 +87,13 @@ uint64_t Buffer::GetOffset() const
     return m_offset;
 }
 
+Buffer Buffer::Slice(uint64_t offset, uint64_t size) const
+{
+    // Non-owning view sharing this buffer's GfxBuffer; offset is relative to this buffer's own
+    // offset so slicing composes. The view never destroys the GPU buffer (owning = false).
+    return Buffer(m_device, m_queue, m_buffer, m_hostMapped, size, m_offset + offset, false);
+}
+
 Buffer::operator GfxBuffer() const
 {
     return m_buffer;

@@ -40,7 +40,6 @@ void TextureDebugRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("imageTexture", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("imageSampler", 1, GFX_SHADER_STAGE_FRAGMENT)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -73,8 +72,9 @@ void TextureDebugRenderer::Init()
     m_quadModel = modelFactory.Create(std::move(quadMesh));
 }
 
-void TextureDebugRenderer::BeforeRender(const prev::render::RenderContext& renderContext)
+void TextureDebugRenderer::BeginFrame(const prev::render::RenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void TextureDebugRenderer::PreRender(const prev::render::RenderContext& renderContext)
@@ -107,8 +107,9 @@ void TextureDebugRenderer::PostRender(const prev::render::RenderContext& renderC
 {
 }
 
-void TextureDebugRenderer::AfterRender(const prev::render::RenderContext& renderContext)
+void TextureDebugRenderer::EndFrame(const prev::render::RenderContext& renderContext)
 {
+    m_shader->EndFrame();
 }
 
 void TextureDebugRenderer::ShutDown()

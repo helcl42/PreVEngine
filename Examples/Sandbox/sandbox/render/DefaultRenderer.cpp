@@ -41,7 +41,6 @@ void DefaultRenderer::Init()
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("ubo", 0, GFX_SHADER_STAGE_VERTEX | GFX_SHADER_STAGE_FRAGMENT)
         })
-        .SetBindGroupCapacity(m_descriptorCount)
         .Build();
 
     m_pipeline = prev::render::pipeline::GraphicsPipelineBuilder{ m_device, *m_shader, m_renderPass }
@@ -58,10 +57,22 @@ void DefaultRenderer::Init()
     m_uniformsPool = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                          .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                         .SetCount(m_descriptorCount)
+                         .SetChunkSize(m_uniformPoolChunk)
                          .SetStride(sizeof(SandboxUniforms))
                          .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                         .Build();
+                         .BuildFrameScoped();
+}
+
+void DefaultRenderer::BeginFrame(uint32_t frameInFlightIndex)
+{
+    m_shader->BeginFrame(frameInFlightIndex);
+    m_uniformsPool->BeginFrame(frameInFlightIndex);
+}
+
+void DefaultRenderer::EndFrame()
+{
+    m_shader->EndFrame();
+    m_uniformsPool->EndFrame();
 }
 
 void DefaultRenderer::Render(GfxRenderPassEncoder encoder, const GfxScissorRect& rect, const ViewData& views, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
@@ -81,8 +92,7 @@ void DefaultRenderer::Render(GfxRenderPassEncoder encoder, const GfxScissorRect&
     gfxRenderPassEncoderSetViewport(encoder, &viewport);
     gfxRenderPassEncoderSetScissorRect(encoder, &rect);
 
-    m_uniformsPool->MoveToNext();
-    auto& ubo{ m_uniformsPool->GetCurrent() };
+    auto& ubo{ m_uniformsPool->Next() };
 
     SandboxUniforms uniforms{};
     uniforms.modelMatrix = modelMatrix;

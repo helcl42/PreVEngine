@@ -137,7 +137,7 @@ template <typename RenderContextType>
 void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers, const std::vector<GfxCommandEncoder>& bundleEncoders)
 {
     for (auto& renderer : renderers) {
-        renderer->BeforeRender(renderContext);
+        renderer->BeginFrame(renderContext);
     }
 
     auto recordBundle = [&](size_t i) {
@@ -186,7 +186,7 @@ void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, 
     renderPass.End();
 
     for (auto& renderer : renderers) {
-        renderer->AfterRender(renderContext);
+        renderer->EndFrame(renderContext);
     }
 }
 #else
@@ -194,7 +194,7 @@ template <typename RenderContextType>
 void MasterRenderer::RenderSerial(prev::render::pass::RenderPass& renderPass, const RenderContextType& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root, const std::vector<std::unique_ptr<IRenderer<RenderContextType>>>& renderers)
 {
     for (auto& renderer : renderers) {
-        renderer->BeforeRender(renderContext);
+        renderer->BeginFrame(renderContext);
     }
 
     renderPass.Begin(renderContext.frameBuffer, renderContext.commandEncoder);
@@ -213,7 +213,7 @@ void MasterRenderer::RenderSerial(prev::render::pass::RenderPass& renderPass, co
     renderPass.End();
 
     for (auto& renderer : renderers) {
-        renderer->AfterRender(renderContext);
+        renderer->EndFrame(renderContext);
     }
 }
 #endif

@@ -24,7 +24,7 @@ public:
 public:
     void Init() override;
 
-    void BeforeRender(const prev::render::RenderContext& renderContext) override;
+    void BeginFrame(const prev::render::RenderContext& renderContext) override;
 
     void PreRender(const prev::render::RenderContext& renderContext) override;
 
@@ -32,7 +32,7 @@ public:
 
     void PostRender(const prev::render::RenderContext& renderContext) override;
 
-    void AfterRender(const prev::render::RenderContext& renderContext) override;
+    void EndFrame(const prev::render::RenderContext& renderContext) override;
 
     void ShutDown() override;
 
@@ -45,9 +45,6 @@ private:
         float nearClippingPlane;
         float farClippingPlane;
     };
-
-private:
-    const uint32_t m_descriptorCount{ 200 };
 
 private:
     prev::event::EventHandler<ShadowMapDebugRenderer, prev::input::keyboard::KeyEvent> m_keyEvent{ *this };

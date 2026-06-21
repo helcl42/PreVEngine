@@ -62,7 +62,6 @@ void WaterRenderer::Init()
             prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("normalMapTexture", 12, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("normalMapSampler", 13, GFX_SHADER_STAGE_FRAGMENT)
         })
-	    .SetBindGroupCapacity(m_descriptorCount)
         .Build();
     // clang-format on
 
@@ -85,18 +84,18 @@ void WaterRenderer::Init()
     m_uniformsPoolVS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
-                           .SetCount(m_descriptorCount)
+                           .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
                            .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
-                           .Build();
+                           .BuildFrameScoped();
 
     LOGI("Water Uniforms Pools created");
 
@@ -119,8 +118,11 @@ void WaterRenderer::Init()
     LOGI("Water Samplers created");
 }
 
-void WaterRenderer::BeforeRender(const NormalRenderContext& renderContext)
+void WaterRenderer::BeginFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
+    m_uniformsPoolFS->BeginFrame(renderContext.frameInFlightIndex);
 }
 
 void WaterRenderer::PreRender(const NormalRenderContext& renderContext)
@@ -153,9 +155,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
     const auto mainLightComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT });
     const auto shadowsComponent = prev::scene::component::NodeComponentHelper::Find<prev_test::component::shadow::IShadowsComponent>(m_scene.GetRootNode(), { TAG_SHADOW });
 
-    m_uniformsPoolVS->MoveToNext();
-
-    auto& uboVS = m_uniformsPoolVS->GetCurrent();
+    auto& uboVS = m_uniformsPoolVS->Next();
 
     UniformsVS uniformsVS{};
     uniformsVS.modelMatrix = transformComponent->GetWorldTransformScaled();
@@ -169,9 +169,7 @@ void WaterRenderer::Render(const NormalRenderContext& renderContext, const std::
 
     uboVS.Write(uniformsVS);
 
-    m_uniformsPoolFS->MoveToNext();
-
-    auto& uboFS = m_uniformsPoolFS->GetCurrent();
+    auto& uboFS = m_uniformsPoolFS->Next();
 
     UniformsFS uniformsFS{};
     uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
@@ -220,8 +218,11 @@ void WaterRenderer::PostRender(const NormalRenderContext& renderContext)
 {
 }
 
-void WaterRenderer::AfterRender(const NormalRenderContext& renderContext)
+void WaterRenderer::EndFrame(const NormalRenderContext& renderContext)
 {
+    m_shader->EndFrame();
+    m_uniformsPoolVS->EndFrame();
+    m_uniformsPoolFS->EndFrame();
 }
 
 void WaterRenderer::ShutDown()
