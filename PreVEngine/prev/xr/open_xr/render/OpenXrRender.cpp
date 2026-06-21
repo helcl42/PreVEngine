@@ -391,9 +391,8 @@ void OpenXrRender::CreateSwapchains()
 
     bool coherentViews = m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
     for (const XrViewConfigurationView& viewConfigurationView : m_viewConfigurationViews) {
-        // Check the current view size against the first view.
-        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectWidth == viewConfigurationView.recommendedImageRectWidth;
-        coherentViews |= m_viewConfigurationViews[0].recommendedImageRectHeight == viewConfigurationView.recommendedImageRectHeight;
+        coherentViews &= m_viewConfigurationViews[0].recommendedImageRectWidth == viewConfigurationView.recommendedImageRectWidth;
+        coherentViews &= m_viewConfigurationViews[0].recommendedImageRectHeight == viewConfigurationView.recommendedImageRectHeight;
     }
     if (!coherentViews) {
         LOGE("The views are not coherent. Unable to create a single Swapchain.");
