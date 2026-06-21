@@ -91,7 +91,7 @@ void SetConsoleTextColor(const ConsoleColor color);
 #define LOGE(...) _LOGE(__VA_ARGS__)
 #define ASSERT(EXPRESSION, ...)                    \
     {                                              \
-        if (!EXPRESSION) {                         \
+        if (!(EXPRESSION)) {                       \
             _LOGE(__VA_ARGS__);                    \
             printf("%s:%d\n", __FILE__, __LINE__); \
             PAUSE;                                 \
