@@ -189,9 +189,12 @@ glm::vec3 TerrainComponentFactory::CalculatePosition(const std::shared_ptr<Heigh
 
 glm::vec2 TerrainComponentFactory::CalculateTextureCoordinates(const int x, const int z) const
 {
+    // To match every other mesh in the engine:
+    // U standardly increases with +worldX
+    // V decreases with +worldZ so the derived tangent basis is right-handed (cross(T,B)==N).
     glm::vec2 result{};
     result.x = 2.0f * (static_cast<float>(x) / static_cast<float>(m_vertexCount - 1)) - 1.0f;
-    result.y = 2.0f * (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1)) - 1.0f;
+    result.y = 1.0f - 2.0f * (static_cast<float>(z) / static_cast<float>(m_vertexCount - 1));
     return result;
 }
 

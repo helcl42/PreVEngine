@@ -84,7 +84,7 @@ struct TerrainNMFSParams_std140_0
 fn sampleNormalMap_0( idx_0 : u32,  uv_0 : vec2<f32>,  ddxUV_0 : vec2<f32>,  ddyUV_0 : vec2<f32>) -> vec3<f32>
 {
     var _S1 : vec3<f32> = vec3<f32>(uv_0, f32(idx_0));
-    return normalize(vec3<f32>(2.0f) * normalize((textureSampleGrad((normalTextures_0), (normalSampler_0), ((_S1)).xy, i32(((_S1)).z), (ddxUV_0), (ddyUV_0))).xyz) - vec3<f32>(1.0f));
+    return normalize(vec3<f32>(2.0f) * (textureSampleGrad((normalTextures_0), (normalSampler_0), ((_S1)).xy, i32(((_S1)).z), (ddxUV_0), (ddyUV_0))).xyz - vec3<f32>(1.0f));
 }
 
 fn GetShadowRawInternal_0( depthTexture_1 : texture_2d_array<f32>,  depthSampler_1 : sampler,  shadowCoord_0 : vec4<f32>,  shadowCoordOffset_0 : vec2<f32>,  cascadeIndex_0 : u32,  depthBias_0 : f32,  useReverseDepth_1 : u32) -> f32
@@ -307,7 +307,7 @@ fn fragmentMain( _S13 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                 }
                 else
                 {
-                    totalDiffuse_0 = _S13.normal_2;
+                    totalDiffuse_0 = vec3<f32>(0.0f, 0.0f, 1.0f);
                 }
                 if((uboFS_0.hasNormalMap_0) != u32(0))
                 {
@@ -315,11 +315,11 @@ fn fragmentMain( _S13 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                 }
                 else
                 {
-                    totalSpecular_0 = _S13.normal_2;
+                    totalSpecular_0 = vec3<f32>(0.0f, 0.0f, 1.0f);
                 }
                 var _S25 : f32 = mix(uboFS_0.material_0.data_3[i_1].shineDamper_0, uboFS_0.material_0.data_3[_S22].shineDamper_0, ratio_0);
                 var _S26 : f32 = mix(uboFS_0.material_0.data_3[i_1].reflectivity_0, uboFS_0.material_0.data_3[_S22].reflectivity_0, ratio_0);
-                normal_3 = mix(totalDiffuse_0, totalSpecular_0, vec3<f32>(ratio_0));
+                normal_3 = normalize(mix(totalDiffuse_0, totalSpecular_0, vec3<f32>(ratio_0)));
                 shineDamper_2 = _S25;
                 reflectivity_2 = _S26;
                 textureColor_0 = _S24;

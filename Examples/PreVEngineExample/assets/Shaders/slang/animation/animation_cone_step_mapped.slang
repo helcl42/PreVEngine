@@ -114,20 +114,15 @@ Interpolants vertexMain(VertexInput input
     output.normal = mul(uboVS.normalMatrix, float4(normalL.xyz, 0.0)).xyz;
     output.visibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 
-    float3x3 mv3 = mul((float3x3)uboVS.viewMatrices[viewIndex], (float3x3)uboVS.modelMatrix);
-    float3x3 TBN = CreateTBNMatrix(mv3, input.normal, input.tangent, input.biTangent);
+    float3x3 TBN = CreateTBNMatrix((float3x3)uboVS.modelMatrix, input.normal, input.tangent, input.biTangent);
 
-    float4 cameraPositionViewSpaceVec4 = mul(uboVS.viewMatrices[viewIndex], float4(uboVS.cameraPositions[viewIndex].xyz, 1.0));
-    float3 cameraPositionViewSpace = cameraPositionViewSpaceVec4.xyz / cameraPositionViewSpaceVec4.w;
-
-    output.toCameraVectorTangentSpace = mul(TBN, cameraPositionViewSpace);
-    output.positionTangentSpace = mul(TBN, viewPosition.xyz);
+    output.toCameraVectorTangentSpace = mul(TBN, uboVS.cameraPositions[viewIndex].xyz);
+    output.positionTangentSpace = mul(TBN, worldPosition.xyz);
 
     float3 toLightVectors[4];
     for (int i = 0; i < (int)uboVS.lightning.realCountOfLights; i++)
     {
-        float3 lightPositionViewSpace = mul(uboVS.viewMatrices[viewIndex], float4(uboVS.lightning.lights[i].position.xyz, 1.0)).xyz;
-        toLightVectors[i] = mul(TBN, lightPositionViewSpace);
+        toLightVectors[i] = mul(TBN, uboVS.lightning.lights[i].position.xyz);
     }
 
     output.toLightVectorTangentSpace0 = toLightVectors[0];
@@ -149,7 +144,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
     float2 ddxTC = ddx(input.textureCoord);
     float2 ddyTC = ddy(input.textureCoord);
 
-    float3 rayDirection = normalize(input.positionTangentSpace);
+    float3 rayDirection = normalize(input.positionTangentSpace - input.toCameraVectorTangentSpace);
     float2 uv = uboFS.hasConeMap != 0 ? RelaxedConeStepMapping(heightTexture, heightSampler, uboFS.heightScale, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
 
     float shadow = 1.0;

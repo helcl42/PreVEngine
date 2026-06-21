@@ -1,16 +1,16 @@
-#ifndef __PERLIN_NOISE_GENERATOR_H__
-#define __PERLIN_NOISE_GENERATOR_H__
+#ifndef __NOISE_GENERATOR_H__
+#define __NOISE_GENERATOR_H__
 
 #include <prev/common/Common.h>
 
 namespace prev_test::component::terrain {
-class PerlinNoiseGenerator {
+class NoiseGenerator {
 public:
-    explicit PerlinNoiseGenerator();
+    explicit NoiseGenerator();
 
-    explicit PerlinNoiseGenerator(const unsigned long seed);
+    explicit NoiseGenerator(const unsigned long seed);
 
-    virtual ~PerlinNoiseGenerator() = default;
+    virtual ~NoiseGenerator() = default;
 
 public:
     float GetInterpolatedNoise(const float x, const float z) const;
@@ -30,4 +30,4 @@ private:
 };
 } // namespace prev_test::component::terrain
 
-#endif // !__PERLIN_NOISE_GENERATOR_H__
+#endif // !__NOISE_GENERATOR_H__

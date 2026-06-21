@@ -142,7 +142,7 @@ fn GetShadowSingle_0( depthTexture_3 : texture_2d_array<f32>,  depthSampler_3 : 
 
 fn NormalMapping_0( normalMapTexture_0 : texture_2d<f32>,  normalMapSampler_0 : sampler,  uv_0 : vec2<f32>) -> vec3<f32>
 {
-    return normalize(vec3<f32>(2.0f) * normalize((textureSample((normalMapTexture_0), (normalMapSampler_0), (uv_0))).xyz) - vec3<f32>(1.0f));
+    return normalize(vec3<f32>(2.0f) * (textureSample((normalMapTexture_0), (normalMapSampler_0), (uv_0))).xyz - vec3<f32>(1.0f));
 }
 
 fn GetAttenuationFactor_0( attenuation_1 : vec3<f32>,  toLightVector_0 : vec3<f32>) -> f32

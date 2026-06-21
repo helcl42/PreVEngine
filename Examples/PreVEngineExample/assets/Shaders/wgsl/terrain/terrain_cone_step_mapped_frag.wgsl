@@ -169,7 +169,7 @@ fn sampleRelaxedConeStepMapping_0( idx_0 : u32,  heightScaleVal_1 : f32,  numLay
 fn sampleNormalMap_0( idx_1 : u32,  uv_1 : vec2<f32>,  ddxUV_1 : vec2<f32>,  ddyUV_1 : vec2<f32>) -> vec3<f32>
 {
     var _S10 : vec3<f32> = vec3<f32>(uv_1, f32(idx_1));
-    return normalize(vec3<f32>(2.0f) * normalize((textureSampleGrad((normalTextures_0), (normalSampler_0), ((_S10)).xy, i32(((_S10)).z), (ddxUV_1), (ddyUV_1))).xyz) - vec3<f32>(1.0f));
+    return normalize(vec3<f32>(2.0f) * (textureSampleGrad((normalTextures_0), (normalSampler_0), ((_S10)).xy, i32(((_S10)).z), (ddxUV_1), (ddyUV_1))).xyz - vec3<f32>(1.0f));
 }
 
 fn sampleColorTextureGrad_0( idx_2 : u32,  uv_2 : vec2<f32>,  ddxUV_2 : vec2<f32>,  ddyUV_2 : vec2<f32>) -> vec4<f32>
@@ -355,7 +355,7 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
     {
         discard;
     }
-    var _S25 : vec3<f32> = normalize(_S23.positionTangentSpace_0);
+    var _S25 : vec3<f32> = normalize(_S23.positionTangentSpace_0 - _S23.toCameraVectorTangentSpace_0);
     var _S26 : f32 = (_S23.worldPosition_0.y + abs(uboFS_0.minHeight_0)) / (abs(uboFS_0.maxHeight_0) + abs(uboFS_0.minHeight_0));
     const _S27 : vec4<f32> = vec4<f32>(1.0f, 1.0f, 1.0f, 1.0f);
     var _S28 : vec2<f32> = dpdx(_S23.textureCoord_0);
@@ -410,17 +410,18 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                 }
                 else
                 {
-                    totalDiffuse_0 = _S23.normal_2;
-                    totalSpecular_0 = _S23.normal_2;
+                    const _S34 : vec3<f32> = vec3<f32>(0.0f, 0.0f, 1.0f);
+                    totalDiffuse_0 = _S34;
+                    totalSpecular_0 = _S34;
                 }
-                var _S34 : u32 = i_2 + u32(1);
-                var _S35 : vec4<f32> = mix(sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29), sampleColorTextureGrad_0(_S34, uv2_0, _S28, _S29), vec4<f32>(ratio_0));
-                var _S36 : f32 = mix(uboFS_0.material_0.data_3[i_2].shineDamper_0, uboFS_0.material_0.data_3[_S34].shineDamper_0, ratio_0);
-                var _S37 : f32 = mix(uboFS_0.material_0.data_3[i_2].reflectivity_0, uboFS_0.material_0.data_3[_S34].reflectivity_0, ratio_0);
-                normal_3 = mix(totalDiffuse_0, totalSpecular_0, vec3<f32>(ratio_0));
-                shineDamper_2 = _S36;
-                reflectivity_2 = _S37;
-                textureColor_0 = _S35;
+                var _S35 : u32 = i_2 + u32(1);
+                var _S36 : vec4<f32> = mix(sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29), sampleColorTextureGrad_0(_S35, uv2_0, _S28, _S29), vec4<f32>(ratio_0));
+                var _S37 : f32 = mix(uboFS_0.material_0.data_3[i_2].shineDamper_0, uboFS_0.material_0.data_3[_S35].shineDamper_0, ratio_0);
+                var _S38 : f32 = mix(uboFS_0.material_0.data_3[i_2].reflectivity_0, uboFS_0.material_0.data_3[_S35].reflectivity_0, ratio_0);
+                normal_3 = normalize(mix(totalDiffuse_0, totalSpecular_0, vec3<f32>(ratio_0)));
+                shineDamper_2 = _S37;
+                reflectivity_2 = _S38;
+                textureColor_0 = _S36;
                 break;
             }
             else
@@ -441,12 +442,12 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                     }
                     else
                     {
-                        normal_3 = _S23.normal_2;
+                        normal_3 = vec3<f32>(0.0f, 0.0f, 1.0f);
                     }
-                    var _S38 : vec4<f32> = sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29);
+                    var _S39 : vec4<f32> = sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29);
                     shineDamper_2 = uboFS_0.material_0.data_3[i_2].shineDamper_0;
                     reflectivity_2 = uboFS_0.material_0.data_3[i_2].reflectivity_0;
-                    textureColor_0 = _S38;
+                    textureColor_0 = _S39;
                     break;
                 }
             }
@@ -467,13 +468,13 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
             }
             else
             {
-                totalDiffuse_0 = _S23.normal_2;
+                totalDiffuse_0 = vec3<f32>(0.0f, 0.0f, 1.0f);
             }
-            var _S39 : vec4<f32> = sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29);
+            var _S40 : vec4<f32> = sampleColorTextureGrad_0(i_2, uv1_0, _S28, _S29);
             normal_3 = totalDiffuse_0;
             shineDamper_2 = uboFS_0.material_0.data_3[i_2].shineDamper_0;
             reflectivity_2 = uboFS_0.material_0.data_3[i_2].reflectivity_0;
-            textureColor_0 = _S39;
+            textureColor_0 = _S40;
         }
         i_2 = i_2 + u32(1);
     }
@@ -486,11 +487,11 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
     {
         shadow_2 = 1.0f;
     }
-    var _S40 : vec3<f32> = normalize(_S23.toCameraVectorTangentSpace_0 - _S23.positionTangentSpace_0);
-    const _S41 : vec3<f32> = vec3<f32>(0.0f, 0.0f, 0.0f);
+    var _S41 : vec3<f32> = normalize(_S23.toCameraVectorTangentSpace_0 - _S23.positionTangentSpace_0);
+    const _S42 : vec3<f32> = vec3<f32>(0.0f, 0.0f, 0.0f);
     var j_1 : u32 = u32(0);
-    totalDiffuse_0 = _S41;
-    totalSpecular_0 = _S41;
+    totalDiffuse_0 = _S42;
+    totalSpecular_0 = _S42;
     for(;;)
     {
         if(j_1 < (uboFS_0.lightning_0.realCountOfLights_0))
@@ -503,9 +504,9 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
         var toLightVector_3 : vec3<f32> = _S24[j_1] - _S23.positionTangentSpace_0;
         var unitToLightVector_0 : vec3<f32> = normalize(toLightVector_3);
         var attenuationFactor_2 : f32 = GetAttenuationFactor_0(uboFS_0.lightning_0.lights_0.data_2[j_1].attenuation_0.xyz, toLightVector_3);
-        var _S42 : vec3<f32> = uboFS_0.lightning_0.lights_0.data_2[j_1].color_0.xyz;
-        var totalDiffuse_1 : vec3<f32> = totalDiffuse_0 + GetDiffuseColor_0(normal_3, unitToLightVector_0, _S42, attenuationFactor_2);
-        var totalSpecular_1 : vec3<f32> = totalSpecular_0 + GetSpecularColor_0(normal_3, unitToLightVector_0, _S40, _S42, attenuationFactor_2, shineDamper_2, reflectivity_2);
+        var _S43 : vec3<f32> = uboFS_0.lightning_0.lights_0.data_2[j_1].color_0.xyz;
+        var totalDiffuse_1 : vec3<f32> = totalDiffuse_0 + GetDiffuseColor_0(normal_3, unitToLightVector_0, _S43, attenuationFactor_2);
+        var totalSpecular_1 : vec3<f32> = totalSpecular_0 + GetSpecularColor_0(normal_3, unitToLightVector_0, _S41, _S43, attenuationFactor_2, shineDamper_2, reflectivity_2);
         j_1 = j_1 + u32(1);
         totalDiffuse_0 = totalDiffuse_1;
         totalSpecular_0 = totalSpecular_1;
@@ -520,7 +521,7 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
     {
         resultColor_1 = resultColor_0;
     }
-    var _S43 : pixelOutput_0 = pixelOutput_0( resultColor_1 );
-    return _S43;
+    var _S44 : pixelOutput_0 = pixelOutput_0( resultColor_1 );
+    return _S44;
 }
 

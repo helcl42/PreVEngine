@@ -1,7 +1,7 @@
 #ifndef __HEIGHT_GENERATOR_H__
 #define __HEIGHT_GENERATOR_H__
 
-#include "PerlinNoiseGenerator.h"
+#include "NoiseGenerator.h"
 
 #include <memory>
 
@@ -22,14 +22,14 @@ private:
 
     inline static const int OCTAVES{ 4 };
 
-    inline static const float ROUGHNESS{ 0.1f };
+    inline static const float ROUGHNESS{ 0.2f };
 
 private:
     const int m_xOffset;
 
     const int m_zOffset;
 
-    const std::unique_ptr<PerlinNoiseGenerator> m_noiseGenerator;
+    const std::unique_ptr<NoiseGenerator> m_noiseGenerator;
 };
 } // namespace prev_test::component::terrain
 

@@ -103,20 +103,15 @@ Interpolants vertexMain(VertexInput input
     output.normal = mul(uboVS.normalMatrix, float4(input.normal, 0.0)).xyz;
     output.visibility = GetVisibility(viewPosition.xyz, uboVS.gradient, uboVS.density);
 
-    float3x3 mv3 = (float3x3)mul(uboVS.viewMatrices[viewIndex], uboVS.modelMatrix);
-    float3x3 TBN = CreateTBNMatrix(mv3, input.normal, input.tangent, input.biTangent);
+    float3x3 TBN = CreateTBNMatrix((float3x3)uboVS.modelMatrix, input.normal, input.tangent, input.biTangent);
 
-    float4 cameraPositionViewSpace4 = mul(uboVS.viewMatrices[viewIndex], float4(uboVS.cameraPositions[viewIndex].xyz, 1.0));
-    float3 cameraPositionViewSpace = cameraPositionViewSpace4.xyz / cameraPositionViewSpace4.w;
-
-    output.toCameraVectorTangentSpace = mul(TBN, cameraPositionViewSpace);
-    output.positionTangentSpace = mul(TBN, viewPosition.xyz);
+    output.toCameraVectorTangentSpace = mul(TBN, uboVS.cameraPositions[viewIndex].xyz);
+    output.positionTangentSpace = mul(TBN, worldPosition.xyz);
 
     float3 toLightVectors[4];
     for (int i = 0; i < (int)uboVS.lightning.realCountOfLights; i++)
     {
-        float3 lightPosViewSpace = mul(uboVS.viewMatrices[viewIndex], float4(uboVS.lightning.lights[i].position.xyz, 1.0)).xyz;
-        toLightVectors[i] = mul(TBN, lightPosViewSpace);
+        toLightVectors[i] = mul(TBN, uboVS.lightning.lights[i].position.xyz);
     }
 
     output.toLightVectorTangentSpace0 = toLightVectors[0];
@@ -194,7 +189,7 @@ float4 sampleColorTextureGrad(uint idx, float2 uv, float2 ddxUV, float2 ddyUV)
 float3 sampleNormalMap(uint idx, float2 uv, float2 ddxUV, float2 ddyUV)
 {
     float3 n = normalTextures.SampleGrad(normalSampler, float3(uv, (float)idx), ddxUV, ddyUV).xyz;
-    return normalize(2.0 * normalize(n) - 1.0);
+    return normalize(2.0 * n - 1.0);
 }
 
 [shader("fragment")]
@@ -206,7 +201,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
         discard;
     }
 
-    float3 rayDirection = normalize(input.positionTangentSpace);
+    float3 rayDirection = normalize(input.positionTangentSpace - input.toCameraVectorTangentSpace);
 
     float heightRange = abs(uboFS.maxHeight) + abs(uboFS.minHeight);
     float normalizedHeight = (input.worldPosition.y + abs(uboFS.minHeight)) / heightRange;
@@ -248,10 +243,10 @@ float4 fragmentMain(Interpolants input) : SV_Target
                 }
                 else
                 {
-                    normal1 = input.normal;
-                    normal2 = input.normal;
+                    normal1 = float3(0.0, 0.0, 1.0);
+                    normal2 = float3(0.0, 0.0, 1.0);
                 }
-                normal = lerp(normal1, normal2, ratio);
+                normal = normalize(lerp(normal1, normal2, ratio));
 
                 float4 color1 = sampleColorTextureGrad(i, uv1, ddxTC, ddyTC);
                 float4 color2 = sampleColorTextureGrad(i + 1, uv2, ddxTC, ddyTC);
@@ -264,7 +259,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
             else if (normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
             {
                 float2 uv = uboFS.hasConeMap != 0 ? sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
-                normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : input.normal;
+                normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
                 textureColor = sampleColorTextureGrad(i, uv, ddxTC, ddyTC);
                 shineDamper = uboFS.material[i].shineDamper;
                 reflectivity = uboFS.material[i].reflectivity;
@@ -274,7 +269,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
         else
         {
             float2 uv = uboFS.hasConeMap != 0 ? sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
-            normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : input.normal;
+            normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
             textureColor = sampleColorTextureGrad(i, uv, ddxTC, ddyTC);
             shineDamper = uboFS.material[i].shineDamper;
             reflectivity = uboFS.material[i].reflectivity;

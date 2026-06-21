@@ -119,7 +119,7 @@ Interpolants vertexMain(VertexInput input
 float3 sampleNormalMap(uint idx, float2 uv, float2 ddxUV, float2 ddyUV)
 {
     float3 n = normalTextures.SampleGrad(normalSampler, float3(uv, (float)idx), ddxUV, ddyUV).xyz;
-    return normalize(2.0 * normalize(n) - 1.0);
+    return normalize(2.0 * n - 1.0);
 }
 
 [shader("fragment")]
@@ -154,9 +154,9 @@ float4 fragmentMain(Interpolants input) : SV_Target
                 float4 color2 = colorTextures.SampleGrad(colorSampler, float3(input.textureCoord, (float)(i + 1)), ddxTC, ddyTC);
                 textureColor = lerp(color1, color2, ratio);
 
-                float3 normal1 = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, input.textureCoord, ddxTC, ddyTC) : input.normal;
-                float3 normal2 = uboFS.hasNormalMap != 0 ? sampleNormalMap(i + 1, input.textureCoord, ddxTC, ddyTC) : input.normal;
-                normal = lerp(normal1, normal2, ratio);
+                float3 normal1 = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, input.textureCoord, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
+                float3 normal2 = uboFS.hasNormalMap != 0 ? sampleNormalMap(i + 1, input.textureCoord, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
+                normal = normalize(lerp(normal1, normal2, ratio));
 
                 shineDamper = lerp(uboFS.material[i].shineDamper, uboFS.material[i + 1].shineDamper, ratio);
                 reflectivity = lerp(uboFS.material[i].reflectivity, uboFS.material[i + 1].reflectivity, ratio);

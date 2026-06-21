@@ -4,14 +4,14 @@ namespace prev_test::component::terrain {
 HeightGenerator::HeightGenerator()
     : m_xOffset(0)
     , m_zOffset(0)
-    , m_noiseGenerator(std::make_unique<PerlinNoiseGenerator>())
+    , m_noiseGenerator(std::make_unique<NoiseGenerator>())
 {
 }
 
 HeightGenerator::HeightGenerator(const int x, const int z, const int size, const unsigned int seed)
     : m_xOffset(x * (size - 1))
     , m_zOffset(z * (size - 1))
-    , m_noiseGenerator(std::make_unique<PerlinNoiseGenerator>(seed))
+    , m_noiseGenerator(std::make_unique<NoiseGenerator>(seed))
 {
 }
 

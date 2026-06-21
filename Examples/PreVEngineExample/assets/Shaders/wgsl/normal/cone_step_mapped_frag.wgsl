@@ -225,7 +225,7 @@ fn GetShadowSingle_0( depthTexture_3 : texture_2d_array<f32>,  depthSampler_3 : 
 
 fn NormalMappingGrad_0( normalMapTexture_0 : texture_2d<f32>,  normalMapSampler_0 : sampler,  uv_1 : vec2<f32>,  ddxUV_1 : vec2<f32>,  ddyUV_1 : vec2<f32>) -> vec3<f32>
 {
-    return normalize(vec3<f32>(2.0f) * normalize((textureSampleGrad((normalMapTexture_0), (normalMapSampler_0), (uv_1), (ddxUV_1), (ddyUV_1))).xyz) - vec3<f32>(1.0f));
+    return normalize(vec3<f32>(2.0f) * (textureSampleGrad((normalMapTexture_0), (normalMapSampler_0), (uv_1), (ddxUV_1), (ddyUV_1))).xyz - vec3<f32>(1.0f));
 }
 
 fn GetAttenuationFactor_0( attenuation_1 : vec3<f32>,  toLightVector_0 : vec3<f32>) -> f32
@@ -337,7 +337,7 @@ fn fragmentMain( _S19 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
     }
     var ddxTC_0 : vec2<f32> = dpdx(_S19.textureCoord_0);
     var ddyTC_0 : vec2<f32> = dpdy(_S19.textureCoord_0);
-    var rayDirection_0 : vec3<f32> = normalize(_S19.positionTangentSpace_0);
+    var rayDirection_0 : vec3<f32> = normalize(_S19.positionTangentSpace_0 - _S19.toCameraVectorTangentSpace_0);
     var uv_2 : vec2<f32>;
     if((uboFS_0.hasConeMap_0) != u32(0))
     {
