@@ -127,8 +127,12 @@ namespace string {
 
     std::vector<std::string> Split(const std::string& s, const std::string& t)
     {
-        std::string copy{ s };
         std::vector<std::string> res;
+        if (t.empty()) {
+            res.push_back(s);
+            return res;
+        }
+        std::string copy{ s };
         while (true) {
             size_t pos = copy.find(t);
             if (pos == std::string::npos) {
@@ -136,23 +140,27 @@ namespace string {
                 break;
             }
             res.push_back(copy.substr(0, pos));
-            copy = copy.substr(pos + 1, copy.size() - pos - 1);
+            copy = copy.substr(pos + t.length()); // advance past the whole delimiter, not one char
         }
         return res;
     }
 
     std::vector<std::wstring> Split(const std::wstring& s, const std::wstring& t)
     {
-        std::wstring copy{ s };
         std::vector<std::wstring> res;
+        if (t.empty()) {
+            res.push_back(s); // no delimiter to split on
+            return res;
+        }
+        std::wstring copy{ s };
         while (true) {
             size_t pos = copy.find(t);
-            if (pos == std::string::npos) {
+            if (pos == std::wstring::npos) {
                 res.push_back(copy);
                 break;
             }
             res.push_back(copy.substr(0, pos));
-            copy = copy.substr(pos + 1, copy.size() - pos - 1);
+            copy = copy.substr(pos + t.length()); // advance past the whole delimiter, not one char
         }
         return res;
     }
