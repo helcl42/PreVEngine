@@ -101,7 +101,7 @@ private:
     prev::event::EventHandler<EngineImpl, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
 
 protected:
-    const Config& m_config;
+    Config m_config;
 
     std::unique_ptr<prev::util::Clock<float>> m_clock{};
 
