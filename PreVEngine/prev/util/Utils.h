@@ -118,34 +118,50 @@ class CircularQueue {
 public:
     bool IsEmpty() const
     {
-        return m_head == m_tail;
+        return m_count == 0;
+    }
+
+    bool IsFull() const
+    {
+        return m_count == Size;
     }
 
     void Push(const Type& item)
     {
-        m_head = ++m_head % Size;
         m_buffer[m_head] = item;
+        m_head = (m_head + 1) % Size;
+        if (m_count == Size) {
+            // Full: drop the oldest entry instead of corrupting the head/tail invariant
+            m_tail = (m_tail + 1) % Size;
+        } else {
+            ++m_count;
+        }
     }
 
     Type& Pop()
     {
-        m_tail = ++m_tail % Size;
-        return m_buffer[m_tail];
+        Type& item{ m_buffer[m_tail] };
+        m_tail = (m_tail + 1) % Size;
+        --m_count;
+        return item;
     }
 
     void Clear()
     {
-        for (int i = 0; i < Size; ++i) {
+        for (size_t i = 0; i < Size; ++i) {
             m_buffer[i] = {};
         }
         m_head = 0;
         m_tail = 0;
+        m_count = 0;
     }
 
 private:
-    uint32_t m_head{};
+    size_t m_head{};
 
-    uint32_t m_tail{};
+    size_t m_tail{};
+
+    size_t m_count{};
 
     Type m_buffer[Size] = {};
 };
