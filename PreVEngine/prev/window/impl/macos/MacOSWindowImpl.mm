@@ -136,7 +136,6 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 
 MacOSWindowImpl::~MacOSWindowImpl()
 {
-
     m_state.reset();
 }
 
@@ -301,8 +300,8 @@ void MacOSWindowImpl::SetPosition(int32_t x, int32_t y)
     NSPoint point = NSMakePoint(x, y);
     NSPoint screenPoint = [m_state->window convertPointToScreen:point];
     [m_state->window setFrameOrigin:screenPoint];
-    
-    OnMoveEvent(x, y);
+
+    m_eventQueue.Push(OnMoveEvent(x, y));
 }
 
 void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
@@ -317,8 +316,9 @@ void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
     
     NSSize newSize = NSMakeSize(w, h);
     [m_state->window setContentSize:newSize];
-    
-    OnResizeEvent(w, h);
+
+    NSSize backingSize = [m_state->view convertSizeToBacking:[[m_state->window contentView] frame].size];
+    m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(backingSize.width), static_cast<uint32_t>(backingSize.height)));
 }
 
 void MacOSWindowImpl::SetMouseCursorVisible(bool visible)
