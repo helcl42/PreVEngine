@@ -3,6 +3,7 @@
 #include "../../common/Logger.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace prev::render::shader {
 Shader::Shader(GfxDevice device,
@@ -67,6 +68,10 @@ bool Shader::AdjustBindGroupCapacity(uint32_t size)
 
 GfxBindGroup Shader::UpdateNextBindGroup()
 {
+    if (m_poolCapacity == 0) {
+        throw std::runtime_error("Shader::UpdateNextBindGroup: no bind-group capacity. Call ShaderBuilder::SetBindGroupCapacity(n) (n >= frames-in-flight) before Build().");
+    }
+
     CheckBindings();
 
     // Gather entries sorted by binding index (one entry per array element, addressed via arrayElement)
