@@ -60,23 +60,14 @@ Buffer& FrameScopedBufferPool::Next()
     return slice;
 }
 
-void FrameScopedBufferPool::TrimRegion(FrameRegion& region)
-{
-    // Free chunk allocations beyond what this frame used. Those chunks were only ever touched by a
-    // prior use of this frame index, which is fenced-complete, and aren't referenced by this frame.
-    const uint32_t neededChunks{ (region.cursor + m_chunkCount - 1) / m_chunkCount };
-    const size_t keepSlices{ static_cast<size_t>(neededChunks) * m_chunkCount };
-    if (region.slices.size() > keepSlices) {
-        region.slices.erase(region.slices.begin() + keepSlices, region.slices.end()); // drop slices first (Buffer has no default ctor, so erase not resize)
-        region.backings.resize(neededChunks); // then release those chunk allocations
-    }
-}
-
 void FrameScopedBufferPool::EndFrame()
 {
-    if (m_currentFrame >= m_frames.size()) {
-        return;
-    }
-    TrimRegion(m_frames[m_currentFrame]);
+    // Intentionally does NOT release any backing buffers. Destroying an owning Buffer calls
+    // gfxQueueWaitIdle (Buffer::~Buffer); doing that here would stall mid-frame — between the
+    // swapchain image acquire and the submit — and on WebGPU/Emscripten gfxQueueWaitIdle yields
+    // control back to the browser, which presents and destroys the in-flight swapchain texture.
+    // The next submit then references a destroyed texture ("... used in a submit"). So the pool
+    // keeps its high-water-mark backings: each frame index's region is rewound and reused in
+    // BeginFrame(), never trimmed, and is only freed when the pool itself is destroyed.
 }
 } // namespace prev::render::buffer

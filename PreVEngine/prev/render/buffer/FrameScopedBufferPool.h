@@ -14,14 +14,15 @@ namespace prev::render::buffer {
 class BufferPoolBuilder;
 
 // A buffer pool with one grow-on-demand slice region per frame-in-flight index. It is a per-frame
-// linear allocator: BeginFrame() rewinds the region, Next() bumps to the following slice, EndFrame()
-// trims the tail. Usage per frame:
+// linear allocator: BeginFrame() rewinds the region, Next() bumps to the following slice. Usage:
 //   pool.BeginFrame(frameInFlightIndex);   // rewind this frame's region (its prior use is fenced)
 //   auto& slice = pool.Next();             // once per draw; grows the region as needed
-//   pool.EndFrame();                       // optional: free chunks the frame didn't use
+//   pool.EndFrame();                       // no-op; the pool never frees backings mid-run
 // Because reuse of a frame index is fenced by the swapchain, a slice is never handed out while the
-// GPU might still be reading it — so the pool needs no fixed pre-sizing. The reference returned by
-// Next() is valid until the next Next()/BeginFrame()/EndFrame() call.
+// GPU might still be reading it — so the pool needs no fixed pre-sizing. The pool grows to its
+// high-water mark and only frees backings on destruction: freeing a buffer mid-frame would stall
+// the queue (Buffer::~Buffer), which on WebGPU yields to the browser and destroys the in-flight
+// swapchain texture. The reference returned by Next() is valid until the next Next()/BeginFrame().
 class FrameScopedBufferPool final {
 private:
     FrameScopedBufferPool(const prev::core::device::Device& device, const prev::core::device::Queue& queue,
@@ -50,8 +51,6 @@ private:
     };
 
     void GrowRegion(FrameRegion& region); // append a chunk of slices (on demand in Next())
-
-    void TrimRegion(FrameRegion& region); // release chunks beyond what the frame used (in EndFrame())
 
 private:
     const prev::core::device::Device& m_device;
