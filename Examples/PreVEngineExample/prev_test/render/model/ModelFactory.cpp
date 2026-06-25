@@ -10,23 +10,23 @@ ModelFactory::ModelFactory(const prev::core::device::Device& device)
 {
 }
 
-std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh) const
+std::unique_ptr<prev_test::render::IModel> ModelFactory::Create(const std::shared_ptr<IMesh>& mesh, bool async) const
 {
     const uint64_t verticesDataSize{ mesh->GetVertexLayout().GetStride() * mesh->GerVerticesCount() };
-    auto vertexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                            .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_COPY_DST)
-                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
-                            .SetSize(verticesDataSize)
-                            .SetData(mesh->GetVertexData(), verticesDataSize)
-                            .Build();
+    auto vertexBuilder = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                             .SetUsageFlags(GFX_BUFFER_USAGE_VERTEX | GFX_BUFFER_USAGE_COPY_DST)
+                             .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
+                             .SetSize(verticesDataSize)
+                             .SetData(mesh->GetVertexData(), verticesDataSize);
+    auto vertexBuffer = async ? vertexBuilder.BuildAsync() : vertexBuilder.Build();
 
     const uint64_t indidesDataSize{ sizeof(uint32_t) * mesh->GetIndicesCount() };
-    auto indexBuffer = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                           .SetUsageFlags(GFX_BUFFER_USAGE_INDEX | GFX_BUFFER_USAGE_COPY_DST)
-                           .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
-                           .SetSize(indidesDataSize)
-                           .SetData(mesh->GetIndices().data(), indidesDataSize)
-                           .Build();
+    auto indexBuilder = prev::render::buffer::BufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                            .SetUsageFlags(GFX_BUFFER_USAGE_INDEX | GFX_BUFFER_USAGE_COPY_DST)
+                            .SetMemoryProperties(GFX_MEMORY_PROPERTY_DEVICE_LOCAL)
+                            .SetSize(indidesDataSize)
+                            .SetData(mesh->GetIndices().data(), indidesDataSize);
+    auto indexBuffer = async ? indexBuilder.BuildAsync() : indexBuilder.Build();
 
     return std::make_unique<prev_test::render::model::Model>(mesh, std::move(vertexBuffer), std::move(indexBuffer));
 }

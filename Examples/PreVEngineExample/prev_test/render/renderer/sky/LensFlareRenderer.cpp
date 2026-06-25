@@ -107,6 +107,10 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
     }
 
     const auto lensFlareComponent{ prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ILensFlareComponent>(node) };
+    if (!lensFlareComponent->IsReady()) {
+        return;
+    }
+
     const auto lightComponent{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
 
     std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];

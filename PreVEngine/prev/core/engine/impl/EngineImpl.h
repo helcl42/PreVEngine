@@ -4,6 +4,8 @@
 #include "../Config.h"
 
 #include "../../Core.h"
+#include "../../DeferredResourceDestroyer.h"
+#include "../../DeferredResourceUploader.h"
 #include "../../device/Device.h"
 #include "../../instance/Instance.h"
 
@@ -36,6 +38,10 @@ public:
     prev::render::pass::RenderPass& GetRenderPass() const;
 
     prev::core::device::Device& GetDevice() const;
+
+    prev::core::DeferredResourceDestroyer& GetDeferredResourceDestroyer();
+
+    prev::core::DeferredResourceUploader& GetDeferredResourceUploader();
 
     const Config& GetConfig() const;
 

@@ -7,8 +7,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device)
+LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, bool async)
     : m_device{ device }
+    , m_async{ async }
 {
 }
 
@@ -35,7 +36,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{ m_device };
-    auto model{ modelFactory.Create(std::move(mesh)) };
+    auto model{ modelFactory.Create(std::move(mesh), m_async) };
 
     prev_test::render::material::MaterialFactory materialFactory{ m_device };
 
@@ -43,7 +44,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     std::vector<Flare> flares{};
     for (const auto& flareCreateInfo : flareCreateInfos) {
         const prev_test::render::MaterialProperties flareMaterialProperties{ { 1.0f, 1.0f, 1.0f, 1.0f }, 1.0f, 1.0f };
-        materials.emplace_back(materialFactory.Create(flareMaterialProperties, flareCreateInfo.path));
+        materials.emplace_back(materialFactory.Create(flareMaterialProperties, flareCreateInfo.path, m_async));
         flares.emplace_back(Flare{ flareCreateInfo.scale });
     }
 

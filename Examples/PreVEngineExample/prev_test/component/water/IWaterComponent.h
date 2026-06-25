@@ -13,6 +13,8 @@ public:
 
     virtual std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual void Update(float deltaTime) = 0;
 
     virtual float GetMoveFactor() const = 0;

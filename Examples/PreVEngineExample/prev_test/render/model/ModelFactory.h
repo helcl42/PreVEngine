@@ -13,7 +13,7 @@ public:
     ~ModelFactory() = default;
 
 public:
-    std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh) const;
+    std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh, bool async = false) const;
 
     std::unique_ptr<prev_test::render::IModel> Create(const std::shared_ptr<IMesh>& mesh, const std::shared_ptr<prev::render::buffer::Buffer>& vertexBuffer, const std::shared_ptr<prev::render::buffer::Buffer>& indexBuffer) const;
 

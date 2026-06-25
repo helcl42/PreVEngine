@@ -115,12 +115,16 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
         return;
     }
 
+    const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
+    if (!particlesComponent->IsReady()) {
+        return;
+    }
+
     const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
     gfxRenderPassEncoderSetPipeline(renderContext.renderPassEncoder, *m_pipeline);
     gfxRenderPassEncoderSetViewport(renderContext.renderPassEncoder, &viewport);
     gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
-    const auto particlesComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::particle::IParticleSystemComponent>(node);
 
     auto& uboVS = m_uniformsPoolVS->Next();
 

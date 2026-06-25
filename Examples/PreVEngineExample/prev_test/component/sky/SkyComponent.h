@@ -14,6 +14,8 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const override;
 
+    bool IsReady() const override;
+
     const glm::vec3& GetBottomColor() const override;
 
     const glm::vec3& GetTopColor() const override;

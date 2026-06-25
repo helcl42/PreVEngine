@@ -22,4 +22,9 @@ std::shared_ptr<prev::render::buffer::Buffer> Model::GetIndexBuffer() const
 {
     return m_ibo;
 }
+
+bool Model::IsReady() const
+{
+    return (!m_vbo || m_vbo->IsReady()) && (!m_ibo || m_ibo->IsReady());
+}
 } // namespace prev_test::render::model

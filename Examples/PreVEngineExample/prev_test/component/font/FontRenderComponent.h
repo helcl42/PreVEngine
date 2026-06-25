@@ -33,6 +33,22 @@ public:
         return m_fontMetaData;
     }
 
+    bool IsReady() const override
+    {
+        if (m_fontMetaData) {
+            const auto imageBuffer{ m_fontMetaData->GetImageBuffer() };
+            if (imageBuffer && !imageBuffer->IsReady()) {
+                return false;
+            }
+        }
+        for (const auto& [key, renderableText] : m_renderableTexts) {
+            if (renderableText.model && !renderableText.model->IsReady()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void AddText(const uint32_t key, const std::shared_ptr<TextType>& text) override
     {
         prev_test::render::model::ModelFactory modelFactory{ m_device };

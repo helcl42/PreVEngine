@@ -167,6 +167,9 @@ void AnimationConeStepMappedRenderer::Render(const NormalRenderContext& renderCo
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto nodeRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::render::IAnimationRenderComponent>(node);
+    if (!nodeRenderComponent->IsReady()) {
+        return;
+    }
 
     std::function<void(const prev_test::render::MeshNode&)> RenderMeshNode = [&](const prev_test::render::MeshNode& meshNode) {
         const auto model = nodeRenderComponent->GetModel();

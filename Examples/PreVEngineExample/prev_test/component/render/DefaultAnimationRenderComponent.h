@@ -21,6 +21,8 @@ public:
 
     bool IsCastedByShadows() const override;
 
+    bool IsReady() const override;
+
     std::shared_ptr<prev_test::render::IAnimation> GetAnimation(const uint32_t index = 0) const override;
 
     const std::vector<std::shared_ptr<prev_test::render::IAnimation>>& GetAnimations() const override;

@@ -60,6 +60,11 @@ void Engine::RunOneFrame()
 
         prev::render::swapchain::FrameContext frameContext;
         if (swapchain.BeginFrame(frameContext)) {
+            // Retire resources from this slot's previous use, then record any async uploads into the
+            // frame encoder so they precede this frame's rendering and are flagged ready.
+            m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
+            m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
+
             const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
             rootRenderer.Render(renderContext, scene);
             swapchain.EndFrame();

@@ -19,6 +19,8 @@ public:
 
     virtual bool HasImageBuffer(uint32_t index) = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual float GetShineDamper() const = 0;
 
     virtual float GetReflectivity() const = 0;

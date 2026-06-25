@@ -19,6 +19,8 @@ public:
 
     std::shared_ptr<prev::render::buffer::Buffer> GetIndexBuffer() const override;
 
+    bool IsReady() const override;
+
 private:
     std::shared_ptr<IMesh> m_mesh;
 

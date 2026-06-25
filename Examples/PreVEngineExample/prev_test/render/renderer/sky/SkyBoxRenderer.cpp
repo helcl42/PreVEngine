@@ -113,6 +113,9 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto skyBoxComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISkyBoxComponent>(node);
+    if (!skyBoxComponent->IsReady()) {
+        return;
+    }
 
     auto& uboVS = m_uniformsPoolVS->Next();
 

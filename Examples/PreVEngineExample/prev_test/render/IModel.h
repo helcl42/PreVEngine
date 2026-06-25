@@ -16,6 +16,8 @@ public:
 
     virtual std::shared_ptr<prev::render::buffer::Buffer> GetIndexBuffer() const = 0;
 
+    virtual bool IsReady() const = 0;
+
 public:
     virtual ~IModel() = default;
 };

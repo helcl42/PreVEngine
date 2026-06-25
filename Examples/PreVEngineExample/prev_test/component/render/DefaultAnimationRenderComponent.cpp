@@ -36,6 +36,19 @@ bool DefaultAnimationRenderComponent::IsCastedByShadows() const
     return m_isCastedByShadows;
 }
 
+bool DefaultAnimationRenderComponent::IsReady() const
+{
+    if (m_model && !m_model->IsReady()) {
+        return false;
+    }
+    for (const auto& material : m_materials) {
+        if (material && !material->IsReady()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::shared_ptr<prev_test::render::IAnimation> DefaultAnimationRenderComponent::GetAnimation(const uint32_t index) const
 {
     return m_animations[index];

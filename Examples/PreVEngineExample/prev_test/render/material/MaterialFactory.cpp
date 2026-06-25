@@ -53,7 +53,7 @@ namespace {
         CUBE_MAP = 1,
     };
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool generateMipMaps)
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool generateMipMaps, const bool async = false)
     {
         std::vector<const uint8_t*> layersData{};
         for (const auto& image : images) {
@@ -67,18 +67,17 @@ namespace {
             texType = GFX_TEXTURE_TYPE_CUBE;
         }
 
-        auto imageBuffer = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-                               .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
-                               .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
-                               .SetType(texType)
-                               .SetMipMapEnabled(generateMipMaps)
-                               .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
-                               .SetLayerData(layersData, static_cast<uint64_t>(images[0]->GetSize()) * images[0]->GetPixelSize())
-                               .SetLayerCount(static_cast<uint32_t>(images.size()))
-                               .SetViewType(viewType)
-                               .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
-                               .Build();
-        return imageBuffer;
+        auto builder = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                           .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
+                           .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
+                           .SetType(texType)
+                           .SetMipMapEnabled(generateMipMaps)
+                           .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                           .SetLayerData(layersData, static_cast<uint64_t>(images[0]->GetSize()) * images[0]->GetPixelSize())
+                           .SetLayerCount(static_cast<uint32_t>(images.size()))
+                           .SetViewType(viewType)
+                           .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY);
+        return async ? builder.BuildAsync() : builder.Build();
     }
 
 } // namespace
@@ -93,40 +92,40 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
     return std::make_unique<prev_test::render::material::Material>(materialProps);
 }
 
-std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath) const
+std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer });
 }
 
-std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath) const
+std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer });
 }
 
-std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath) const
+std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true, async) };
 
     auto heightImage{ CreateImage(heightMapPath) };
-    auto heightImageBuffer{ CreateImageBuffer(m_device, { heightImage }, ImageBufferViewType::REGULAR, true) };
+    auto heightImageBuffer{ CreateImageBuffer(m_device, { heightImage }, ImageBufferViewType::REGULAR, true, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer, heightImageBuffer });
 }
 
-std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths) const
+std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(const MaterialProperties& materialProps, const std::vector<std::string>& sidePaths, bool async) const
 {
     prev::render::image::ImageFactory imageFactory{};
 
@@ -135,12 +134,12 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
         images.emplace_back(imageFactory.CreateImage(faceFilePath));
     }
 
-    auto cubeMapImageBuffer{ CreateImageBuffer(m_device, images, ImageBufferViewType::CUBE_MAP, true) };
+    auto cubeMapImageBuffer{ CreateImageBuffer(m_device, images, ImageBufferViewType::CUBE_MAP, true, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ std::move(cubeMapImageBuffer) });
 }
 
-std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Create(const std::string& modelPath) const
+std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Create(const std::string& modelPath, bool async) const
 {
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> result;
 
@@ -165,7 +164,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
         for (const auto& textureType : textureTypes) {
             if (auto image = CreateModelImage(*scene, material, textureType)) {
-                imageBuffers.emplace_back(CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true));
+                imageBuffers.emplace_back(CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async));
             }
         }
 

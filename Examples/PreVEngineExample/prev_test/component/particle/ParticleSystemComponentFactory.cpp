@@ -16,8 +16,9 @@ static const inline uint32_t BufferCount{ 2 };
 
 static const inline uint32_t MaxParticleCount{ 100000 };
 
-ParticleSystemComponentFactory::ParticleSystemComponentFactory(prev::core::device::Device& device)
+ParticleSystemComponentFactory::ParticleSystemComponentFactory(prev::core::device::Device& device, bool async)
     : m_device{ device }
+    , m_async{ async }
 {
 }
 
@@ -25,14 +26,14 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 {
     prev_test::render::material::MaterialFactory materialFactory{ m_device };
 
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png")) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-ember-particles-png-4-transparent.png"), m_async) };
     material->SetAtlasNumberOfRows(8);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{ m_device };
-    auto model{ modelFactory.Create(std::move(mesh)) };
+    auto model{ modelFactory.Create(std::move(mesh), m_async) };
 
     std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {
@@ -55,14 +56,14 @@ std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::Create
 std::unique_ptr<IParticleSystemComponent> ParticleSystemComponentFactory::CreateRandomInCone(const glm::vec3& coneDirection, const float angle) const
 {
     prev_test::render::material::MaterialFactory materialFactory{ m_device };
-    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png")) };
+    std::shared_ptr<prev_test::render::IMaterial> material{ materialFactory.Create({ glm::vec4{ 1.0f }, 0.0f, 0.0f }, prev_test::common::AssetManager::Instance().GetAssetPath("Textures/fire-texture-atlas.png"), m_async) };
     material->SetAtlasNumberOfRows(4);
 
     prev_test::render::mesh::MeshFactory meshFactory{};
     auto mesh{ meshFactory.CreateQuad() };
 
     prev_test::render::model::ModelFactory modelFactory{ m_device };
-    auto model{ modelFactory.Create(std::move(mesh)) };
+    auto model{ modelFactory.Create(std::move(mesh), m_async) };
 
     std::vector<std::shared_ptr<prev::render::buffer::Buffer>> vertexBuffers(BufferCount);
     for (uint32_t i = 0; i < BufferCount; ++i) {

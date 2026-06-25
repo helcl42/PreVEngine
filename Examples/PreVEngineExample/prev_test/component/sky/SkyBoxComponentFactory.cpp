@@ -7,8 +7,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-SkyBoxComponentFactory::SkyBoxComponentFactory(prev::core::device::Device& device)
+SkyBoxComponentFactory::SkyBoxComponentFactory(prev::core::device::Device& device, bool async)
     : m_device{ device }
+    , m_async{ async }
 {
 }
 
@@ -23,9 +24,9 @@ std::unique_ptr<ISkyBoxComponent> SkyBoxComponentFactory::Create() const
         prev_test::common::AssetManager::Instance().GetAssetPath("SkyBoxes/Sky/front.png"),
     };
 
-    auto material{ prev_test::render::material::MaterialFactory{ m_device }.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f }, materialPaths) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device }.CreateCubeMap({ glm::vec4{ 1.0f }, 1.0f, 0.0f }, materialPaths, m_async) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateCube() };
-    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh)) };
+    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh), m_async) };
 
     auto skyBox = std::make_unique<SkyBoxComponent>();
     skyBox->m_model = std::move(model);

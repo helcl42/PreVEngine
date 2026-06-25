@@ -70,7 +70,7 @@ private:
     static const inline GfxFormat DEPTH_FORMAT{ GFX_FORMAT_R32_FLOAT };
 
 private:
-    void UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags = GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING);
+    void UpdateImageBufferExtents(GfxCommandEncoder commandEncoder, const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags);
     void CopyImageBuffer(const ImageBufferData& src, const ImageBufferData& dst, GfxCommandEncoder commandEncoder);
 
 private:

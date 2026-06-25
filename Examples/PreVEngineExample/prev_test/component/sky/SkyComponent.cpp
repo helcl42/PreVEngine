@@ -16,6 +16,11 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> SkyComponent::GetPerlinWorley
     return m_perlinWorleyNoiseImageBuffer;
 }
 
+bool SkyComponent::IsReady() const
+{
+    return !m_model || m_model->IsReady();
+}
+
 const glm::vec3& SkyComponent::GetBottomColor() const
 {
     return m_bottomColor;

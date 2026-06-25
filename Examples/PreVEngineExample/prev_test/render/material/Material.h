@@ -19,6 +19,8 @@ public:
 
     bool HasImageBuffer(uint32_t index) override;
 
+    bool IsReady() const override;
+
     float GetShineDamper() const override;
 
     float GetReflectivity() const override;

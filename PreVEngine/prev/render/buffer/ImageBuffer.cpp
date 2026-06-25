@@ -1,5 +1,11 @@
 #include "ImageBuffer.h"
 
+#include "../../core/DeferredResourceDestroyer.h"
+
+#include <cassert>
+#include <memory>
+#include <utility>
+
 namespace prev::render::buffer {
 namespace {
     // Deduce appropriate pipeline stage and access mask for a given texture layout.
@@ -48,20 +54,84 @@ namespace {
             break;
         }
     }
+
+    // Owns a texture and its view, destroying both when it dies. Handed to the deferred resource
+    // manager so the GPU handles outlive any in-flight work that still references them.
+    class OwnedGfxTexture final {
+    public:
+        OwnedGfxTexture(ImageBufferView&& view, GfxTexture texture)
+            : m_view{ std::move(view) }
+            , m_texture{ texture }
+        {
+        }
+        OwnedGfxTexture(const OwnedGfxTexture&) = delete;
+        OwnedGfxTexture& operator=(const OwnedGfxTexture&) = delete;
+        ~OwnedGfxTexture()
+        {
+            // m_view's destructor releases the texture view; destroy the texture itself here.
+            if (m_texture) {
+                gfxTextureDestroy(m_texture);
+            }
+        }
+
+    private:
+        ImageBufferView m_view;
+        GfxTexture m_texture{};
+    };
 } // namespace
 
-ImageBuffer::ImageBuffer(GfxDevice device, GfxQueue queue)
+ImageBuffer::ImageBuffer(GfxDevice device, GfxQueue queue, CreateInfo&& createInfo)
     : m_device{ device }
     , m_queue{ queue }
+    , m_extent{ createInfo.extent }
+    , m_format{ createInfo.format }
+    , m_texture{ createInfo.texture }
+    , m_view{ std::move(createInfo.view) }
+    , m_type{ createInfo.type }
+    , m_viewType{ createInfo.viewType }
+    , m_samplesCount{ createInfo.sampleCount }
+    , m_mipLevels{ createInfo.mipLevels }
+    , m_layerCount{ createInfo.layerCount }
+    , m_usageFlags{ createInfo.usageFlags }
+    , m_layout{ createInfo.layout }
+    , m_deferredResourceDestroyer{ createInfo.deferredResourceDestroyer }
+    , m_destroyExecutionMode{ createInfo.destroyExecutionMode }
+    , m_state{ createInfo.stateFlag ? createInfo.stateFlag : std::make_shared<std::atomic<prev::core::ResourceState>>(prev::core::ResourceState::Ready) }
 {
+    assert(m_deferredResourceDestroyer && "ImageBuffer requires a deferred resource destroyer");
+}
+
+bool ImageBuffer::IsDeferred() const
+{
+    if (m_destroyExecutionMode == ExecutionMode::Immediate) {
+        return false;
+    }
+    return m_deferredResourceDestroyer->IsActive();
+}
+
+prev::core::ResourceState ImageBuffer::GetState() const
+{
+    return m_state->load();
 }
 
 ImageBuffer::~ImageBuffer()
 {
-    gfxQueueWaitIdle(m_queue);
-    m_view = ImageBufferView{ nullptr };
-    if (m_texture) {
-        gfxTextureDestroy(m_texture);
+    // Cancel a still-pending async upload: the uploader checks this at flush and skips a destroyed
+    // resource instead of recording work for it / touching it.
+    if (m_state && m_state->load() == prev::core::ResourceState::Creating) {
+        m_state->store(prev::core::ResourceState::Destroying);
+    }
+
+    // Move the GPU handles into an owner that destroys them. When a deferred manager is active, hand
+    // it over so destruction happens after any in-flight work; otherwise wait for the queue to drain
+    // and let the owner destroy them here as it leaves scope.
+    auto handles{ std::make_unique<OwnedGfxTexture>(std::move(m_view), m_texture) };
+    m_texture = nullptr;
+
+    if (IsDeferred()) {
+        m_deferredResourceDestroyer->Destroy(std::move(handles));
+    } else {
+        gfxQueueWaitIdle(m_queue);
     }
 }
 

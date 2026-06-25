@@ -1,6 +1,8 @@
 ﻿#include "Device.h"
 
 #include "../../common/Logger.h"
+#include "../DeferredResourceDestroyer.h"
+#include "../DeferredResourceUploader.h"
 
 #include <algorithm>
 #include <iterator>
@@ -12,6 +14,8 @@ Device::Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, 
     , m_handle{ handle }
     , m_queues{ std::move(queues) }
     , m_enabledExtensions{ std::move(enabledExtensions) }
+    , m_deferredResourceDestroyer{ std::make_unique<prev::core::DeferredResourceDestroyer>() }
+    , m_deferredResourceUploader{ std::make_unique<prev::core::DeferredResourceUploader>(*m_deferredResourceDestroyer) }
 {
     LOGI("Logical Device created");
 }
@@ -19,6 +23,13 @@ Device::Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, 
 Device::~Device()
 {
     gfxDeviceWaitIdle(m_handle);
+
+    // Uploader first: it may still hold un-flushed staging buffers and references the destroyer.
+    m_deferredResourceUploader.reset();
+    if (m_deferredResourceDestroyer) {
+        m_deferredResourceDestroyer->Flush();
+        m_deferredResourceDestroyer.reset();
+    }
     gfxDeviceDestroy(m_handle);
     m_handle = nullptr;
     LOGI("Logical device destroyed");
@@ -78,6 +89,16 @@ uint32_t Device::GetQueueTypeCount(const QueueType queueType) const
 const PhysicalDevice& Device::GetGPU() const
 {
     return m_gpu;
+}
+
+prev::core::DeferredResourceDestroyer& Device::GetDeferredResourceDestroyer() const
+{
+    return *m_deferredResourceDestroyer;
+}
+
+prev::core::DeferredResourceUploader& Device::GetDeferredResourceUploader() const
+{
+    return *m_deferredResourceUploader;
 }
 
 void Device::Print() const

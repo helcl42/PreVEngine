@@ -1,22 +1,48 @@
 #ifndef __IMAGE_BUFFER_H__
 #define __IMAGE_BUFFER_H__
 
+#include "ExecutionMode.h"
 #include "ImageBufferView.h"
 
+#include "../../core/DeferredResourceDestroyer.h"
+#include "../../core/IResource.h"
 #include "../../core/device/Device.h"
-#include "../../core/device/Queue.h"
+
+#include <atomic>
+#include <memory>
 
 namespace prev::render::buffer {
 class ImageBufferBuilder;
 
-class ImageBuffer final {
+class ImageBuffer final : public prev::core::IResource {
 private:
-    ImageBuffer(GfxDevice device, GfxQueue queue);
+    struct CreateInfo {
+        GfxExtent3D extent{};
+        GfxFormat format{};
+        GfxTexture texture{};
+        ImageBufferView view{}; // default (empty) view (null for host-mapped textures); moved into the buffer
+        GfxTextureType type{};
+        GfxTextureViewType viewType{};
+        GfxSampleCount sampleCount{};
+        uint32_t mipLevels{};
+        uint32_t layerCount{};
+        GfxTextureUsageFlags usageFlags{};
+        GfxTextureLayout layout{ GFX_TEXTURE_LAYOUT_UNDEFINED };
+        prev::core::DeferredResourceDestroyer* deferredResourceDestroyer{};
+        ExecutionMode destroyExecutionMode{ ExecutionMode::Auto };
+        // Initial/shared lifecycle state. Null defaults to Ready; async builds share a Creating state
+        // with the uploader so it survives the resource being dropped before the upload is flushed.
+        std::shared_ptr<std::atomic<prev::core::ResourceState>> stateFlag{};
+    };
+
+    ImageBuffer(GfxDevice device, GfxQueue queue, CreateInfo&& createInfo);
 
 public:
-    ~ImageBuffer();
+    ~ImageBuffer() override;
 
 public:
+    prev::core::ResourceState GetState() const override;
+
     void UpdateLayout(const GfxTextureLayout newLayout, GfxCommandEncoder commandEncoder);
 
     void GenerateMipMaps(GfxCommandEncoder commandEncoder);
@@ -54,9 +80,12 @@ public:
     friend class ImageBufferBuilder;
 
 private:
-    GfxDevice m_device;
+    bool IsDeferred() const;
 
-    GfxQueue m_queue;
+private:
+    GfxDevice m_device{};
+
+    GfxQueue m_queue{};
 
     GfxExtent3D m_extent{};
 
@@ -64,7 +93,7 @@ private:
 
     GfxTexture m_texture{};
 
-    ImageBufferView m_view{ nullptr };
+    ImageBufferView m_view{};
 
     GfxTextureType m_type{};
 
@@ -81,6 +110,12 @@ private:
     GfxTextureLayout m_layout{ GFX_TEXTURE_LAYOUT_UNDEFINED };
 
     void* m_mappedData{};
+
+    prev::core::DeferredResourceDestroyer* m_deferredResourceDestroyer{};
+
+    ExecutionMode m_destroyExecutionMode{ ExecutionMode::Auto };
+
+    std::shared_ptr<std::atomic<prev::core::ResourceState>> m_state{};
 };
 
 } // namespace prev::render::buffer

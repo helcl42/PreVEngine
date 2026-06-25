@@ -9,8 +9,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-SkyComponentFactory::SkyComponentFactory(prev::core::device::Device& device)
+SkyComponentFactory::SkyComponentFactory(prev::core::device::Device& device, bool async)
     : m_device{ device }
+    , m_async{ async }
 {
 }
 
@@ -18,7 +19,7 @@ std::unique_ptr<ISkyComponent> SkyComponentFactory::Create() const
 {
     auto cloudsNoise{ cloud::CloudsNoiseFactory{ m_device }.CreatePerlinWorleyNoise(128, 128, 128) };
     auto cloudsImage{ cloud::CloudsFactory{ m_device }.Create(1024, 1024) };
-    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(prev_test::render::mesh::MeshFactory{}.CreateQuad()) };
+    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(prev_test::render::mesh::MeshFactory{}.CreateQuad(), m_async) };
 
     auto sky{ std::make_unique<SkyComponent>() };
     sky->m_model = std::move(model);

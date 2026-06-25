@@ -17,6 +17,8 @@ public:
 
     virtual std::shared_ptr<prev_test::render::IModel> GetModel() const = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual std::vector<glm::vec2> ComputeFlarePositions(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const = 0;
 
 public:

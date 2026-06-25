@@ -59,6 +59,11 @@ std::shared_ptr<prev_test::render::IMaterial> ParticleSystemComponent::GetMateri
     return m_material;
 }
 
+bool ParticleSystemComponent::IsReady() const
+{
+    return (!m_model || m_model->IsReady()) && (!m_material || m_material->IsReady());
+}
+
 std::list<std::shared_ptr<Particle>> ParticleSystemComponent::GetParticles() const
 {
     return m_particles;

@@ -23,6 +23,8 @@ public:
 
     bool IsCastedByShadows() const override;
 
+    bool IsReady() const override;
+
 private:
     std::shared_ptr<prev_test::render::IModel> m_model;
 

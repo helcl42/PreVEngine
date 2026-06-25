@@ -21,6 +21,8 @@ public:
 
     virtual bool IsCastedByShadows() const = 0;
 
+    virtual bool IsReady() const = 0;
+
 public:
     virtual ~IRenderComponent() = default;
 };

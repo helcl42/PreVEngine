@@ -13,8 +13,9 @@
 #include <prev/util/GfxUtils.h>
 
 namespace prev_test::component::terrain {
-TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, const unsigned int seed, const unsigned int vertexCount)
+TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, bool async, const unsigned int seed, const unsigned int vertexCount)
     : m_device{ device }
+    , m_async{ async }
     , m_seed{ seed }
     , m_vertexCount{ vertexCount }
 {
@@ -42,7 +43,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(
 
     std::vector<std::string> colorPaths;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, m_async));
         result->m_heightSteps.emplace_back(layer.heightStep);
         colorPaths.push_back(layer.materialPath);
     }
@@ -74,7 +75,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainN
     std::vector<std::string> colorPaths;
     std::vector<std::string> normalPaths;
     for (const auto& layer : terrainLayers) {
-        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath));
+        result->m_materials.emplace_back(materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath, m_async));
         result->m_heightSteps.emplace_back(layer.heightStep);
         colorPaths.push_back(layer.materialPath);
         normalPaths.push_back(layer.materialNormalPath);
@@ -109,7 +110,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
     std::vector<std::string> normalPaths;
     std::vector<std::string> heightPaths;
     for (const auto& layer : terrainLayers) {
-        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath) };
+        auto material{ materialFactory.Create({ glm::vec4(1.0f), layer.shineDamper, layer.reflectivity }, layer.materialPath, layer.materialNormalPath, layer.materialHeightPath, m_async) };
         material->SetHeightScale(layer.heightScale);
         result->m_materials.emplace_back(std::move(material));
         result->m_heightSteps.emplace_back(layer.heightStep);
@@ -127,7 +128,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
 std::unique_ptr<prev_test::render::IModel> TerrainComponentFactory::CreateModel(const std::shared_ptr<VertexData>& vertexData, const bool normalMapped) const
 {
     auto mesh{ GenerateMesh(vertexData, normalMapped) };
-    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh)) };
+    auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh), m_async) };
     return model;
 }
 
@@ -244,16 +245,16 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::Crea
         layersData.push_back(img->GetRawDataPtr());
     }
 
-    return prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
-        .SetExtent({ maxWidth, maxHeight, 1 })
-        .SetFormat(prev::util::gfx::ToImageFormat(finalImages[0]->GetChannels(), finalImages[0]->GetBitDepth(), finalImages[0]->IsFloatingPoint()))
-        .SetType(GFX_TEXTURE_TYPE_2D)
-        .SetViewType(GFX_TEXTURE_VIEW_TYPE_2D_ARRAY)
-        .SetLayerCount(static_cast<uint32_t>(paths.size()))
-        .SetLayerData(layersData, static_cast<uint64_t>(finalImages[0]->GetSize()) * finalImages[0]->GetPixelSize())
-        .SetMipMapEnabled(true)
-        .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
-        .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
-        .Build();
+    auto builder = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+                       .SetExtent({ maxWidth, maxHeight, 1 })
+                       .SetFormat(prev::util::gfx::ToImageFormat(finalImages[0]->GetChannels(), finalImages[0]->GetBitDepth(), finalImages[0]->IsFloatingPoint()))
+                       .SetType(GFX_TEXTURE_TYPE_2D)
+                       .SetViewType(GFX_TEXTURE_VIEW_TYPE_2D_ARRAY)
+                       .SetLayerCount(static_cast<uint32_t>(paths.size()))
+                       .SetLayerData(layersData, static_cast<uint64_t>(finalImages[0]->GetSize()) * finalImages[0]->GetPixelSize())
+                       .SetMipMapEnabled(true)
+                       .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
+                       .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY);
+    return m_async ? builder.BuildAsync() : builder.Build();
 }
 } // namespace prev_test::component::terrain
