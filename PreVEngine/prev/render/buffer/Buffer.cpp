@@ -1,27 +1,33 @@
 #include "Buffer.h"
+#include "OwnedGfxBuffer.h"
 
+#include "../../core/DeferredResourceDestroyer.h"
+
+#include <cassert>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace prev::render::buffer {
-Buffer::Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size, uint64_t offset, bool owning)
+Buffer::Buffer(GfxDevice device, GfxQueue queue, const CreateInfo& createInfo)
     : m_device{ device }
     , m_queue{ queue }
-    , m_buffer{ buffer }
-    , m_hostMapped{ hostMapped }
-    , m_size{ size }
-    , m_offset{ offset }
-    , m_owning{ owning }
+    , m_buffer{ createInfo.buffer }
+    , m_hostMapped{ createInfo.hostMapped }
+    , m_size{ createInfo.size }
+    , m_offset{ createInfo.offset }
+    , m_owning{ createInfo.owning }
+    , m_deferredResourceDestroyer{ createInfo.deferredResourceDestroyer }
+    , m_destroyExecutionMode{ createInfo.destroyExecutionMode }
+    , m_state{ createInfo.stateFlag ? createInfo.stateFlag : std::make_shared<std::atomic<prev::core::ResourceState>>(prev::core::ResourceState::Ready) }
 {
+    assert(m_deferredResourceDestroyer && "Buffer requires a deferred resource destroyer");
 }
 
 Buffer::~Buffer()
 {
-    if (m_owning && m_buffer) {
-        gfxQueueWaitIdle(m_queue);
-        gfxBufferDestroy(m_buffer);
-    }
+    ReleaseBuffer();
 }
 
 Buffer::Buffer(Buffer&& other) noexcept
@@ -32,6 +38,9 @@ Buffer::Buffer(Buffer&& other) noexcept
     , m_size{ other.m_size }
     , m_offset{ other.m_offset }
     , m_owning{ other.m_owning }
+    , m_deferredResourceDestroyer{ other.m_deferredResourceDestroyer }
+    , m_destroyExecutionMode{ other.m_destroyExecutionMode }
+    , m_state{ other.m_state }
 {
     other.m_buffer = {};
     other.m_owning = false;
@@ -40,10 +49,7 @@ Buffer::Buffer(Buffer&& other) noexcept
 Buffer& Buffer::operator=(Buffer&& other) noexcept
 {
     if (this != &other) {
-        if (m_owning && m_buffer) {
-            gfxQueueWaitIdle(m_queue);
-            gfxBufferDestroy(m_buffer);
-        }
+        ReleaseBuffer();
         m_device = other.m_device;
         m_queue = other.m_queue;
         m_buffer = other.m_buffer;
@@ -51,10 +57,46 @@ Buffer& Buffer::operator=(Buffer&& other) noexcept
         m_size = other.m_size;
         m_offset = other.m_offset;
         m_owning = other.m_owning;
+        m_deferredResourceDestroyer = other.m_deferredResourceDestroyer;
+        m_destroyExecutionMode = other.m_destroyExecutionMode;
+        m_state = other.m_state;
         other.m_buffer = {};
         other.m_owning = false;
     }
     return *this;
+}
+
+bool Buffer::IsDeferred() const
+{
+    if (m_destroyExecutionMode == ExecutionMode::Immediate) {
+        return false;
+    }
+    return m_deferredResourceDestroyer->IsActive();
+}
+
+prev::core::ResourceState Buffer::GetState() const
+{
+    return m_state->load();
+}
+
+void Buffer::ReleaseBuffer()
+{
+    if (!m_owning || !m_buffer) {
+        return;
+    }
+    // Cancel a still-pending async upload: the uploader checks this at flush and skips a destroyed
+    // resource instead of recording work for it / touching it.
+    if (m_state && m_state->load() == prev::core::ResourceState::Creating) {
+        m_state->store(prev::core::ResourceState::Destroying);
+    }
+    if (IsDeferred()) {
+        // Defer destruction past any in-flight work; no queue stall.
+        m_deferredResourceDestroyer->Destroy(std::make_unique<OwnedGfxBuffer>(m_buffer));
+    } else {
+        gfxQueueWaitIdle(m_queue);
+        gfxBufferDestroy(m_buffer);
+    }
+    m_buffer = {};
 }
 
 void Buffer::Write(const void* data, const uint64_t size, const uint64_t offset)
@@ -91,7 +133,17 @@ Buffer Buffer::Slice(uint64_t offset, uint64_t size) const
 {
     // Non-owning view sharing this buffer's GfxBuffer; offset is relative to this buffer's own
     // offset so slicing composes. The view never destroys the GPU buffer (owning = false).
-    return Buffer(m_device, m_queue, m_buffer, m_hostMapped, size, m_offset + offset, false);
+    CreateInfo info{};
+    info.buffer = m_buffer;
+    info.hostMapped = m_hostMapped;
+    info.size = size;
+    info.offset = m_offset + offset;
+    info.owning = false;
+    info.deferredResourceDestroyer = m_deferredResourceDestroyer;
+    info.destroyExecutionMode = m_destroyExecutionMode;
+    info.stateFlag = m_state; // the view shares the parent's lifecycle state
+
+    return Buffer(m_device, m_queue, info);
 }
 
 Buffer::operator GfxBuffer() const

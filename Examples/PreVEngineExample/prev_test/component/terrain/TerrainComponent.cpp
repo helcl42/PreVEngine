@@ -29,6 +29,24 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponent::GetTextureA
     return nullptr;
 }
 
+bool TerrainComponent::IsReady() const
+{
+    if (m_model && !m_model->IsReady()) {
+        return false;
+    }
+    for (const auto& material : m_materials) {
+        if (material && !material->IsReady()) {
+            return false;
+        }
+    }
+    for (const auto& [index, textureArray] : m_textureArrays) {
+        if (textureArray && !textureArray->IsReady()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool TerrainComponent::GetHeightAt(const glm::vec3& position, float& outHeight) const
 {
     const float terrainX = position.x - m_position.x;

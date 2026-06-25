@@ -9,7 +9,9 @@ class ImageBufferViewBuilder;
 
 class ImageBufferView final {
 public:
-    ImageBufferView(GfxTextureView view);
+    ImageBufferView() noexcept = default;
+
+    explicit ImageBufferView(GfxTextureView view);
 
     ~ImageBufferView();
 

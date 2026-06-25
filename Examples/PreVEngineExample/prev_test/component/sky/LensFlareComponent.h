@@ -17,6 +17,8 @@ public:
 
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
+    bool IsReady() const override;
+
     std::vector<glm::vec2> ComputeFlarePositions(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const override;
 
 private:

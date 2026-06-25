@@ -22,6 +22,8 @@ public:
 
     std::shared_ptr<prev::render::buffer::ImageBuffer> GetTextureArray(uint32_t index) const override;
 
+    bool IsReady() const override;
+
     bool GetHeightAt(const glm::vec3& position, float& outHeight) const override;
 
     const glm::vec3& GetPosition() const override;

@@ -12,6 +12,8 @@ public:
 
     std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override;
 
+    bool IsReady() const override;
+
 private:
     friend class SkyBoxComponentFactory;
 

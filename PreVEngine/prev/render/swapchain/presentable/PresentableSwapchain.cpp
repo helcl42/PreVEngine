@@ -5,6 +5,7 @@
 
 #include "../../../common/Logger.h"
 
+#include <algorithm>
 #include <vector>
 
 namespace prev::render::swapchain::presentable {
@@ -16,6 +17,11 @@ PresentableSwapchain::PresentableSwapchain(core::device::Device& device, pass::R
     , m_viewCount{ viewCount }
     , m_maxFramesInFlight{ maxFramesInFlight }
 {
+    // Clamp the requested count to the surface's supported [min, max] image count.
+    GfxSurfaceInfo surfaceInfo{};
+    GFXERRCHECK(gfxSurfaceGetInfo(surface, m_device.GetGPU(), &surfaceInfo));
+    const uint32_t clampedImageCount{ std::max(surfaceInfo.minImageCount, std::min(imageCount, surfaceInfo.maxImageCount > 0 ? surfaceInfo.maxImageCount : imageCount)) };
+
     GfxSwapchainDescriptor swapchainDesc{};
     swapchainDesc.sType = GFX_STRUCTURE_TYPE_SWAPCHAIN_DESCRIPTOR;
     swapchainDesc.pNext = nullptr;
@@ -25,7 +31,7 @@ PresentableSwapchain::PresentableSwapchain(core::device::Device& device, pass::R
     swapchainDesc.format = m_renderPass.GetColorFormat();
     swapchainDesc.usage = GFX_TEXTURE_USAGE_RENDER_ATTACHMENT;
     swapchainDesc.presentMode = presentMode;
-    swapchainDesc.imageCount = imageCount;
+    swapchainDesc.imageCount = clampedImageCount;
     GFXERRCHECK(gfxDeviceCreateSwapchain(m_device, &swapchainDesc, &m_swapchain));
 
     GfxSwapchainInfo info{};

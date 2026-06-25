@@ -159,15 +159,9 @@ void DefaultEngineImpl::ResetSwapchain()
     const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
 
     GfxPresentMode presentMode = GFX_PRESENT_MODE_FIFO;
-    uint32_t imageCount = m_config.swapchainFrameCount;
-
     if (surface) {
         const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
         presentMode = m_surface->GetPreferredPresentMode(m_device->GetGPU(), preferred);
-
-        const auto surfaceInfo{ m_surface->GetInfo(m_device->GetGPU()) };
-        imageCount = std::max(surfaceInfo.minImageCount,
-            std::min(m_config.swapchainFrameCount, surfaceInfo.maxImageCount > 0 ? surfaceInfo.maxImageCount : m_config.swapchainFrameCount));
     }
 
     m_swapchain = prev::render::swapchain::SwapchainFactory{}.Create(
@@ -176,7 +170,7 @@ void DefaultEngineImpl::ResetSwapchain()
         surface,
         extent,
         presentMode,
-        imageCount,
+        m_config.swapchainFrameCount,
         GetViewCount(),
         m_config.maxFramesInFlight);
     m_swapchain->Print();

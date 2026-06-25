@@ -18,6 +18,8 @@ public:
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetTextureArray(uint32_t index) const = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual bool GetHeightAt(const glm::vec3& position, float& outHeight) const = 0;
 
     virtual std::shared_ptr<HeightMapInfo> GetHeightMapInfo() const = 0;

@@ -43,6 +43,16 @@ prev::core::device::Device& EngineImpl::GetDevice() const
     return *m_device;
 }
 
+prev::core::DeferredResourceDestroyer& EngineImpl::GetDeferredResourceDestroyer()
+{
+    return m_device->GetDeferredResourceDestroyer();
+}
+
+prev::core::DeferredResourceUploader& EngineImpl::GetDeferredResourceUploader()
+{
+    return m_device->GetDeferredResourceUploader();
+}
+
 const Config& EngineImpl::GetConfig() const
 {
     return m_config;
@@ -80,6 +90,7 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 
     m_swapchain.reset();
     m_surface.reset();
+    m_device->GetDeferredResourceDestroyer().RetireAll();
     ResetSurface();
     ResetSwapchain();
 }
@@ -88,6 +99,7 @@ void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
     m_device->WaitIdle();
     m_swapchain.reset();
+    m_device->GetDeferredResourceDestroyer().RetireAll();
     ResetSwapchain();
 }
 

@@ -38,4 +38,17 @@ bool DefaultRenderComponent::IsCastedByShadows() const
 {
     return m_isCastedByShadows;
 }
+
+bool DefaultRenderComponent::IsReady() const
+{
+    if (m_model && !m_model->IsReady()) {
+        return false;
+    }
+    for (const auto& material : m_materials) {
+        if (material && !material->IsReady()) {
+            return false;
+        }
+    }
+    return true;
+}
 } // namespace prev_test::component::render

@@ -28,6 +28,8 @@ public:
 
     std::shared_ptr<prev_test::render::IMaterial> GetMaterial() const override;
 
+    bool IsReady() const override;
+
     std::list<std::shared_ptr<Particle>> GetParticles() const override;
 
     std::shared_ptr<prev::render::buffer::Buffer> GetVertexBuffer() const override;

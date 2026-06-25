@@ -1,20 +1,39 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
+#include "ExecutionMode.h"
+
+#include "../../core/DeferredResourceDestroyer.h"
+#include "../../core/IResource.h"
 #include "../../core/device/Device.h"
 
+#include <atomic>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
 namespace prev::render::buffer {
 class BufferBuilder;
 
-class Buffer final {
+class Buffer final : public prev::core::IResource {
 private:
-    Buffer(GfxDevice device, GfxQueue queue, GfxBuffer buffer, bool hostMapped, uint64_t size, uint64_t offset = 0, bool owning = true);
+    struct CreateInfo {
+        GfxBuffer buffer{};
+        bool hostMapped{};
+        uint64_t size{};
+        uint64_t offset{};
+        bool owning{ true };
+        prev::core::DeferredResourceDestroyer* deferredResourceDestroyer{};
+        ExecutionMode destroyExecutionMode{ ExecutionMode::Auto };
+        // Initial/shared lifecycle state. Null defaults to Ready; async builds share a Creating state
+        // with the uploader so it survives the resource being dropped before the upload is flushed.
+        std::shared_ptr<std::atomic<prev::core::ResourceState>> stateFlag{};
+    };
+
+    Buffer(GfxDevice device, GfxQueue queue, const CreateInfo& createInfo);
 
 public:
-    ~Buffer();
+    ~Buffer() override;
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
@@ -27,6 +46,8 @@ public:
     void Clear();
 
 public:
+    prev::core::ResourceState GetState() const override;
+
     uint64_t GetSize() const;
 
     uint64_t GetOffset() const;
@@ -48,6 +69,11 @@ public:
 public:
     friend class BufferBuilder; // constructs the owning buffer
 
+private:
+    bool IsDeferred() const;
+
+    void ReleaseBuffer();
+
 protected:
     GfxDevice m_device{};
 
@@ -62,6 +88,12 @@ protected:
     uint64_t m_offset{};
 
     bool m_owning{ true };
+
+    prev::core::DeferredResourceDestroyer* m_deferredResourceDestroyer{ nullptr };
+
+    ExecutionMode m_destroyExecutionMode{ ExecutionMode::Auto };
+
+    std::shared_ptr<std::atomic<prev::core::ResourceState>> m_state{};
 };
 } // namespace prev::render::buffer
 

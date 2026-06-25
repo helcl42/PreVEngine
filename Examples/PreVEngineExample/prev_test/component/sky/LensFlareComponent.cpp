@@ -59,6 +59,19 @@ std::shared_ptr<prev_test::render::IModel> LensFlareComponent::GetModel() const
     return m_model;
 }
 
+bool LensFlareComponent::IsReady() const
+{
+    if (m_model && !m_model->IsReady()) {
+        return false;
+    }
+    for (const auto& material : m_materials) {
+        if (material && !material->IsReady()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::vector<glm::vec2> LensFlareComponent::ComputeFlarePositions(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const
 {
     std::vector<glm::vec2> positions(m_flares.size());

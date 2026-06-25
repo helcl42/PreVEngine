@@ -8,13 +8,16 @@
 namespace prev_test::component::sky {
 class LensFlareComponentFactory final {
 public:
-    LensFlareComponentFactory(prev::core::device::Device& device);
+    // async: when true (default), the model and flare textures stream in asynchronously.
+    LensFlareComponentFactory(prev::core::device::Device& device, bool async = true);
 
 public:
     std::unique_ptr<ILensFlareComponent> Create() const;
 
 private:
     prev::core::device::Device& m_device;
+
+    bool m_async{ true };
 };
 } // namespace prev_test::component::sky
 

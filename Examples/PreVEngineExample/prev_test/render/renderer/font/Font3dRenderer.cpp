@@ -107,6 +107,10 @@ void Font3dRenderer::Render(const NormalRenderContext& renderContext, const std:
     }
 
     const auto nodeFontRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>>(node);
+    if (!nodeFontRenderComponent->IsReady()) {
+        return;
+    }
+
     for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
         // Text mesh faces +Z in model space (TextMeshFactory uses Y-down layout, shader negates Y → face normal becomes +Z).
         // For non-billboard text, rotate 180° around Y so it faces -Z (toward the default camera direction).

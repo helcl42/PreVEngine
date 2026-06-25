@@ -8,7 +8,7 @@
 namespace prev_test::component::sky {
 class SunComponentFactory final {
 public:
-    SunComponentFactory(prev::core::device::Device& device);
+    SunComponentFactory(prev::core::device::Device& device, bool async = true);
 
     ~SunComponentFactory() = default;
 
@@ -17,6 +17,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    bool m_async{ true };
 };
 } // namespace prev_test::component::sky
 

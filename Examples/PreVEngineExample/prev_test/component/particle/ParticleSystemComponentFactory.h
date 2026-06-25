@@ -8,7 +8,7 @@
 namespace prev_test::component::particle {
 class ParticleSystemComponentFactory final {
 public:
-    ParticleSystemComponentFactory(prev::core::device::Device& device);
+    ParticleSystemComponentFactory(prev::core::device::Device& device, bool async = true);
 
     ~ParticleSystemComponentFactory() = default;
 
@@ -19,6 +19,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    bool m_async{ true };
 };
 } // namespace prev_test::component::particle
 

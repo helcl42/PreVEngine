@@ -106,6 +106,10 @@ void FontRenderer::Render(const NormalRenderContext& renderContext, const std::s
     }
 
     const auto nodeFontRenderComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::font::IFontRenderComponent<prev_test::render::font::ScreenSpaceText>>(node);
+    if (!nodeFontRenderComponent->IsReady()) {
+        return;
+    }
+
     for (const auto& [key, renderableText] : nodeFontRenderComponent->GetRenderableTexts()) {
         const float xScale{ 1.0f };
         const float yScale{ xScale * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };

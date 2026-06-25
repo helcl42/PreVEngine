@@ -180,17 +180,17 @@ void SkyRenderer::BeginFrame(const NormalRenderContext& renderContext)
         auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
         auto& skyPostProcessColorImageBuffer{ m_skyPostProcessColorImageBuffer[viewIndex] };
 
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyColorImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyBloomImageBuffer);
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyAlphanessImageBuffer);
-        UpdateImageBufferExtents(extent, DEPTH_FORMAT, skyCloudDistanceImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, skyPostProcessColorImageBuffer);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, COLOR_FORMAT, skyColorImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, COLOR_FORMAT, skyBloomImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, COLOR_FORMAT, skyAlphanessImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, DEPTH_FORMAT, skyCloudDistanceImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING | GFX_TEXTURE_USAGE_COPY_SRC);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, COLOR_FORMAT, skyPostProcessColorImageBuffer, GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_STORAGE_BINDING);
 
         // History buffers for reprojection
         static constexpr uint32_t REPROJ_WARMUP_FRAMES = 5;
         bool historyValid = m_frameCounter >= REPROJ_WARMUP_FRAMES && m_skyHistoryColorImageBuffer[viewIndex].image != nullptr && m_skyHistoryColorImageBuffer[viewIndex].image->GetExtent().width == extent.width && m_skyHistoryColorImageBuffer[viewIndex].image->GetExtent().height == extent.height;
-        UpdateImageBufferExtents(extent, COLOR_FORMAT, m_skyHistoryColorImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
-        UpdateImageBufferExtents(extent, DEPTH_FORMAT, m_skyHistoryDepthImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, COLOR_FORMAT, m_skyHistoryColorImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
+        UpdateImageBufferExtents(renderContext.commandEncoder, extent, DEPTH_FORMAT, m_skyHistoryDepthImageBuffer[viewIndex], GFX_TEXTURE_USAGE_TEXTURE_BINDING | GFX_TEXTURE_USAGE_COPY_DST);
 
         auto& skyColorImageSampler{ m_samplers[skyColorImageBuffer.samplerType] };
         auto& skyBloomImageSampler{ m_samplers[skyBloomImageBuffer.samplerType] };
@@ -401,6 +401,9 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
     }
 
     const auto skyComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::sky::ISkyComponent>(node);
+    if (!skyComponent->IsReady()) {
+        return;
+    }
 
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         auto& skyCloudDistanceImageBuffer{ m_skyCloudDistanceImageBuffer[viewIndex] };
@@ -473,16 +476,18 @@ void SkyRenderer::ShutDown()
     m_skyShader.reset();
 }
 
-void SkyRenderer::UpdateImageBufferExtents(const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags)
+void SkyRenderer::UpdateImageBufferExtents(GfxCommandEncoder commandEncoder, const GfxExtent2D& extent, const GfxFormat format, ImageBufferData& imageBuffer, GfxTextureUsageFlags usageFlags)
 {
     if (imageBuffer.image == nullptr || imageBuffer.image->GetExtent().width != extent.width || imageBuffer.image->GetExtent().height != extent.height) {
+        // Record the layout transition into the frame encoder (called from BeginFrame, before any pass)
+        // so a resize doesn't stall on an immediate submit+wait; ready when this frame's encoder submits.
         imageBuffer.image = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                                 .SetExtent({ extent.width, extent.height, 1 })
                                 .SetFormat(format)
                                 .SetType(GFX_TEXTURE_TYPE_2D)
                                 .SetUsageFlags(usageFlags)
                                 .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
-                                .Build();
+                                .Build(commandEncoder);
 
         // TODO: gfx API doesn't expose format feature queries - assume linear filtering is available
         imageBuffer.samplerType = (format == DEPTH_FORMAT) ? SamplerType::NEAREST : SamplerType::LINEAR;

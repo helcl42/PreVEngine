@@ -30,6 +30,8 @@ public:
 
     virtual const std::map<uint32_t, RenderableText<TextType>>& GetRenderableTexts() const = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual void AddText(const uint32_t key, const std::shared_ptr<TextType>& text) = 0;
 
     virtual void RemoveText(const uint32_t key) = 0;

@@ -22,6 +22,11 @@ std::shared_ptr<prev_test::render::IModel> WaterComponent::GetModel() const
     return m_model;
 }
 
+bool WaterComponent::IsReady() const
+{
+    return (!m_model || m_model->IsReady()) && (!m_material || m_material->IsReady());
+}
+
 void WaterComponent::Update(float deltaTime)
 {
     m_moveFactor += WATER_WAVE_SPEED * deltaTime;

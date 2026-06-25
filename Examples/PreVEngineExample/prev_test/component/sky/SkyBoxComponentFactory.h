@@ -8,7 +8,7 @@
 namespace prev_test::component::sky {
 class SkyBoxComponentFactory final {
 public:
-    SkyBoxComponentFactory(prev::core::device::Device& device);
+    SkyBoxComponentFactory(prev::core::device::Device& device, bool async = true);
 
     ~SkyBoxComponentFactory() = default;
 
@@ -17,6 +17,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    bool m_async{ true };
 };
 } // namespace prev_test::component::sky
 

@@ -4,6 +4,9 @@
 #include "PhysicalDevice.h"
 #include "Queue.h"
 
+#include "../DeferredResourceDestroyer.h"
+#include "../DeferredResourceUploader.h"
+
 #include <map>
 #include <memory>
 #include <vector>
@@ -28,6 +31,10 @@ public:
 
     const PhysicalDevice& GetGPU() const;
 
+    prev::core::DeferredResourceDestroyer& GetDeferredResourceDestroyer() const;
+
+    prev::core::DeferredResourceUploader& GetDeferredResourceUploader() const;
+
     void Print() const;
 
 public:
@@ -43,6 +50,10 @@ private:
     std::map<QueueType, std::vector<std::unique_ptr<Queue>>> m_queues;
 
     std::vector<std::string> m_enabledExtensions;
+
+    std::unique_ptr<prev::core::DeferredResourceDestroyer> m_deferredResourceDestroyer;
+
+    std::unique_ptr<prev::core::DeferredResourceUploader> m_deferredResourceUploader;
 };
 } // namespace prev::core::device
 

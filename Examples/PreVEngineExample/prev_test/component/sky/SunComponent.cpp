@@ -56,6 +56,11 @@ std::shared_ptr<prev_test::render::IModel> SunComponent::GetModel() const
     return m_model;
 }
 
+bool SunComponent::IsReady() const
+{
+    return (!m_model || m_model->IsReady()) && (!m_material || m_material->IsReady());
+}
+
 glm::vec2 SunComponent::ComputeFlarePosition(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix, const glm::vec3& eyePosition, const glm::vec3& sunPosition) const
 {
     return ComputeFlareNdcPosition(projectionMatrix, viewMatrix, eyePosition, sunPosition);

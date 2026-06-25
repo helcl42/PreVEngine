@@ -15,6 +15,8 @@ public:
 
     std::shared_ptr<prev_test::render::IModel> GetModel() const override;
 
+    bool IsReady() const override;
+
     void Update(float deltaTime) override;
 
     float GetMoveFactor() const override;

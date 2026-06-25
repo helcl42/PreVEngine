@@ -135,6 +135,9 @@ void TerrainRenderer::Render(const NormalRenderContext& renderContext, const std
 
     const auto transformComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::transform::ITransformComponent>(node);
     const auto terrainComponent = prev::scene::component::NodeComponentHelper::GetComponent<prev_test::component::terrain::ITerrainComponent>(node);
+    if (!terrainComponent->IsReady()) {
+        return;
+    }
 
     auto& uboVS = m_uniformsPoolVS->Next();
 

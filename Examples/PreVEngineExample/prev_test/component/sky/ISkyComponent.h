@@ -15,6 +15,8 @@ public:
 
     virtual std::shared_ptr<prev::render::buffer::ImageBuffer> GetPerlinWorleyNoise() const = 0;
 
+    virtual bool IsReady() const = 0;
+
     virtual const glm::vec3& GetBottomColor() const = 0;
 
     virtual const glm::vec3& GetTopColor() const = 0;
@@ -30,4 +32,4 @@ public:
 };
 } // namespace prev_test::component::sky
 
-#endif // !__SKY_COMPONENT_H__
+#endif // !__ISKY_COMPONENT_H__

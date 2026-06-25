@@ -196,7 +196,7 @@ namespace {
                                .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
                                .SetLayerData({ image->GetRawDataPtr() }, static_cast<uint64_t>(image->GetSize()) * image->GetPixelSize())
                                .SetLayout(GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY)
-                               .Build();
+                               .BuildAsync();
         return imageBuffer;
     }
 } // namespace

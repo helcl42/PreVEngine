@@ -31,6 +31,16 @@ bool Material::HasImageBuffer(uint32_t index)
     return index < static_cast<uint32_t>(m_images.size());
 }
 
+bool Material::IsReady() const
+{
+    for (const auto& image : m_images) {
+        if (image && !image->IsReady()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 float Material::GetShineDamper() const
 {
     return m_shineDamper;
