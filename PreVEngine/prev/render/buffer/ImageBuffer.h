@@ -82,6 +82,8 @@ public:
 private:
     bool IsDeferred() const;
 
+    static void RecordLayoutTransition(GfxCommandEncoder commandEncoder, GfxTexture texture, uint32_t mipLevels, uint32_t layerCount, GfxTextureLayout oldLayout, GfxTextureLayout newLayout);
+
 private:
     GfxDevice m_device{};
 

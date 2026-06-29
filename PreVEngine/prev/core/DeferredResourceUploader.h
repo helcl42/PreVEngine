@@ -13,11 +13,10 @@
 
 namespace prev::core {
 
-// Collects asynchronous resource uploads and records them into a frame's command encoder at a single
-// safe point each frame (before any rendering). A resource built via BuildAsync is allocated immediately
-// but left unpopulated and flagged not-ready; its upload work is queued here. On Flush the work is
-// recorded into the frame encoder, the resource is flagged ready (its copy now precedes any sampling in
-// the same command buffer), and the staging buffer is handed to the destroyer to outlive that copy.
+// Queues async resource uploads (from BuildAsync) and records a byte-budgeted batch into the frame's
+// command encoder once per frame, before rendering. On flush each resource flips Creating -> Ready and its
+// staging buffer is defer-destroyed. Recording before the render passes keeps the uploads stall-free (the
+// resource is valid the same frame) without a separate submission.
 class DeferredResourceUploader final {
 public:
     explicit DeferredResourceUploader(DeferredResourceDestroyer& destroyer);
@@ -28,28 +27,31 @@ public:
     DeferredResourceUploader& operator=(const DeferredResourceUploader&) = delete;
 
 public:
-    // Queues creation GPU work, the resource's shared lifecycle state, and the staging buffer that backs
-    // it. Thread-safe: called from whatever thread builds the resource. The work is replayed at the next
-    // Flush. `staging` may be null (e.g. a layout-only transition with no data to copy).
-    void Enqueue(std::function<void(GfxCommandEncoder)> record, std::shared_ptr<std::atomic<ResourceState>> state, GfxBuffer staging);
+    // Queues upload work, the resource's shared lifecycle state, its staging buffer (may be null), and the
+    // upload size in bytes (used to budget per-frame work). Thread-safe; replayed at the next Flush.
+    void Enqueue(std::function<void(GfxCommandEncoder)> record, std::shared_ptr<std::atomic<ResourceState>> state, GfxBuffer staging, uint64_t bytes);
 
-    // For each queued upload: if the resource is still Creating, record its work into `encoder` and flag
-    // it Ready; if it was dropped meanwhile (Destroying) skip the work entirely (never touch a destroyed
-    // resource). Either way the staging buffer is defer-destroyed. Called by the engine at frame start,
-    // before rendering and outside a render pass (copies/barriers are illegal inside one). Drains the queue.
+    // Records a byte-budgeted batch of still-Creating uploads into `encoder` (flipping each Ready), leaving
+    // the rest queued for later frames. Called at frame start, before rendering and outside a render pass.
     void Flush(GfxCommandEncoder encoder);
+
+    // True if queuing an upload of `bytes` would keep the outstanding (queued-but-not-yet-flushed) staging
+    // memory within budget; builders fall back to a synchronous upload when this returns false.
+    bool CanQueue(uint64_t bytes) const;
 
 private:
     struct Entry {
         std::function<void(GfxCommandEncoder)> record;
         std::shared_ptr<std::atomic<ResourceState>> state;
         GfxBuffer staging{};
+        uint64_t bytes{};
     };
 
     DeferredResourceDestroyer& m_destroyer;
 
     std::vector<Entry> m_pending;
     std::mutex m_mutex;
+    std::atomic<uint64_t> m_outstandingBytes{ 0 };
 };
 
 } // namespace prev::core

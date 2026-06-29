@@ -128,9 +128,14 @@ std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
         return BuildImpl(nullptr);
     }
 
+    if (!m_device.GetDeferredResourceUploader().CanQueue(m_dataSize)) {
+        // Too much staging already queued (e.g. a whole scene at load); build synchronously so this data's
+        // staging is freed immediately rather than held until flush, keeping peak memory bounded.
+        return BuildImpl(nullptr);
+    }
+
     // Allocate now but leave it Creating; the uploader records the copy at frame start and flips it Ready.
-    // The shared state survives the upload being recorded after the builder returns and lets the
-    // resource's destructor cancel the upload (Destroying) if it is dropped first.
+    // The shared state survives the resource being dropped before then (its destructor cancels the upload).
     auto state{ std::make_shared<std::atomic<prev::core::ResourceState>>(prev::core::ResourceState::Creating) };
 
     uint64_t alignedSize{};
@@ -141,7 +146,7 @@ std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
     const GfxBuffer staging{ CreateStagingBuffer(size) };
     auto record{ MakeCopyRecorder(staging, *buffer, size) };
 
-    m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, staging);
+    m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, staging, size);
 
     return buffer;
 }

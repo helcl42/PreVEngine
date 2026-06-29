@@ -116,8 +116,7 @@ prev::core::ResourceState ImageBuffer::GetState() const
 
 ImageBuffer::~ImageBuffer()
 {
-    // Cancel a still-pending async upload: the uploader checks this at flush and skips a destroyed
-    // resource instead of recording work for it / touching it.
+    // Cancel a still-pending async upload (optimization; the uploader's record is handle-only, not a UAF).
     if (m_state && m_state->load() == prev::core::ResourceState::Creating) {
         m_state->store(prev::core::ResourceState::Destroying);
     }
@@ -135,36 +134,43 @@ ImageBuffer::~ImageBuffer()
     }
 }
 
-void ImageBuffer::UpdateLayout(const GfxTextureLayout newLayout, GfxCommandEncoder commandEncoder)
+void ImageBuffer::RecordLayoutTransition(GfxCommandEncoder commandEncoder, GfxTexture texture, uint32_t mipLevels, uint32_t layerCount, GfxTextureLayout oldLayout, GfxTextureLayout newLayout)
 {
-    if (m_layout == newLayout) {
+    if (oldLayout == newLayout) {
         return;
     }
 
     GfxPipelineStageFlags srcStage{}, dstStage{};
     GfxAccessFlags srcAccess{}, dstAccess{};
-    GetLayoutBarrierParams(m_layout, srcStage, srcAccess);
+    GetLayoutBarrierParams(oldLayout, srcStage, srcAccess);
     GetLayoutBarrierParams(newLayout, dstStage, dstAccess);
 
     GfxTextureBarrier barrier{};
-    barrier.texture = m_texture;
-    barrier.oldLayout = m_layout;
+    barrier.texture = texture;
+    barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
     barrier.srcStageMask = srcStage;
     barrier.dstStageMask = dstStage;
     barrier.srcAccessMask = srcAccess;
     barrier.dstAccessMask = dstAccess;
     barrier.baseMipLevel = 0;
-    barrier.mipLevelCount = m_mipLevels;
+    barrier.mipLevelCount = mipLevels;
     barrier.baseArrayLayer = 0;
-    barrier.arrayLayerCount = m_layerCount;
+    barrier.arrayLayerCount = layerCount;
 
     GfxPipelineBarrierDescriptor barrierDesc{};
     barrierDesc.sType = GFX_STRUCTURE_TYPE_PIPELINE_BARRIER_DESCRIPTOR;
     barrierDesc.textureBarriers = &barrier;
     barrierDesc.textureBarrierCount = 1;
     gfxCommandEncoderPipelineBarrier(commandEncoder, &barrierDesc);
+}
 
+void ImageBuffer::UpdateLayout(const GfxTextureLayout newLayout, GfxCommandEncoder commandEncoder)
+{
+    if (m_layout == newLayout) {
+        return;
+    }
+    RecordLayoutTransition(commandEncoder, m_texture, m_mipLevels, m_layerCount, m_layout, newLayout);
     m_layout = newLayout;
 }
 

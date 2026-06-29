@@ -213,6 +213,7 @@ void PresentableSwapchain::EndFrame()
 
     GfxCommandEncoder encoders[] = { frameInFlight.commandEncoder };
     GfxSemaphore waitSems[] = { *frameInFlight.acquireSemaphore };
+    GfxPipelineStageFlags waitStages[] = { GFX_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT };
     GfxSemaphore signalSems[] = { *swapchainBuffer.renderSemaphore };
 
     GfxSubmitDescriptor submitDesc{};
@@ -220,6 +221,7 @@ void PresentableSwapchain::EndFrame()
     submitDesc.commandEncoders = encoders;
     submitDesc.commandEncoderCount = 1;
     submitDesc.waitSemaphores = waitSems;
+    submitDesc.waitStages = waitStages;
     submitDesc.waitSemaphoreCount = 1;
     submitDesc.signalSemaphores = signalSems;
     submitDesc.signalSemaphoreCount = 1;

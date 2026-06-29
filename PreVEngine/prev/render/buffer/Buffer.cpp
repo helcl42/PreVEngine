@@ -84,8 +84,7 @@ void Buffer::ReleaseBuffer()
     if (!m_owning || !m_buffer) {
         return;
     }
-    // Cancel a still-pending async upload: the uploader checks this at flush and skips a destroyed
-    // resource instead of recording work for it / touching it.
+    // Cancel a still-pending async upload (optimization; the uploader's record is handle-only, not a UAF).
     if (m_state && m_state->load() == prev::core::ResourceState::Creating) {
         m_state->store(prev::core::ResourceState::Destroying);
     }
