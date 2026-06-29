@@ -129,8 +129,8 @@ fn RelaxedConeStepMapping_0( coneMapTexture_0 : texture_2d<f32>,  coneMapSampler
     var bsRange_0 : vec3<f32> = _S6 * rayDir_1 * vec3<f32>(pos_0.z);
     var _S7 : vec3<f32> = rayPos_0 + bsRange_0;
     var j_0 : u32 = u32(0);
-    var bsRange_1 : vec3<f32> = bsRange_0;
     var bsPosition_0 : vec3<f32> = _S7;
+    var bsRange_1 : vec3<f32> = bsRange_0;
     for(;;)
     {
         if(j_0 < u32(6))
@@ -141,7 +141,7 @@ fn RelaxedConeStepMapping_0( coneMapTexture_0 : texture_2d<f32>,  coneMapSampler
             break;
         }
         var bsRange_2 : vec3<f32> = bsRange_1 * _S6;
-        if((bsPosition_0.z) < (GetInverseHeight_0(clamp((textureSampleGrad((coneMapTexture_0), (coneMapSampler_0), (pos_0.xy), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f)).x)))
+        if((bsPosition_0.z) < (GetInverseHeight_0(clamp((textureSampleGrad((coneMapTexture_0), (coneMapSampler_0), (bsPosition_0.xy), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f)).x)))
         {
             bsPosition_0 = bsPosition_0 + bsRange_2;
         }

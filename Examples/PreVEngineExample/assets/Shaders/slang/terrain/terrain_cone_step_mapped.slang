@@ -3,6 +3,7 @@ import common.utils;
 import common.common;
 import common.lights;
 import common.shadows;
+import common.cone_step_mapping;
 
 #ifndef MAX_VIEW_COUNT
 #define MAX_VIEW_COUNT 1
@@ -121,65 +122,6 @@ Interpolants vertexMain(VertexInput input
     return output;
 }
 
-static const bool useDepthBias = true;
-
-float3 GetRayDirection(float3 viewDirection, float heightScaleVal)
-{
-    float3 v = normalize(viewDirection);
-    v.z = abs(v.z);
-    if (useDepthBias)
-    {
-        float db = 1.0 - v.z;
-        db *= db;
-        db *= db;
-        db = 1.0 - db * db;
-        v.xy *= db;
-    }
-    v.xy *= heightScaleVal;
-    return v;
-}
-
-float GetInverseHeight(float height)
-{
-    return 1.0 - height;
-}
-
-float2 sampleRelaxedConeStepMapping(uint idx, float heightScaleVal, uint numLayers, float2 uv, float2 ddxUV, float2 ddyUV, float3 texDir3D)
-{
-    const uint binarySteps = 6;
-
-    float3 rayPos = float3(uv, 0.0);
-    float3 rayDir = GetRayDirection(texDir3D, heightScaleVal);
-
-    rayDir /= rayDir.z;
-    float rayRatio = length(rayDir.xy);
-    float3 pos = rayPos;
-    for (uint i = 0; i < numLayers; ++i)
-    {
-        float2 heightAndCone = clamp(heightTextures.SampleGrad(heightSampler, float3(pos.xy, (float)idx), ddxUV, ddyUV).rg, 0.0, 1.0);
-        float coneRatio = heightAndCone.g * heightAndCone.g;
-        float height = GetInverseHeight(heightAndCone.r) - pos.z;
-        float d = coneRatio * height / (rayRatio + coneRatio);
-        pos += rayDir * d;
-    }
-
-    float3 bsRange = 0.5 * rayDir * pos.z;
-    float3 bsPosition = rayPos + bsRange;
-    for (uint j = 0; j < binarySteps; ++j)
-    {
-        float2 heightAndCone = clamp(heightTextures.SampleGrad(heightSampler, float3(bsPosition.xy, (float)idx), ddxUV, ddyUV).rg, 0.0, 1.0);
-        bsRange *= 0.5;
-        if (bsPosition.z < GetInverseHeight(heightAndCone.r))
-        {
-            bsPosition += bsRange;
-        }
-        else
-        {
-            bsPosition -= bsRange;
-        }
-    }
-    return bsPosition.xy;
-}
 
 float4 sampleColorTextureGrad(uint idx, float2 uv, float2 ddxUV, float2 ddyUV)
 {
@@ -225,8 +167,8 @@ float4 fragmentMain(Interpolants input) : SV_Target
                 float2 uv2;
                 if (uboFS.hasConeMap != 0)
                 {
-                    uv1 = sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection);
-                    uv2 = sampleRelaxedConeStepMapping(i + 1, uboFS.heightScale[i + 1].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection);
+                    uv1 = RelaxedConeStepMapping(heightTextures, heightSampler, i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection);
+                    uv2 = RelaxedConeStepMapping(heightTextures, heightSampler, i + 1, uboFS.heightScale[i + 1].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection);
                 }
                 else
                 {
@@ -258,7 +200,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
             }
             else if (normalizedHeight < uboFS.heightSteps[i].x - uboFS.heightTransitionRange)
             {
-                float2 uv = uboFS.hasConeMap != 0 ? sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
+                float2 uv = uboFS.hasConeMap != 0 ? RelaxedConeStepMapping(heightTextures, heightSampler, i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
                 normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
                 textureColor = sampleColorTextureGrad(i, uv, ddxTC, ddyTC);
                 shineDamper = uboFS.material[i].shineDamper;
@@ -268,7 +210,7 @@ float4 fragmentMain(Interpolants input) : SV_Target
         }
         else
         {
-            float2 uv = uboFS.hasConeMap != 0 ? sampleRelaxedConeStepMapping(i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
+            float2 uv = uboFS.hasConeMap != 0 ? RelaxedConeStepMapping(heightTextures, heightSampler, i, uboFS.heightScale[i].x, uboFS.numLayers, input.textureCoord, ddxTC, ddyTC, rayDirection) : input.textureCoord;
             normal = uboFS.hasNormalMap != 0 ? sampleNormalMap(i, uv, ddxTC, ddyTC) : float3(0.0, 0.0, 1.0);
             textureColor = sampleColorTextureGrad(i, uv, ddxTC, ddyTC);
             shineDamper = uboFS.material[i].shineDamper;

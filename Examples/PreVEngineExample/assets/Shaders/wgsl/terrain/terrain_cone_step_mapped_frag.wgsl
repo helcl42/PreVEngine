@@ -88,7 +88,7 @@ struct TerrainCSMFSParams_std140_0
 
 @binding(9) @group(0) var depthSampler_0 : sampler;
 
-fn GetRayDirection_0( viewDirection_0 : vec3<f32>,  heightScaleVal_0 : f32) -> vec3<f32>
+fn GetRayDirection_0( viewDirection_0 : vec3<f32>,  heightScale_1 : f32) -> vec3<f32>
 {
     var _S1 : vec3<f32> = normalize(viewDirection_0);
     var v_0 : vec3<f32> = _S1;
@@ -99,7 +99,7 @@ fn GetRayDirection_0( viewDirection_0 : vec3<f32>,  heightScaleVal_0 : f32) -> v
     var _S2 : vec2<f32> = v_0.xy * vec2<f32>((1.0f - db_2 * db_2));
     v_0.x = _S2.x;
     v_0.y = _S2.y;
-    var _S3 : vec2<f32> = v_0.xy * vec2<f32>(heightScaleVal_0);
+    var _S3 : vec2<f32> = v_0.xy * vec2<f32>(heightScale_1);
     v_0.x = _S3.x;
     v_0.y = _S3.y;
     return v_0;
@@ -110,10 +110,10 @@ fn GetInverseHeight_0( height_0 : f32) -> f32
     return 1.0f - height_0;
 }
 
-fn sampleRelaxedConeStepMapping_0( idx_0 : u32,  heightScaleVal_1 : f32,  numLayers_1 : u32,  uv_0 : vec2<f32>,  ddxUV_0 : vec2<f32>,  ddyUV_0 : vec2<f32>,  texDir3D_0 : vec3<f32>) -> vec2<f32>
+fn RelaxedConeStepMapping_0( coneMapTextures_0 : texture_2d_array<f32>,  coneMapSampler_0 : sampler,  layer_0 : u32,  heightScale_2 : f32,  numLayers_1 : u32,  uv_0 : vec2<f32>,  ddxUV_0 : vec2<f32>,  ddyUV_0 : vec2<f32>,  texDir3D_0 : vec3<f32>) -> vec2<f32>
 {
     var rayPos_0 : vec3<f32> = vec3<f32>(uv_0, 0.0f);
-    var rayDir_0 : vec3<f32> = GetRayDirection_0(texDir3D_0, heightScaleVal_1);
+    var rayDir_0 : vec3<f32> = GetRayDirection_0(texDir3D_0, heightScale_2);
     var rayDir_1 : vec3<f32> = rayDir_0 / vec3<f32>(rayDir_0.z);
     var _S4 : f32 = length(rayDir_1.xy);
     var i_0 : u32 = u32(0);
@@ -127,8 +127,8 @@ fn sampleRelaxedConeStepMapping_0( idx_0 : u32,  heightScaleVal_1 : f32,  numLay
         {
             break;
         }
-        var _S5 : vec3<f32> = vec3<f32>(pos_0.xy, f32(idx_0));
-        var heightAndCone_0 : vec2<f32> = clamp((textureSampleGrad((heightTextures_0), (heightSampler_0), ((_S5)).xy, i32(((_S5)).z), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f));
+        var _S5 : vec3<f32> = vec3<f32>(pos_0.xy, f32(layer_0));
+        var heightAndCone_0 : vec2<f32> = clamp((textureSampleGrad((coneMapTextures_0), (coneMapSampler_0), ((_S5)).xy, i32(((_S5)).z), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f));
         var _S6 : f32 = heightAndCone_0.y;
         var coneRatio_0 : f32 = _S6 * _S6;
         var pos_1 : vec3<f32> = pos_0 + rayDir_1 * vec3<f32>((coneRatio_0 * (GetInverseHeight_0(heightAndCone_0.x) - pos_0.z) / (_S4 + coneRatio_0)));
@@ -150,9 +150,9 @@ fn sampleRelaxedConeStepMapping_0( idx_0 : u32,  heightScaleVal_1 : f32,  numLay
         {
             break;
         }
-        var _S9 : vec3<f32> = vec3<f32>(bsPosition_0.xy, f32(idx_0));
+        var _S9 : vec3<f32> = vec3<f32>(bsPosition_0.xy, f32(layer_0));
         var bsRange_2 : vec3<f32> = bsRange_1 * _S7;
-        if((bsPosition_0.z) < (GetInverseHeight_0(clamp((textureSampleGrad((heightTextures_0), (heightSampler_0), ((_S9)).xy, i32(((_S9)).z), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f)).x)))
+        if((bsPosition_0.z) < (GetInverseHeight_0(clamp((textureSampleGrad((coneMapTextures_0), (coneMapSampler_0), ((_S9)).xy, i32(((_S9)).z), (ddxUV_0), (ddyUV_0))).xy, vec2<f32>(0.0f), vec2<f32>(1.0f)).x)))
         {
             bsPosition_0 = bsPosition_0 + bsRange_2;
         }
@@ -166,15 +166,15 @@ fn sampleRelaxedConeStepMapping_0( idx_0 : u32,  heightScaleVal_1 : f32,  numLay
     return bsPosition_0.xy;
 }
 
-fn sampleNormalMap_0( idx_1 : u32,  uv_1 : vec2<f32>,  ddxUV_1 : vec2<f32>,  ddyUV_1 : vec2<f32>) -> vec3<f32>
+fn sampleNormalMap_0( idx_0 : u32,  uv_1 : vec2<f32>,  ddxUV_1 : vec2<f32>,  ddyUV_1 : vec2<f32>) -> vec3<f32>
 {
-    var _S10 : vec3<f32> = vec3<f32>(uv_1, f32(idx_1));
+    var _S10 : vec3<f32> = vec3<f32>(uv_1, f32(idx_0));
     return normalize(vec3<f32>(2.0f) * (textureSampleGrad((normalTextures_0), (normalSampler_0), ((_S10)).xy, i32(((_S10)).z), (ddxUV_1), (ddyUV_1))).xyz - vec3<f32>(1.0f));
 }
 
-fn sampleColorTextureGrad_0( idx_2 : u32,  uv_2 : vec2<f32>,  ddxUV_2 : vec2<f32>,  ddyUV_2 : vec2<f32>) -> vec4<f32>
+fn sampleColorTextureGrad_0( idx_1 : u32,  uv_2 : vec2<f32>,  ddxUV_2 : vec2<f32>,  ddyUV_2 : vec2<f32>) -> vec4<f32>
 {
-    var _S11 : vec3<f32> = vec3<f32>(uv_2, f32(idx_2));
+    var _S11 : vec3<f32> = vec3<f32>(uv_2, f32(idx_1));
     return (textureSampleGrad((colorTextures_0), (colorSampler_0), ((_S11)).xy, i32(((_S11)).z), (ddxUV_2), (ddyUV_2)));
 }
 
@@ -393,8 +393,8 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                 if((uboFS_0.hasConeMap_0) != u32(0))
                 {
                     var _S31 : u32 = i_2 + u32(1);
-                    var _S32 : vec2<f32> = sampleRelaxedConeStepMapping_0(_S31, uboFS_0.heightScale_0[_S31].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
-                    uv1_0 = sampleRelaxedConeStepMapping_0(i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
+                    var _S32 : vec2<f32> = RelaxedConeStepMapping_0(heightTextures_0, heightSampler_0, _S31, uboFS_0.heightScale_0[_S31].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
+                    uv1_0 = RelaxedConeStepMapping_0(heightTextures_0, heightSampler_0, i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
                     uv2_0 = _S32;
                 }
                 else
@@ -430,7 +430,7 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
                 {
                     if((uboFS_0.hasConeMap_0) != u32(0))
                     {
-                        uv1_0 = sampleRelaxedConeStepMapping_0(i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
+                        uv1_0 = RelaxedConeStepMapping_0(heightTextures_0, heightSampler_0, i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
                     }
                     else
                     {
@@ -456,7 +456,7 @@ fn fragmentMain( _S23 : pixelInput_0, @builtin(position) position_1 : vec4<f32>)
         {
             if((uboFS_0.hasConeMap_0) != u32(0))
             {
-                uv1_0 = sampleRelaxedConeStepMapping_0(i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
+                uv1_0 = RelaxedConeStepMapping_0(heightTextures_0, heightSampler_0, i_2, uboFS_0.heightScale_0[i_2].x, uboFS_0.numLayers_0, _S23.textureCoord_0, _S28, _S29, _S25);
             }
             else
             {
