@@ -1,6 +1,7 @@
 #ifndef __IROOT_RENDERER_H__
 #define __IROOT_RENDERER_H__
 
+#include "FrameSubmitSync.h"
 #include "RenderContext.h"
 
 #include "../scene/IScene.h"
@@ -10,7 +11,7 @@ class IRootRenderer {
 public:
     virtual void Init() = 0;
 
-    virtual void Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene) = 0;
+    virtual FrameSubmitSync Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene) = 0;
 
     virtual void ShutDown() = 0;
 

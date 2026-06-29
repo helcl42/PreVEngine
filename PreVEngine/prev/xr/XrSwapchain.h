@@ -10,6 +10,7 @@
 #include "../render/framebuffer/Framebuffer.h"
 #include "../render/pass/RenderPass.h"
 #include "../render/swapchain/ISwapchain.h"
+#include "../render/swapchain/SwapchainTargets.h"
 
 #include "../core/device/Device.h"
 #include "../core/sync/Fence.h"
@@ -27,7 +28,7 @@ public:
 public:
     bool BeginFrame(prev::render::swapchain::FrameContext& outContext) override;
 
-    void EndFrame() override;
+    void EndFrame(const prev::render::FrameSubmitSync& submitSync) override;
 
     void Print() const override;
 
@@ -64,12 +65,8 @@ private:
 
     GfxExtent2D m_extent{};
 
-    // MSAA resources (shared across all frames)
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer;
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer;
-
-    // Owned depth buffer (when XR doesn't provide depth images)
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_ownedDepthBuffer;
+    // Shared MSAA color/depth + (when XR doesn't provide depth) a shared depth, plus framebuffer assembly.
+    std::unique_ptr<prev::render::swapchain::SwapchainTargets> m_targets;
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 

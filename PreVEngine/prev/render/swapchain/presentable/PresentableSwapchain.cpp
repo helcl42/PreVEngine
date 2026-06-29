@@ -60,47 +60,8 @@ PresentableSwapchain::~PresentableSwapchain()
 
 void PresentableSwapchain::CreateResources()
 {
-    const GfxFormat colorFormat = m_renderPass.GetColorFormat();
-    const GfxFormat depthFormat = m_renderPass.GetDepthFormat();
-    const GfxSampleCount sampleCount = m_renderPass.GetSampleCount();
-    const GfxTextureViewType viewType = (m_viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
-
-    const auto& graphicsQueue = m_device.GetQueue(core::device::QueueType::GRAPHICS);
-
-    // Depth texture
-    m_depthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
-                        .SetExtent({ m_extent.width, m_extent.height, 1 })
-                        .SetFormat(depthFormat)
-                        .SetType(GFX_TEXTURE_TYPE_2D)
-                        .SetViewType(viewType)
-                        .SetSampleCount(sampleCount)
-                        .SetLayerCount(m_viewCount)
-                        .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
-                        .Build();
-
-    if (sampleCount > GFX_SAMPLE_COUNT_1) {
-        // MSAA color texture
-        m_msaaColorBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
-                                .SetExtent({ m_extent.width, m_extent.height, 1 })
-                                .SetFormat(colorFormat)
-                                .SetType(GFX_TEXTURE_TYPE_2D)
-                                .SetViewType(viewType)
-                                .SetSampleCount(sampleCount)
-                                .SetLayerCount(m_viewCount)
-                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
-                                .Build();
-
-        // MSAA depth texture
-        m_msaaDepthBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, graphicsQueue }
-                                .SetExtent({ m_extent.width, m_extent.height, 1 })
-                                .SetFormat(depthFormat)
-                                .SetType(GFX_TEXTURE_TYPE_2D)
-                                .SetViewType(viewType)
-                                .SetSampleCount(sampleCount)
-                                .SetLayerCount(m_viewCount)
-                                .SetUsageFlags(GFX_TEXTURE_USAGE_RENDER_ATTACHMENT)
-                                .Build();
-    }
+    // Shared depth + MSAA attachments and per-image framebuffer assembly (the part identical across swapchains).
+    m_targets = std::make_unique<SwapchainTargets>(m_device, m_renderPass, m_extent, m_renderPass.GetColorFormat(), m_renderPass.GetDepthFormat(), m_renderPass.GetSampleCount(), m_viewCount, /*createSharedDepth*/ true);
 
     // Per-swapchain-image resources
     GfxSwapchainInfo info{};
@@ -114,23 +75,7 @@ void PresentableSwapchain::CreateResources()
         // View is owned by the swapchain, do not destroy it
         GFXERRCHECK(gfxSwapchainGetTextureView(m_swapchain, i, &sb.view));
 
-        GfxTextureView colorView{};
-        GfxTextureView depthView{};
-        GfxTextureView colorResolve{};
-        if (sampleCount > GFX_SAMPLE_COUNT_1) {
-            colorView = m_msaaColorBuffer->GetTextureView();
-            colorResolve = sb.view;
-            depthView = m_msaaDepthBuffer->GetTextureView();
-        } else {
-            colorView = sb.view;
-            depthView = m_depthBuffer->GetTextureView();
-        }
-
-        sb.framebuffer = prev::render::framebuffer::FramebufferBuilder{ m_device, m_renderPass }
-                             .SetExtent(m_extent)
-                             .AddColorAttachment(colorView, colorResolve)
-                             .SetDepthStencilAttachment(depthView)
-                             .Build();
+        sb.framebuffer = m_targets->CreateFramebuffer(sb.view);
 
         sb.renderSemaphore = std::make_unique<core::sync::Semaphore>(m_device, GFX_SEMAPHORE_TYPE_BINARY, 0, "RenderSemaphore");
     }
@@ -170,9 +115,7 @@ void PresentableSwapchain::DestroyResources()
     }
     m_framesInFlight.clear();
 
-    m_msaaDepthBuffer.reset();
-    m_msaaColorBuffer.reset();
-    m_depthBuffer.reset();
+    m_targets.reset();
 }
 
 bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
@@ -202,7 +145,7 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
     return true;
 }
 
-void PresentableSwapchain::EndFrame()
+void PresentableSwapchain::EndFrame(const FrameSubmitSync& submitSync)
 {
     ASSERT(m_isAcquired, "PresentableSwapchain: BeginFrame must succeed before EndFrame");
 
@@ -212,19 +155,37 @@ void PresentableSwapchain::EndFrame()
     GFXERRCHECK(gfxCommandEncoderEnd(frameInFlight.commandEncoder));
 
     GfxCommandEncoder encoders[] = { frameInFlight.commandEncoder };
-    GfxSemaphore waitSems[] = { *frameInFlight.acquireSemaphore };
-    GfxPipelineStageFlags waitStages[] = { GFX_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT };
-    GfxSemaphore signalSems[] = { *swapchainBuffer.renderSemaphore };
+
+    // Wait: acquired image (binary, value 0) + this frame's deps. Values are index-aligned; gfx reads them
+    // only for timeline semaphores.
+    std::vector<GfxSemaphore> waitSems{ *frameInFlight.acquireSemaphore };
+    std::vector<GfxPipelineStageFlags> waitStages{ GFX_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT };
+    std::vector<uint64_t> waitValues{ 0 };
+    for (const auto& wait : submitSync.waits) {
+        waitSems.push_back(wait.semaphore);
+        waitStages.push_back(wait.stage);
+        waitValues.push_back(wait.value);
+    }
+
+    // Signal: render semaphore (binary, present waits on it) + this frame's deps.
+    std::vector<GfxSemaphore> signalSems{ *swapchainBuffer.renderSemaphore };
+    std::vector<uint64_t> signalValues{ 0 };
+    for (const auto& signal : submitSync.signals) {
+        signalSems.push_back(signal.semaphore);
+        signalValues.push_back(signal.value);
+    }
 
     GfxSubmitDescriptor submitDesc{};
     submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
     submitDesc.commandEncoders = encoders;
     submitDesc.commandEncoderCount = 1;
-    submitDesc.waitSemaphores = waitSems;
-    submitDesc.waitStages = waitStages;
-    submitDesc.waitSemaphoreCount = 1;
-    submitDesc.signalSemaphores = signalSems;
-    submitDesc.signalSemaphoreCount = 1;
+    submitDesc.waitSemaphores = waitSems.data();
+    submitDesc.waitStages = waitStages.data();
+    submitDesc.waitValues = waitValues.data();
+    submitDesc.waitSemaphoreCount = static_cast<uint32_t>(waitSems.size());
+    submitDesc.signalSemaphores = signalSems.data();
+    submitDesc.signalValues = signalValues.data();
+    submitDesc.signalSemaphoreCount = static_cast<uint32_t>(signalSems.size());
     submitDesc.signalFence = *frameInFlight.fence;
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 

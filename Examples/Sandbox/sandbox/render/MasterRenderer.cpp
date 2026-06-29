@@ -31,7 +31,7 @@ void MasterRenderer::Init()
     m_defaultRenderer->Init();
 }
 
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene)
+prev::render::FrameSubmitSync MasterRenderer::Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene)
 {
     const auto camera{ prev::scene::component::NodeComponentHelper::Find<sandbox::component::CameraComponent>(scene.GetRootNode(), { sandbox::TAG_MAIN_CAMERA }) };
 
@@ -55,6 +55,8 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
     m_renderPass.End();
 
     m_defaultRenderer->EndFrame(); // trim this frame's bind-group region back to what it used
+
+    return {};
 }
 
 void MasterRenderer::TraverseScene(GfxRenderPassEncoder encoder, const GfxScissorRect& rect, const ViewData& views, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)

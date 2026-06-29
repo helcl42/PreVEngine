@@ -2,6 +2,7 @@
 #define __ISWAPCHAIN_H__
 
 #include "../../core/Core.h"
+#include "../FrameSubmitSync.h"
 
 namespace prev::render::swapchain {
 struct FrameContext {
@@ -14,7 +15,7 @@ class ISwapchain {
 public:
     virtual bool BeginFrame(FrameContext& outContext) = 0;
 
-    virtual void EndFrame() = 0;
+    virtual void EndFrame(const FrameSubmitSync& submitSync) = 0;
 
     virtual void Print() const = 0;
 

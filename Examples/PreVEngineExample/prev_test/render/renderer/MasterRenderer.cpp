@@ -63,7 +63,7 @@ void MasterRenderer::Init()
     InitRefraction();
 }
 
-void MasterRenderer::Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene)
+prev::render::FrameSubmitSync MasterRenderer::Render(const prev::render::RenderContext& renderContext, const prev::scene::IScene& scene)
 {
     // Shadows render pass
     RenderShadows(renderContext, scene.GetRootNode());
@@ -81,6 +81,8 @@ void MasterRenderer::Render(const prev::render::RenderContext& renderContext, co
     // Debug quad with shadowMap
     // RenderDebug(renderContext, scene->GetRootNode());
 #endif
+
+    return {};
 }
 
 void MasterRenderer::ShutDown()

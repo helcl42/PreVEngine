@@ -2,6 +2,7 @@
 #define __HEADLESS_SWAPCHAIN_H__
 
 #include "../ISwapchain.h"
+#include "../SwapchainTargets.h"
 
 #include "../../buffer/ImageBuffer.h"
 #include "../../framebuffer/Framebuffer.h"
@@ -23,7 +24,7 @@ public:
 public:
     bool BeginFrame(FrameContext& outContext) override;
 
-    void EndFrame() override;
+    void EndFrame(const FrameSubmitSync& submitSync) override;
 
     void Print() const override;
 
@@ -55,11 +56,7 @@ private:
 
     uint32_t m_viewCount{ 1 };
 
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_depthBuffer;
-
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaColorBuffer;
-
-    std::unique_ptr<prev::render::buffer::ImageBuffer> m_msaaDepthBuffer;
+    std::unique_ptr<SwapchainTargets> m_targets;
 
     std::vector<SwapchainBuffer> m_swapchainBuffers;
 

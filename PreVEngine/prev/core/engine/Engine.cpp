@@ -66,8 +66,8 @@ void Engine::RunOneFrame()
             m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
 
             const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
-            rootRenderer.Render(renderContext, scene);
-            swapchain.EndFrame();
+            const prev::render::FrameSubmitSync submitSync{ rootRenderer.Render(renderContext, scene) };
+            swapchain.EndFrame(submitSync);
         }
     } else {
         LOGW("No focus...");
