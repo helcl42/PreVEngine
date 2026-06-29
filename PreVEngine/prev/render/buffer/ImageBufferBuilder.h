@@ -77,6 +77,8 @@ private:
 
     void UploadLayerData(GfxTexture texture, GfxCommandEncoder commandEncoder) const;
 
+    uint32_t ComputeBytesPerRow() const;
+
     // Packs all layers into one host-visible staging buffer (created + filled now). Caller owns it.
     GfxBuffer CreateLayerStagingBuffer() const;
 
