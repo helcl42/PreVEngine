@@ -153,7 +153,9 @@ python Scripts/compile_shaders.py --list
 | `ENABLE_LOGGING` | ON | Enable logging output |
 | `ENABLE_REVERSE_DEPTH` | OFF | Use reverse depth buffer |
 | `ENABLE_MULTITOUCH` | OFF | Multi-touch input support |
-| `ENABLE_ASAN` | OFF | Address Sanitizer |
+| `ENABLE_ASAN` | OFF | Address Sanitizer (mutually exclusive with `ENABLE_TSAN`) |
+| `ENABLE_UBSAN` | OFF | Undefined Behavior Sanitizer (combines with ASan or TSan) |
+| `ENABLE_TSAN` | OFF | Thread Sanitizer (mutually exclusive with `ENABLE_ASAN`) |
 
 ### Linux-specific
 

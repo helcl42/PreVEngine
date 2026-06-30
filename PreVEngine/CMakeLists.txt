@@ -74,7 +74,9 @@ option(ENABLE_XR_EXTENDED_INIT "Enable XR extended init (currently applicable on
 option(ENABLE_XR_DEPTH "Enable XR Depth" OFF)
 option(BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
-option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_ASAN  "Enable Address Sanitizer"            OFF)
+option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
+option(ENABLE_TSAN  "Enable Thread Sanitizer"             OFF)
 
 if (ENABLE_LOGGING)
     add_definitions(-DENABLE_LOGGING)
@@ -101,8 +103,50 @@ include_directories("external")
 if(EMSCRIPTEN)
     set(BUILD_VULKAN_BACKEND OFF CACHE BOOL "Vulkan not available on web" FORCE)
     set(BUILD_WEBGPU_BACKEND ON CACHE BOOL "" FORCE)
-    set(ENABLE_ASAN OFF CACHE BOOL "ASan not supported on web" FORCE)
+    # Sanitizers are not supported on web - force off so the flags never reach the Emscripten link.
+    set(ENABLE_ASAN  OFF CACHE BOOL "Sanitizers not supported on web" FORCE)
+    set(ENABLE_UBSAN OFF CACHE BOOL "Sanitizers not supported on web" FORCE)
+    set(ENABLE_TSAN  OFF CACHE BOOL "Sanitizers not supported on web" FORCE)
     add_definitions(-DWORM_HOLES_SINGLE_THREADED)
+endif()
+
+# ---------------------------------------------------------------------------
+# Sanitizers (Clang/GCC; AddressSanitizer also on MSVC). The derivation lives
+# here once and is carried by the prev_sanitizers INTERFACE target, which every
+# first-party target links (PreVEngine, the examples, the tests). Vendored code
+# under external/ is left uninstrumented - it is never linked against this target.
+# ASan and TSan are mutually exclusive; UBSan combines with either.
+# ---------------------------------------------------------------------------
+if(ENABLE_ASAN AND ENABLE_TSAN)
+    message(FATAL_ERROR "ENABLE_ASAN and ENABLE_TSAN are mutually exclusive")
+endif()
+
+add_library(prev_sanitizers INTERFACE)
+if(MSVC)
+    if(ENABLE_ASAN)
+        target_compile_options(prev_sanitizers INTERFACE /fsanitize=address)
+        message(STATUS "Sanitizers enabled: address (MSVC)")
+    endif()
+    if(ENABLE_UBSAN OR ENABLE_TSAN)
+        message(WARNING "UBSan/TSan are not supported on MSVC - ignoring")
+    endif()
+else()
+    set(_prev_sanitizers "")
+    if(ENABLE_ASAN)
+        list(APPEND _prev_sanitizers address)
+    endif()
+    if(ENABLE_UBSAN)
+        list(APPEND _prev_sanitizers undefined)
+    endif()
+    if(ENABLE_TSAN)
+        list(APPEND _prev_sanitizers thread)
+    endif()
+    if(_prev_sanitizers)
+        string(REPLACE ";" "," _prev_sanitizers_flag "${_prev_sanitizers}")
+        target_compile_options(prev_sanitizers INTERFACE -fsanitize=${_prev_sanitizers_flag} -fno-omit-frame-pointer -g)
+        target_link_options(prev_sanitizers INTERFACE -fsanitize=${_prev_sanitizers_flag})
+        message(STATUS "Sanitizers enabled: ${_prev_sanitizers_flag}")
+    endif()
 endif()
 
 if(IOS OR ANDROID OR ENABLE_XR)
@@ -336,13 +380,5 @@ endif()
 # Propagate MAX_VIEW_COUNT to all dependents
 target_compile_definitions(${PROJECT_NAME} PUBLIC MAX_VIEW_COUNT_VALUE=${MAX_VIEW_COUNT})
 
-# Address Sanitizer (optional)
-if(ENABLE_ASAN)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /fsanitize=address)
-    else()
-        target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
-        target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-    endif()
-    message("${PROJECT_NAME} - Address Sanitizer enabled")
-endif()
+# Sanitizers (see top-level CMakeLists). No-op unless ENABLE_ASAN/UBSAN/TSAN is set.
+target_link_libraries(${PROJECT_NAME} prev_sanitizers)

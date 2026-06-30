@@ -40,14 +40,7 @@ if(ANDROID)
     target_link_libraries(PreVEngineTests log android)
 endif()
 
-# Address Sanitizer (optional, propagated from PreVEngine)
-if(ENABLE_ASAN)
-    if(MSVC)
-        target_compile_options(PreVEngineTests PRIVATE /fsanitize=address)
-    else()
-        target_compile_options(PreVEngineTests PRIVATE -fsanitize=address -fno-omit-frame-pointer)
-        target_link_options(PreVEngineTests PRIVATE -fsanitize=address)
-    endif()
-endif()
+# Sanitizers (see top-level CMakeLists). No-op unless ENABLE_ASAN/UBSAN/TSAN is set.
+target_link_libraries(PreVEngineTests prev_sanitizers)
 
 add_test(NAME PreVEngineTests COMMAND PreVEngineTests)

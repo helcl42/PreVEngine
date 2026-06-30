@@ -310,16 +310,8 @@ else()
     message(FATAL_ERROR "Unsupported platform.")
 endif()
 
-# Address Sanitizer (optional, propagated from PreVEngine)
-if(ENABLE_ASAN)
-    if(MSVC)
-        target_compile_options(${PROJECT_NAME} PRIVATE /fsanitize=address)
-    else()
-        target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -fno-omit-frame-pointer)
-        target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address)
-    endif()
-    message("${PROJECT_NAME} - Address Sanitizer enabled")
-endif()
+# Sanitizers (see top-level CMakeLists). No-op unless ENABLE_ASAN/UBSAN/TSAN is set.
+target_link_libraries(${PROJECT_NAME} prev_sanitizers)
 
 if(TARGET CompileShaders AND TARGET ${PROJECT_NAME})
     add_dependencies(${PROJECT_NAME} CompileShaders)

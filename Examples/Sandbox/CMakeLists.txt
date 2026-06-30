@@ -167,6 +167,11 @@ else()
     message(FATAL_ERROR "Unsupported platform for Sandbox example.")
 endif()
 
+# Sanitizers (see top-level CMakeLists). No-op unless ENABLE_ASAN/UBSAN/TSAN is set.
+if(TARGET ${PROJECT_NAME})
+    target_link_libraries(${PROJECT_NAME} prev_sanitizers)
+endif()
+
 if(TARGET CompileSandboxShaders AND TARGET ${PROJECT_NAME})
     add_dependencies(${PROJECT_NAME} CompileSandboxShaders)
 endif()
