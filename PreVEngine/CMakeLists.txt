@@ -74,6 +74,7 @@ option(ENABLE_XR_EXTENDED_INIT "Enable XR extended init (currently applicable on
 option(ENABLE_XR_DEPTH "Enable XR Depth" OFF)
 option(BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
+option(BUILD_HEADLESS "Build without windowing system support (no surface creation)" OFF)
 option(ENABLE_ASAN  "Enable Address Sanitizer"            OFF)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
 option(ENABLE_TSAN  "Enable Thread Sanitizer"             OFF)
@@ -262,7 +263,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     option(ENABLE_WAYLAND "Enable Wayland support" OFF)
     option(ENABLE_XLIB "Enable Xlib support" ON)
     
-    if (ENABLE_XCB)
+    if(BUILD_HEADLESS)
+        message("${PROJECT_NAME} - Linux headless (no X11/XCB/Wayland)")
+
+        add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
+        target_link_libraries(${PROJECT_NAME} gfx pthread)
+    elseif (ENABLE_XCB)
         add_definitions(-DTARGET_PLATFORM_XCB)
 
         add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
@@ -317,11 +323,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
         message(FATAL_ERROR "Unsupported Linux Window System.")
     endif()
 
-    # gfx library auto-detects Wayland and publicly defines GFX_HAS_WAYLAND
-    # even when XCB is selected. Add the platform/wayland include so the
-    # guarded WaylandWindowImpl header can find xdg-shell.h.
-    find_package(Wayland QUIET)
-    if(WAYLAND_CLIENT_FOUND)
+    # gfx auto-detects Wayland and publicly defines GFX_HAS_WAYLAND independently of PreVEngine's
+    # window-system selection. WaylandWindowImpl.cpp is globbed into every Linux build and self-guards
+    # on that macro, so it needs platform/wayland on the include path exactly when gfx defined it
+    # (e.g. an XCB build that also has Wayland) - and never in a headless build, where gfx defines nothing.
+    # gfx's GFX_HAS_WAYLAND is a directory-scoped variable not visible here, so read the actual gfx
+    # target definition instead - the same condition that gates the WaylandWindowImpl source.
+    get_target_property(_gfx_compile_defs gfx INTERFACE_COMPILE_DEFINITIONS)
+    if(_gfx_compile_defs MATCHES "GFX_HAS_WAYLAND")
         include_directories("platform/wayland")
     endif()
 

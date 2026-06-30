@@ -12,6 +12,12 @@ namespace prev::core::engine::impl {
 EngineImpl::EngineImpl(const Config& config)
     : m_config{ config }
 {
+#if defined(GFX_HEADLESS_BUILD)
+    if (!m_config.headless) {
+        LOGW("BUILD_HEADLESS: no windowing system compiled in - forcing headless mode (windowed rendering unavailable)");
+    }
+    m_config.headless = true;
+#endif
 }
 
 EngineImpl::~EngineImpl()

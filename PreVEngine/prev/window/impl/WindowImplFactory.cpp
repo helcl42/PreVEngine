@@ -30,7 +30,10 @@ std::unique_ptr<WindowImpl> WindowImplFactory::Create(const WindowInfo& info) co
         return std::make_unique<headless::HeadlessWindowImpl>(info);
     }
 
-#ifdef TARGET_PLATFORM_ANDROID
+#if defined(GFX_HEADLESS_BUILD)
+    // Headless build: no windowing system is compiled in, so there is nothing else to create.
+    return std::make_unique<headless::HeadlessWindowImpl>(info);
+#elif defined(TARGET_PLATFORM_ANDROID)
     return std::make_unique<android::AndroidWindowImpl>(info);
 #elif defined(TARGET_PLATFORM_XCB)
     return std::make_unique<xcb::XcbWindowImpl>(info);

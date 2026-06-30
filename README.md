@@ -9,6 +9,7 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 | Windows | [![Windows - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows.yml) |
 | Linux (Wayland) | [![Linux (Wayland) - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland.yml) |
 | Linux (XCB) | [![Linux (XCB) - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb.yml) |
+| Linux (Headless) | [![Linux Headless - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless.yml) |
 | macOS | [![MacOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-macos.yml) |
 | iOS | [![iOS - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-ios.yml) |
 | Android | [![Android - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android.yml) |
@@ -19,6 +20,7 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 | Windows | [![Windows OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml) |
 | Linux (Wayland) | [![Linux (Wayland) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml) |
 | Linux (XCB) | [![Linux (XCB) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml) |
+| Linux (Headless) | [![Linux OpenXR Headless - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-openxr-headless.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-openxr-headless.yml) |
 | Android | [![Android OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml) |
 
 ## 🌐 [Live Web Demo](https://helcl42.github.io/PreVEngine/)
@@ -99,6 +101,20 @@ emcmake cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --target PreVEngineExample
 ```
 
+### Headless (no display)
+
+For offscreen rendering with no windowing system — e.g. a Linux server/CI box with no X11/XCB/Wayland:
+
+```bash
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_HEADLESS=ON ..
+ninja
+```
+
+`BUILD_HEADLESS` drops the windowing dependency (no X11/XCB/Wayland linked on Linux) and forces the
+engine to render headless at runtime — it only ever creates an offscreen swapchain, never a surface.
+For a fully windowing-free build, also pass `-DBUILD_WEBGPU_BACKEND=OFF` (Dawn pulls in X11); Vulkan
+is the intended headless backend.
+
 ## Compile Shaders
 
 Shaders are written in [Slang](https://shader-slang.com/) and compiled directly to SPIR-V and WGSL using `slangc`.
@@ -149,6 +165,7 @@ python Scripts/compile_shaders.py --list
 |--------|---------|-------------|
 | `BUILD_VULKAN_BACKEND` | ON | Build Vulkan backend |
 | `BUILD_WEBGPU_BACKEND` | ON | Build WebGPU backend (Dawn) |
+| `BUILD_HEADLESS` | OFF | Build without a windowing system - offscreen only, no surface. |
 | `ENABLE_XR` | OFF | Enable OpenXR support |
 | `ENABLE_LOGGING` | ON | Enable logging output |
 | `ENABLE_REVERSE_DEPTH` | OFF | Use reverse depth buffer |
