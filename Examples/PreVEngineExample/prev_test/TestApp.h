@@ -2,6 +2,8 @@
 #define __TEST_APP_H__
 
 #include <prev/App.h>
+#include <prev/event/EventHandler.h>
+#include <prev/input/keyboard/KeyboardEvents.h>
 
 namespace prev_test {
 class TestApp final : public prev::App {
@@ -10,10 +12,16 @@ public:
 
     ~TestApp() = default;
 
+public:
+    void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
+
 protected:
     std::unique_ptr<prev::scene::IScene> CreateScene() const override;
 
     std::unique_ptr<prev::render::IRootRenderer> CreateRootRenderer() const override;
+
+private:
+    prev::event::EventHandler<TestApp, prev::input::keyboard::KeyEvent> m_keyEventHandler{ *this };
 };
 } // namespace prev_test
 
