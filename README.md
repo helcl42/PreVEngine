@@ -17,12 +17,12 @@ PreVEngine is a cross-platform rendering engine supporting both **Vulkan** and *
 
 | XR (VR/AR) | Status |
 |---|---:|
-| OpenXR — Windows | [![Windows OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml) |
-| OpenXR — Linux (Wayland) | [![Linux (Wayland) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml) |
-| OpenXR — Linux (XCB) | [![Linux (XCB) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml) |
-| OpenXR — Linux (Headless) | [![Linux (Headless) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless-openxr.yml) |
-| OpenXR — Android | [![Android OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml) |
-| WebXR — Web | [![WebXR - CI Build](https://github.com/helcl42/PreVEngine/actions/workflows/ci-webxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-webxr.yml) |
+| OpenXR - Windows | [![Windows OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-windows-openxr.yml) |
+| OpenXR - Linux (Wayland) | [![Linux (Wayland) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-wayland-openxr.yml) |
+| OpenXR - Linux (XCB) | [![Linux (XCB) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-xcb-openxr.yml) |
+| OpenXR - Linux (Headless) | [![Linux (Headless) OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-linux-headless-openxr.yml) |
+| OpenXR - Android | [![Android OpenXR - CI Build/Test](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-android-openxr.yml) |
+| WebXR - Web | [![WebXR - CI Build](https://github.com/helcl42/PreVEngine/actions/workflows/ci-webxr.yml/badge.svg)](https://github.com/helcl42/PreVEngine/actions/workflows/ci-webxr.yml) |
 
 ## 🌐 [Live Web Demo](https://helcl42.github.io/PreVEngine/)
 
@@ -35,15 +35,15 @@ Runs in any WebGPU-capable browser:
 </p>
 
 
-- **[PreVEngine Example](https://helcl42.github.io/PreVEngine/)** — full scene demo.
-- **[Sandbox](https://helcl42.github.io/PreVEngine/Sandbox.html)** — minimal end-to-end example (see [Examples/Sandbox](Examples/Sandbox)).
+- **[PreVEngine Example](https://helcl42.github.io/PreVEngine/)** - full scene demo.
+- **[Sandbox](https://helcl42.github.io/PreVEngine/Sandbox.html)** - minimal end-to-end example (see [Examples/Sandbox](Examples/Sandbox)).
 
 ### 🥽 WebXR (VR)
 
 Open on a WebXR-capable headset browser (e.g. Meta Quest Browser) and press **Enter VR**:
 
-- **[PreVEngine Example (WebXR)](https://helcl42.github.io/PreVEngine/webxr/PreVEngineExample.html)** — full scene rendered in stereo VR.
-- **[Sandbox (WebXR)](https://helcl42.github.io/PreVEngine/webxr/Sandbox.html)** — minimal end-to-end WebXR example.
+- **[PreVEngine Example (WebXR)](https://helcl42.github.io/PreVEngine/webxr/PreVEngineExample.html)** - full scene rendered in stereo VR.
+- **[Sandbox (WebXR)](https://helcl42.github.io/PreVEngine/webxr/Sandbox.html)** - minimal end-to-end WebXR example.
 
 > These need an immersive-VR device: on a desktop browser without a headset the page loads but can't start a session (use an [immersive-web emulator](https://github.com/meta-quest/immersive-web-emulator) extension to test on desktop). To build and run WebXR locally, see [VR / AR (XR)](#vr--ar-xr).
 
@@ -51,7 +51,7 @@ Open on a WebXR-capable headset browser (e.g. Meta Quest Browser) and press **En
 
 - **Multiple rendering backends**: Vulkan and WebGPU (via Dawn)
 - **Cross-platform**: Win32, XCB, Wayland, Cocoa (macOS), UIKit (iOS), Android native, Web (Emscripten/WASM)
-- **XR (VR/AR)**: OpenXR (native — Windows, Linux, Android) and WebXR (browser, over WebGPU)
+- **XR (VR/AR)**: OpenXR (native - Windows, Linux, Android) and WebXR (browser, over WebGPU)
 - **Shader pipeline**: Slang → SPIR-V / WGSL (via slangc)
 
 ## Clone
@@ -111,7 +111,7 @@ cmake --build . --target PreVEngineExample
 
 ### Headless (no display)
 
-For offscreen rendering with no windowing system — e.g. a Linux server/CI box with no X11/XCB/Wayland:
+For offscreen rendering with no windowing system - e.g. a Linux server/CI box with no X11/XCB/Wayland:
 
 ```bash
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_HEADLESS=ON ..
@@ -119,18 +119,18 @@ ninja
 ```
 
 `BUILD_HEADLESS` drops the windowing dependency (no X11/XCB/Wayland linked on Linux) and forces the
-engine to render headless at runtime — it only ever creates an offscreen swapchain, never a surface.
+engine to render headless at runtime - it only ever creates an offscreen swapchain, never a surface.
 For a fully windowing-free build, also pass `-DBUILD_WEBGPU_BACKEND=OFF` (Dawn pulls in X11); Vulkan
 is the intended headless backend.
 
 ## VR / AR (XR)
 
-Two XR backends sit behind one interface — **OpenXR** (native: Windows, Linux, Android — Vulkan) and
+Two XR backends sit behind one interface - **OpenXR** (native: Windows, Linux, Android - Vulkan) and
 **WebXR** (browser, over WebGPU). Both are off by default; enable exactly one. Stereo is rendered
 single-pass via **multiview** by default (`ENABLE_MULTIVIEW=ON`); WebGPU has no multiview, so **WebXR is
 always per-eye** (one pass per eye).
 
-### OpenXR — desktop (Windows / Linux)
+### OpenXR - desktop (Windows / Linux)
 
 ```bash
 mkdir build-xr && cd build-xr
@@ -141,7 +141,7 @@ ninja PreVEngineExample
 Add `-DENABLE_MULTIVIEW=OFF` to render each eye in its own pass instead of single-pass multiview.
 (macOS has no OpenXR runtime and is not supported.)
 
-### OpenXR — Android (e.g. Quest)
+### OpenXR - Android (e.g. Quest)
 
 ```bash
 cd Examples/PreVEngineExample/platform/android
@@ -149,7 +149,7 @@ cd Examples/PreVEngineExample/platform/android
 ./gradlew installDebug -PenableXr -PnoMultiview   # per-eye (one pass per eye)
 ```
 
-### WebXR — browser (over WebGPU)
+### WebXR - browser (over WebGPU)
 
 ```bash
 source /path/to/emsdk/emsdk_env.sh
@@ -167,7 +167,7 @@ python3 Scripts/https_server.py build-webxr/Examples/PreVEngineExample/
 # → https://<your-lan-ip>:8443/PreVEngineExample.html
 ```
 
-The engine picks the backend from the enabled option — no code changes needed to target OpenXR vs WebXR.
+The engine picks the backend from the enabled option - no code changes needed to target OpenXR vs WebXR.
 
 ## Compile Shaders
 
