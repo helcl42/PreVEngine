@@ -1,14 +1,14 @@
 // Hand tracking visualization shader - renders cubes at hand joint positions
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 struct HandTrackingVSParams
 {
     float4x4 modelMatrix;
-    float4x4 viewMatrices[MAX_VIEW_COUNT];
-    float4x4 projectionMatrices[MAX_VIEW_COUNT];
+    float4x4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];
+    float4x4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT];
 };
 
 struct HandTrackingFSParams
@@ -35,12 +35,12 @@ struct Interpolants
 
 [shader("vertex")]
 Interpolants vertexMain(VertexInput input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID
 #endif
 )
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const int viewIndex = 0;
 #endif
 

@@ -4,16 +4,16 @@
 // world -> view -> clip itself and forwards the world-space position/normal. That gives any
 // prototype shader access to world and view space without changing the C++ uniform layout.
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 struct SandboxParams
 {
     float4x4 modelMatrix;                        // object -> world
     float4x4 normalMatrix;                       // object -> world for normals (model, rotation-only here)
-    float4x4 viewMatrices[MAX_VIEW_COUNT];       // world -> eye, per view
-    float4x4 projectionMatrices[MAX_VIEW_COUNT]; // eye -> clip, per view
+    float4x4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];       // world -> eye, per view
+    float4x4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT]; // eye -> clip, per view
     float4 lightDirection;                       // world-space direction TO the light (xyz)
     float4 color;                                // base color (rgb)
 };
@@ -35,12 +35,12 @@ struct VertexOutput
 
 [shader("vertex")]
 VertexOutput vertexMain(VertexInput input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID // multiview: the layer (eye) currently being rendered
 #endif
 )
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const uint viewIndex = 0; // mono: a single view
 #endif
     VertexOutput output;

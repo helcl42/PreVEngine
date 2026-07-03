@@ -13,8 +13,8 @@ constexpr const uint32_t MAX_HAND_COUNT{ 2 };
 constexpr const uint32_t MAX_HAND_TRACKING_JOINT_COUNT{ 26 };
 
 struct CameraEvent {
-    prev::util::math::Pose poses[MAX_VIEW_COUNT]{};
-    prev::util::math::Fov fovs[MAX_VIEW_COUNT]{};
+    prev::util::math::Pose poses[MAX_VIEW_COUNT_VALUE]{};
+    prev::util::math::Fov fovs[MAX_VIEW_COUNT_VALUE]{};
     uint32_t count{};
 };
 

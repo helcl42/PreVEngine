@@ -80,10 +80,24 @@ bool HeadlessSwapchain::BeginFrame(FrameContext& outContext)
 
     GFXERRCHECK(gfxCommandEncoderBegin(sb.commandEncoder));
 
-    outContext.frameBuffer = *sb.framebuffer;
     outContext.commandEncoder = sb.commandEncoder;
     outContext.index = m_frameIndex;
     return true;
+}
+
+void HeadlessSwapchain::BeginPass(FrameContext& outContext, uint32_t passIndex)
+{
+    (void)passIndex; // single-pass (mono): GetPassCount() == 1
+    ASSERT(m_isAcquired, "HeadlessSwapchain: BeginPass without an acquired frame");
+    outContext.frameBuffer = *m_swapchainBuffers[m_frameIndex].framebuffer;
+    outContext.viewOffset = 0;
+    outContext.viewCount = 1;
+}
+
+void HeadlessSwapchain::EndPass(uint32_t passIndex)
+{
+    (void)passIndex; // single-pass (mono): nothing to finalize between passes
+    ASSERT(m_isAcquired, "HeadlessSwapchain: EndPass without an acquired frame");
 }
 
 void HeadlessSwapchain::EndFrame(const FrameSubmitSync& submitSync)
@@ -137,6 +151,11 @@ GfxExtent2D HeadlessSwapchain::GetExtent() const
 uint32_t HeadlessSwapchain::GetImageCount() const
 {
     return m_frameIndex.GetCount();
+}
+
+uint32_t HeadlessSwapchain::GetPassCount() const
+{
+    return 1; // mono: a single render pass per frame
 }
 
 void HeadlessSwapchain::Print() const

@@ -10,10 +10,6 @@
 #include <cstdint>
 
 namespace sandbox::component {
-// Per-view camera state consumed by the renderer: the eye transform and a precomputed projection,
-// one entry per view (a single view in mono, two for stereo XR). The camera scene nodes fill these
-// in each frame (DefaultCamera from FOV + viewport aspect, XrCamera from the runtime's per-eye
-// poses/FOVs), so the renderer just reads them — it never builds a projection itself.
 class CameraComponent final : public prev::scene::component::IComponent {
 public:
     explicit CameraComponent(uint32_t viewCount = 1)

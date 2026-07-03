@@ -31,6 +31,8 @@ public:
 
     bool EndFrame() override;
 
+    void RunFrameLoop(const std::function<bool()>& tick) override;
+
 private:
     void ResetInstance() override;
 

@@ -10,10 +10,11 @@ Usage:
     python compile_shaders.py --wgsl       # WGSL only
     python compile_shaders.py --clean      # Remove compiled outputs
     python compile_shaders.py --list       # List all shaders
-    python compile_shaders.py --enable-xr --max-view-count 2
+    python compile_shaders.py --enable-multiview --max-view-count 2
 """
 
 import os
+import re
 import sys
 import subprocess
 import argparse
@@ -26,21 +27,29 @@ class SlangCompiler:
     # Shaders that use geometry stage (SPIR-V only, no WGSL)
     GEOMETRY_SHADERS = {"debug/raycast_debug.slang"}
 
-    def __init__(self, shader_dir: Path, max_view_count: int, enable_xr: bool, debug: bool = False, force: bool = False):
+    # Records the build config the current outputs were compiled with. When it changes (e.g. XR/view-count
+    # toggled, or slangc updated) the mtime check alone wouldn't notice, so we force a full recompile.
+    STAMP_NAME = ".shader_build_config"
+
+    def __init__(self, shader_dir: Path, max_view_count: int, enable_multiview: bool, debug: bool = False, force: bool = False, output_dir: Optional[Path] = None):
         self.shader_dir = shader_dir
+        # Inputs (.slang) always live under shader_dir; outputs (spirv/wgsl + the config stamp) go to
+        # output_dir. Desktop points output_dir at its build dir so builds don't rewrite the shared source
+        # tree (the mono/multiview configs otherwise fight over it); iOS/Web/Android leave it None and write
+        # in place because they package assets straight from the source tree.
+        self.output_dir = output_dir if output_dir is not None else shader_dir
         self.slang_dir = shader_dir / "slang"
-        self.spirv_dir = shader_dir / "spirv"
-        self.wgsl_dir = shader_dir / "wgsl"
+        self.spirv_dir = self.output_dir / "spirv"
+        self.wgsl_dir = self.output_dir / "wgsl"
         self.max_view_count = max_view_count
-        self.enable_xr = enable_xr
+        self.enable_multiview = enable_multiview
         self.debug = debug
         self.force = force
 
     def find_slang_files(self) -> List[Path]:
         """Find all Slang shader files that have entry points."""
         all_files = sorted(self.slang_dir.rglob("*.slang"))
-        import re as _re
-        return [f for f in all_files if _re.search(r'\[shader\(', f.read_text())]
+        return [f for f in all_files if re.search(r'\[shader\(', f.read_text())]
 
     def _get_entry_points_and_stages(self, slang_file: Path) -> List[Tuple[str, str]]:
         """Parse a .slang file and return (entry_name, stage) pairs."""
@@ -52,7 +61,6 @@ class SlangCompiler:
             "geometry": "geometry",
         }
         content = slang_file.read_text()
-        import re
         for match in re.finditer(r'\[shader\("(\w+)"\)\]', content):
             stage = match.group(1)
             # Find the function name on the next non-empty line
@@ -79,22 +87,45 @@ class SlangCompiler:
         return rel_path.parent / f"{stem}_{suffix}{ext}"
 
     def _find_slangc(self) -> Optional[str]:
-        """Find slangc executable."""
-        # Check PATH first
-        from shutil import which
-        result = which("slangc")
+        """Find the slangc executable. shutil.which() applies PATHEXT, so it resolves slangc.exe on Windows
+        and slangc elsewhere - used for the PATH lookup, the SLANGC override, and every fallback dir."""
+        env_slangc = os.environ.get("SLANGC")
+        if env_slangc:
+            resolved = shutil.which(env_slangc)
+            if resolved:
+                return resolved
+        # On PATH?
+        result = shutil.which("slangc")
         if result:
             return result
-        # Check common install locations
-        candidates = [
-            "/tmp/slang-install/bin/slangc",
-            "/usr/local/bin/slangc",
-            Path.home() / ".local" / "bin" / "slangc",
+        candidate_dirs = [
+            "/tmp/slang-install/bin",
+            "/usr/local/bin",
+            str(Path.home() / ".local" / "bin"),
+            str(Path.home() / "slang" / "bin"),
         ]
-        for c in candidates:
-            if Path(c).is_file() and os.access(c, os.X_OK):
-                return str(c)
+        for d in candidate_dirs:
+            found = shutil.which("slangc", path=d)
+            if found:
+                return found
         return None
+
+    def _config_signature(self) -> str:
+        """Signature of every input that changes shader output but isn't a source-file mtime: the defines
+        (view count, XR) and the slangc binary itself (path + mtime as a cheap version proxy)."""
+        slangc = self._find_slangc() or ""
+        slangc_mtime = ""
+        try:
+            if slangc:
+                slangc_mtime = str(int(os.path.getmtime(slangc)))
+        except OSError:
+            pass
+        return ";".join([
+            f"max_view_count={self.max_view_count}",
+            f"enable_multiview={int(self.enable_multiview)}",
+            f"debug={int(self.debug)}",
+            f"slangc={slangc}@{slangc_mtime}",
+        ])
 
     def _needs_recompile(self, slang_file: Path, out_file: Path) -> bool:
         """Check if output is missing or older than source or common imports."""
@@ -117,27 +148,27 @@ class SlangCompiler:
     def _build_base_args(self, slang_file: Path) -> List[str]:
         """Build common slangc arguments."""
         args = [
-            f"-DMAX_VIEW_COUNT={self.max_view_count}",
+            f"-DMAX_PER_PASS_VIEW_COUNT={self.max_view_count}",
             "-I", str(self.slang_dir),
         ]
-        if self.enable_xr:
-            args.append("-DENABLE_XR=1")
+        if self.enable_multiview:
+            args.append("-DENABLE_MULTIVIEW=1")
         if self.debug:
             args.extend(["-g2", "-O0"])
         return args
 
-    def compile_to_spirv(self, slang_file: Path) -> bool:
-        """Compile a .slang file to SPIR-V (one .spv per entry point)."""
+    def compile_to_spirv(self, slang_file: Path) -> Tuple[bool, bool]:
+        """Compile a .slang file to SPIR-V (one .spv per entry point). Returns (success, all_skipped)."""
         slangc = self._find_slangc()
         if not slangc:
             print("[ERROR] slangc not found. Install Slang SDK.")
-            return False
+            return False, False
 
         rel_path = slang_file.relative_to(self.slang_dir)
         entries = self._get_entry_points_and_stages(slang_file)
         if not entries:
             print(f"[WARN] No entry points found in {rel_path}")
-            return False
+            return False, False
 
         success = True
         all_skipped = True
@@ -162,7 +193,7 @@ class SlangCompiler:
             ])
 
             try:
-                print(f"  SPIR-V: {rel_path} [{entry_name}] -> {out_file.relative_to(self.shader_dir)}")
+                print(f"  SPIR-V: {rel_path} [{entry_name}] -> {out_file.relative_to(self.output_dir)}")
                 subprocess.run(cmd, check=True, capture_output=True)
                 out_file.touch()
             except subprocess.CalledProcessError as e:
@@ -171,8 +202,8 @@ class SlangCompiler:
 
         return success, all_skipped
 
-    def compile_to_wgsl(self, slang_file: Path) -> bool:
-        """Compile a .slang file to WGSL (one .wgsl per entry point)."""
+    def compile_to_wgsl(self, slang_file: Path) -> Tuple[bool, bool]:
+        """Compile a .slang file to WGSL (one .wgsl per entry point). Returns (success, all_skipped)."""
         rel_path = slang_file.relative_to(self.slang_dir)
 
         # Skip geometry shaders
@@ -212,7 +243,7 @@ class SlangCompiler:
             ])
 
             try:
-                print(f"  WGSL:  {rel_path} [{entry_name}] -> {out_file.relative_to(self.shader_dir)}")
+                print(f"  WGSL:  {rel_path} [{entry_name}] -> {out_file.relative_to(self.output_dir)}")
                 subprocess.run(cmd, check=True, capture_output=True)
                 out_file.touch()
             except subprocess.CalledProcessError as e:
@@ -227,6 +258,16 @@ class SlangCompiler:
         if not slang_files:
             print("No .slang files found")
             return False
+
+        # Force a full recompile when the build config differs from what the existing outputs were built
+        # with (the per-file mtime check can't detect a define/slangc change, only source edits).
+        signature = self._config_signature()
+        stamp_file = self.output_dir / self.STAMP_NAME
+        previous = stamp_file.read_text().strip() if stamp_file.exists() else None
+        if previous != signature and not self.force:
+            if previous is not None:
+                print(f"Shader build config changed -> recompiling all.\n  was: {previous}\n  now: {signature}")
+            self.force = True
 
         total = len(slang_files)
         total_ok = 0
@@ -256,6 +297,10 @@ class SlangCompiler:
             print(f"All {total} shaders up-to-date.")
         else:
             print(f"\nResult: {total_compiled} compiled, {total_skipped} up-to-date, {total_ok}/{total} OK")
+
+        # Record the config the outputs were built with, so a later config change forces a recompile.
+        if total_ok == total:
+            stamp_file.write_text(signature)
         return total_ok == total
 
     def clean(self):
@@ -264,6 +309,10 @@ class SlangCompiler:
             if directory.exists():
                 shutil.rmtree(directory)
                 print(f"Removed {directory}")
+        stamp_file = self.output_dir / self.STAMP_NAME
+        if stamp_file.exists():
+            stamp_file.unlink()
+            print(f"Removed {stamp_file}")
 
     def list_shaders(self):
         """List all Slang shaders and their entry points."""
@@ -282,11 +331,12 @@ def main():
     parser.add_argument("--wgsl", action="store_true", help="Compile to WGSL only")
     parser.add_argument("--clean", action="store_true", help="Remove compiled shaders")
     parser.add_argument("--list", action="store_true", help="List all shaders")
-    parser.add_argument("--max-view-count", type=int, default=1, help="MAX_VIEW_COUNT define value")
-    parser.add_argument("--enable-xr", action="store_true", help="Enable XR defines")
+    parser.add_argument("--max-view-count", type=int, default=1, help="MAX_PER_PASS_VIEW_COUNT define value")
+    parser.add_argument("--enable-multiview", action="store_true", help="Enable multiview (SV_ViewID) defines")
     parser.add_argument("--debug", action="store_true", help="Emit debug info and disable optimizations (for RenderDoc, validation layers)")
     parser.add_argument("--force", action="store_true", help="Recompile all shaders even if up-to-date")
-    parser.add_argument("--shader-dir", type=str, default=None, help="Override shader directory")
+    parser.add_argument("--shader-dir", type=str, default=None, help="Override shader directory (holds slang/ inputs)")
+    parser.add_argument("--output-dir", type=str, default=None, help="Where to write spirv/, wgsl/ and the build stamp (default: the shader dir, i.e. in place)")
 
     args = parser.parse_args()
 
@@ -300,7 +350,8 @@ def main():
         print(f"[ERROR] Shader directory not found: {shader_dir}")
         sys.exit(1)
 
-    compiler = SlangCompiler(shader_dir, args.max_view_count, args.enable_xr, args.debug, args.force)
+    output_dir = Path(args.output_dir) if args.output_dir else None
+    compiler = SlangCompiler(shader_dir, args.max_view_count, args.enable_multiview, args.debug, args.force, output_dir)
 
     if args.clean:
         compiler.clean()

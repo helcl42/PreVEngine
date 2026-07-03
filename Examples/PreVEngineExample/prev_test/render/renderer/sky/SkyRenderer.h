@@ -52,15 +52,15 @@ private:
         SamplerType samplerType;
     };
 
-    ImageBufferData m_skyColorImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyColorImageBuffer[MAX_PER_PASS_VIEW_COUNT];
 
-    ImageBufferData m_skyBloomImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyBloomImageBuffer[MAX_PER_PASS_VIEW_COUNT];
 
-    ImageBufferData m_skyAlphanessImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyAlphanessImageBuffer[MAX_PER_PASS_VIEW_COUNT];
 
-    ImageBufferData m_skyCloudDistanceImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyCloudDistanceImageBuffer[MAX_PER_PASS_VIEW_COUNT];
 
-    ImageBufferData m_skyPostProcessColorImageBuffer[MAX_VIEW_COUNT];
+    ImageBufferData m_skyPostProcessColorImageBuffer[MAX_PER_PASS_VIEW_COUNT];
 
     uint32_t m_frameCounter{ 0 };
 
@@ -178,9 +178,9 @@ private:
     std::unique_ptr<prev::render::pipeline::Pipeline> m_compositePipeline;
 
     // Reprojection history
-    ImageBufferData m_skyHistoryColorImageBuffer[MAX_VIEW_COUNT];
-    ImageBufferData m_skyHistoryDepthImageBuffer[MAX_VIEW_COUNT];
-    glm::mat4 m_prevViewProjectionMatrix[MAX_VIEW_COUNT]{};
+    ImageBufferData m_skyHistoryColorImageBuffer[MAX_PER_PASS_VIEW_COUNT];
+    ImageBufferData m_skyHistoryDepthImageBuffer[MAX_PER_PASS_VIEW_COUNT];
+    glm::mat4 m_prevViewProjectionMatrix[MAX_PER_PASS_VIEW_COUNT]{};
 };
 } // namespace prev_test::render::renderer::sky
 

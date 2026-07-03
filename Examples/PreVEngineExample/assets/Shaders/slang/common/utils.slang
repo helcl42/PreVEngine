@@ -1,8 +1,8 @@
 // Common utilities module
 module utils;
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 static const float PI = 3.1415927;

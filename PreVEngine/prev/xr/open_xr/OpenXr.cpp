@@ -1,6 +1,6 @@
 #include "OpenXr.h"
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "OpenXrLoader.h"
 
@@ -30,22 +30,25 @@ void OpenXr::PollEvents()
     m_core->PollEvents();
 }
 
-void OpenXr::UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex)
+void OpenXr::UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, GfxQueue queue)
 {
-    m_render->UpdateGraphicsBinding(instance, adapter, device, queueFamilyIndex, queueIndex);
+    GfxQueueInfo queueInfo{};
+    gfxQueueGetInfo(queue, &queueInfo);
+
+    m_render->UpdateGraphicsBinding(instance, adapter, device, queueInfo.queueFamilyIndex, queueInfo.queueIndex);
 }
 
-std::vector<std::string> OpenXr::GetVulkanInstanceExtensions() const
+std::vector<std::string> OpenXr::GetRequiredInstanceExtensions() const
 {
     return m_core->GetVulkanInstanceExtensions();
 }
 
-std::vector<std::string> OpenXr::GetVulkanDeviceExtensions() const
+std::vector<std::string> OpenXr::GetRequiredDeviceExtensions() const
 {
     return m_core->GetVulkanDeviceExtensions();
 }
 
-GfxAdapter OpenXr::GetPhysicalDevice(GfxInstance instance) const
+GfxAdapter OpenXr::GetAdapter(GfxInstance instance) const
 {
     return m_core->GetPhysicalDevice(instance);
 }
@@ -72,19 +75,27 @@ void OpenXr::DestroySession()
     m_core->DestroySession();
 }
 
-std::vector<GfxTexture> OpenXr::GetColorImages() const
+bool OpenXr::GetFrameImages(XrFrameImages& outImages) const
 {
-    return m_render->GetColorImages();
+    if (m_render->GetImageCount() == 0) {
+        return false; // no session/swapchain yet
+    }
+    const uint32_t index{ m_render->GetCurrentSwapchainIndex() };
+    outImages.colorImage = m_render->GetColorImage(index);
+    outImages.depthImage = m_render->GetDepthImage(index);
+    outImages.imageIndex = index;
+    outImages.imagesChanged = false;
+    return true;
 }
 
-std::vector<GfxTexture> OpenXr::GetDepthImages() const
+uint32_t OpenXr::GetImageCount() const
 {
-    return m_render->GetDepthImages();
+    return m_render->GetImageCount();
 }
 
 bool OpenXr::HasDepthImages() const
 {
-    return !m_render->GetDepthImages().empty();
+    return m_render->HasDepthImages();
 }
 
 GfxExtent2D OpenXr::GetExtent() const
@@ -107,14 +118,16 @@ uint32_t OpenXr::GetViewCount() const
     return m_render->GetViewCount();
 }
 
-uint32_t OpenXr::GetCurrentSwapchainIndex() const
-{
-    return m_render->GetCurrentSwapchainIndex();
-}
-
 float OpenXr::GetCurrentDeltaTime() const
 {
     return m_render->GetCurrentDeltaTime();
+}
+
+void OpenXr::RunFrameLoop(const std::function<bool()>& tick)
+{
+    // Frame pacing comes from the runtime (xrWaitFrame in BeginFrame).
+    while (tick()) {
+    }
 }
 
 bool OpenXr::BeginFrame()

@@ -1,6 +1,6 @@
 #include "OpenXrLoader.h"
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "common/OpenXrCommon.h"
 #include "util/OpenXrUtils.h"

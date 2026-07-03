@@ -140,7 +140,7 @@ void Player::ShutDown()
 void Player::operator()(const prev::core::NewIterationEvent& newIterationEvent)
 {
     const glm::ivec2 newResolution{ newIterationEvent.windowWidth, newIterationEvent.windowHeight };
-    if (newResolution != m_currentResolution) {
+    if (newResolution != m_currentResolution && newResolution.x > 0 && newResolution.y > 0) {
         const auto& currentFrustum{ m_cameraComponent->GetViewFrustum() };
         m_cameraComponent->SetViewFrustum(prev_test::render::ViewFrustum{ currentFrustum.GetVerticalFov(), static_cast<float>(newResolution.x) / static_cast<float>(newResolution.y), currentFrustum.GetNearClippingPlane(), currentFrustum.GetFarClippingPlane() });
         m_currentResolution = newResolution;

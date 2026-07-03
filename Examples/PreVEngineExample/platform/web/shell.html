@@ -3,6 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
+    <script>
+    // Diagnostic beacon: forward console output to the dev server so on-device (Quest) errors are
+    // visible without adb/chrome://inspect. gfx + Emscripten route errors via printf -> stdout ->
+    // console.log (NOT console.error), so we capture console.log too — filtered to error-ish lines.
+    (function () {
+        function beacon(tag, msg) { try { fetch('/__c?m=' + encodeURIComponent('[prevex ' + tag + '] ' + msg)); } catch (e) {} }
+        ['error', 'warn'].forEach(function (fn) {
+            var orig = console[fn] ? console[fn].bind(console) : function () {};
+            console[fn] = function () { beacon(fn, Array.from(arguments).map(String).join(' ')); orig.apply(console, arguments); };
+        });
+        var origLog = console.log ? console.log.bind(console) : function () {};
+        var RX = /error|fail|abort|unreachable|invalid|out of bounds|\[gfx\]|uncaptured|validation|exception|assert|webxr|xrgpu/i;
+        console.log = function () { var s = Array.from(arguments).map(String).join(' '); if (RX.test(s)) { beacon('log', s); } origLog.apply(console, arguments); };
+        window.addEventListener('error', function (e) { beacon('onerror', (e.message || '') + ' @ ' + (e.filename || '') + ':' + (e.lineno || '')); });
+        window.addEventListener('unhandledrejection', function (e) { var r = e.reason; beacon('reject', (r && (r.stack || r.message)) || String(r)); });
+        beacon('init', 'beacon active');
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PreVEngine - WebGPU</title>
     <style>

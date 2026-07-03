@@ -1,14 +1,14 @@
 // Sky composite shader
 import common.utils;
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
-#ifdef ENABLE_XR
-[[vk::binding(0)]] Texture2D colorTex[MAX_VIEW_COUNT];
+#ifdef ENABLE_MULTIVIEW
+[[vk::binding(0)]] Texture2D colorTex[MAX_PER_PASS_VIEW_COUNT];
 [[vk::binding(1)]] SamplerState colorSampler;
-[[vk::binding(2)]] Texture2D depthTex[MAX_VIEW_COUNT];
+[[vk::binding(2)]] Texture2D depthTex[MAX_PER_PASS_VIEW_COUNT];
 [[vk::binding(3)]] SamplerState depthSampler;
 #else
 [[vk::binding(0)]] Texture2D colorTex;
@@ -47,18 +47,18 @@ struct FragmentOutput
 
 [shader("fragment")]
 FragmentOutput fragmentMain(VertexOutput input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID
 #endif
 )
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const int viewIndex = 0;
 #endif
     FragmentOutput output;
     float2 uv = input.textureCoord;
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     output.color = colorTex[viewIndex].Sample(colorSampler, uv);
     output.depth = clamp(depthTex[viewIndex].Sample(depthSampler, uv).r, 0.0, 1.0);
 #else

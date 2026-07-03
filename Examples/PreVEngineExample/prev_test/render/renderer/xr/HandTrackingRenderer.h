@@ -40,9 +40,9 @@ private:
     struct DEFAULT_ALIGNMENT UniformsVS {
         DEFAULT_ALIGNMENT glm::mat4 modelMatrix;
 
-        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_VIEW_COUNT];
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];
 
-        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_VIEW_COUNT];
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT];
     };
 
     struct DEFAULT_ALIGNMENT UniformsFS {
@@ -50,7 +50,6 @@ private:
     };
 
 private:
-    // 2 hands * 26 joints = 52 max draws per frame
     const uint32_t m_descriptorCount{ 16 };
 
 private:

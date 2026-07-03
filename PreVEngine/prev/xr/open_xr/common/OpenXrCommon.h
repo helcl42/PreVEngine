@@ -1,7 +1,7 @@
 #ifndef __OPEN_XR_COMMON_H__
 #define __OPEN_XR_COMMON_H__
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../../../common/Common.h"
 #include "../../../common/Logger.h"
@@ -12,7 +12,11 @@
 #elif defined(TARGET_PLATFORM_WINDOWS)
 #define XR_USE_PLATFORM_WIN32
 #elif defined(TARGET_PLATFORM_LINUX)
+#if defined(TARGET_PLATFORM_XCB)
 #define XR_USE_PLATFORM_XCB
+#elif defined(TARGET_PLATFORM_WAYLAND)
+#define XR_USE_PLATFORM_WAYLAND
+#endif
 #else
 #error Unsupported XR platform.
 #endif

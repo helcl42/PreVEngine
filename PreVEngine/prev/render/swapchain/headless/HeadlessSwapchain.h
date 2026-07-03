@@ -24,13 +24,19 @@ public:
 public:
     bool BeginFrame(FrameContext& outContext) override;
 
-    void EndFrame(const FrameSubmitSync& submitSync) override;
+    void BeginPass(FrameContext& outContext, uint32_t passIndex) override;
 
-    void Print() const override;
+    void EndPass(uint32_t passIndex) override;
+
+    void EndFrame(const FrameSubmitSync& submitSync) override;
 
     GfxExtent2D GetExtent() const override;
 
     uint32_t GetImageCount() const override;
+
+    uint32_t GetPassCount() const override;
+
+    void Print() const override;
 
 private:
     struct SwapchainBuffer {

@@ -14,6 +14,20 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/MathUtils.h>
 
+#include <string>
+
+namespace {
+std::string ViewTexKey(const char* base, uint32_t viewIndex)
+{
+#ifdef ENABLE_MULTIVIEW
+    return std::string(base) + "[" + std::to_string(viewIndex) + "]";
+#else
+    (void)viewIndex;
+    return base;
+#endif
+}
+} // namespace
+
 namespace prev_test::render::renderer::sky {
 SkyRenderer::SkyRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
@@ -115,9 +129,9 @@ void SkyRenderer::Init()
             prev::render::shader::VertexInputBinding{ 0, VertexLayout::GetComponentsSize({ VertexLayoutComponent::VEC3, VertexLayoutComponent::VEC2, VertexLayoutComponent::VEC3 }), GFX_VERTEX_STEP_MODE_VERTEX }
         })
         .AddBindGroupEntries({
-            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_VIEW_COUNT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("colorTex", 0, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_PER_PASS_VIEW_COUNT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("colorSampler", 1, GFX_SHADER_STAGE_FRAGMENT),
-            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_VIEW_COUNT, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
+            prev::render::shader::ShaderBuilder::BindGroupEntry::Texture("depthTex", 2, GFX_SHADER_STAGE_FRAGMENT, GFX_TEXTURE_VIEW_TYPE_2D, MAX_PER_PASS_VIEW_COUNT, GFX_TEXTURE_SAMPLE_TYPE_UNFILTERABLE_FLOAT),
             prev::render::shader::ShaderBuilder::BindGroupEntry::Sampler("depthSampler", 3, GFX_SHADER_STAGE_FRAGMENT, true)
         })
         .Build();
@@ -411,13 +425,9 @@ void SkyRenderer::Render(const NormalRenderContext& renderContext, const std::sh
 
         auto& skyCloudDistanceImageSampler{ m_samplers[skyCloudDistanceImageBuffer.samplerType] };
         auto& skyPostProcessImageSampler{ m_samplers[skyPostProcessColorImageBuffer.samplerType] };
-#ifdef ENABLE_XR
-        const auto colorTexKey{ "colorTex[" + std::to_string(viewIndex) + "]" };
-        const auto depthTexKey{ "depthTex[" + std::to_string(viewIndex) + "]" };
-#else
-        const auto colorTexKey{ "colorTex" };
-        const auto depthTexKey{ "depthTex" };
-#endif
+        const auto colorTexKey{ ViewTexKey("colorTex", viewIndex) };
+        const auto depthTexKey{ ViewTexKey("depthTex", viewIndex) };
+
         m_compositeShader->Bind(colorTexKey, skyPostProcessColorImageBuffer.image->GetTextureView());
         m_compositeShader->Bind("colorSampler", *skyPostProcessImageSampler);
         m_compositeShader->Bind(depthTexKey, skyCloudDistanceImageBuffer.image->GetTextureView());
@@ -453,7 +463,7 @@ void SkyRenderer::ShutDown()
         sampler.reset();
     }
 
-    for (uint32_t viewIndex = 0; viewIndex < MAX_VIEW_COUNT; ++viewIndex) {
+    for (uint32_t viewIndex = 0; viewIndex < MAX_PER_PASS_VIEW_COUNT; ++viewIndex) {
         m_skyHistoryDepthImageBuffer[viewIndex] = {};
         m_skyHistoryColorImageBuffer[viewIndex] = {};
         m_skyPostProcessColorImageBuffer[viewIndex] = {};

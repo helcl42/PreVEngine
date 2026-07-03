@@ -1,5 +1,6 @@
 ﻿#include "Device.h"
 
+#include "../../common/Common.h"
 #include "../../common/Logger.h"
 #include "../DeferredResourceDestroyer.h"
 #include "../DeferredResourceUploader.h"
@@ -37,7 +38,9 @@ Device::~Device()
 
 void Device::WaitIdle() const
 {
-    gfxDeviceWaitIdle(m_handle);
+    if constexpr (SUPPORTS_BLOCKING_GPU_WAIT) {
+        gfxDeviceWaitIdle(m_handle);
+    }
 }
 
 bool Device::HasQueue(const QueueType queueType, const uint32_t index) const

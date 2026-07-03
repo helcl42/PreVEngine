@@ -1,7 +1,7 @@
 #ifndef __OPEN_XR_INPUT_H__
 #define __OPEN_XR_INPUT_H__
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../common/IOpenXrEventObserver.h"
 

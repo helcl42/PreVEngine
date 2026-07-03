@@ -1,0 +1,79 @@
+name: WebXR - CI Build
+
+on:
+  push:
+    branches: [ "master", "gfx" ]
+  pull_request:
+    branches: [ "master", "gfx" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SLANG_VERSION: "2026.9.1"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Init Dawn submodule
+      run: git -C PreVEngine/external/gfx submodule update --init third_party/dawn
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: sudo apt-get install -y ninja-build
+
+    - name: Setup Emscripten
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: 'latest'
+
+    - name: Install Slang
+      run: |
+        wget -q https://github.com/shader-slang/slang/releases/download/v${SLANG_VERSION}/slang-${SLANG_VERSION}-linux-x86_64-glibc-2.28.tar.gz -O slang.tar.gz
+        mkdir -p $HOME/slang && tar -xzf slang.tar.gz -C $HOME/slang
+        echo "$HOME/slang/bin" >> $GITHUB_PATH
+
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build_webxr" >> "$GITHUB_OUTPUT"
+
+    - name: Compile Shaders
+      run: |
+        python3 Scripts/compile_shaders.py --max-view-count 1
+
+    - name: Configure CMake (WebXR)
+      run: |
+        emcmake cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_WEBXR=ON \
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+
+    - name: Create Artifact
+      run: |
+        mkdir -p example-webxr
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.html example-webxr/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.js example-webxr/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.wasm example-webxr/
+        cp ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample.data example-webxr/
+
+    - name: Publish Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: example-webxr
+        path: example-webxr
+        retention-days: 7

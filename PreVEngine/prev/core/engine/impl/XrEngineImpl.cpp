@@ -2,7 +2,10 @@
 
 #ifdef ENABLE_XR
 
+#include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
+#include "../../device/PhysicalDevices.h"
+#include "../../device/Queue.h"
 #include "../../instance/InstanceFactory.h"
 
 #include "../../../xr/XrFactory.h"
@@ -89,44 +92,59 @@ bool XrEngineImpl::EndFrame()
     return result;
 }
 
+void XrEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
+{
+    m_xr->RunFrameLoop(tick);
+}
+
 void XrEngineImpl::ResetInstance()
 {
     prev::core::instance::InstanceFactory instanceFactory{};
-    m_instance = instanceFactory.Create(m_config.appName, m_config.validation, m_config.renderBackend, m_xr->GetVulkanInstanceExtensions());
+    m_instance = instanceFactory.Create(m_config.appName, m_config.validation, m_config.renderBackend, m_xr->GetRequiredInstanceExtensions());
 }
 
 void XrEngineImpl::ResetDevice()
 {
-    // Ask OpenXR which adapter to use (internally matches VkPhysicalDevice)
-    GfxAdapter selectedAdapter = m_xr->GetPhysicalDevice(*m_instance);
-    if (!selectedAdapter) {
-        throw std::runtime_error("Could not find GfxAdapter matching OpenXR physical device");
+    GfxAdapter selectedAdapter = m_xr->GetAdapter(*m_instance);
+
+    if (selectedAdapter) {
+        prev::core::device::PhysicalDevice physicalDevice{ selectedAdapter };
+        const std::vector<std::string> extensions{
+            GFX_DEVICE_EXTENSION_SWAPCHAIN,
+            GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
+            GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
+            GFX_DEVICE_EXTENSION_MULTIVIEW,
+        };
+        m_device = prev::core::device::DeviceFactory{}.Create(physicalDevice, extensions, m_xr->GetRequiredDeviceExtensions());
+    } else {
+        prev::core::device::PhysicalDevices physicalDevices{ m_instance->GetHandle() };
+        const auto gpu{ physicalDevices.Find(nullptr, m_config.gpuIndex) };
+        if (!gpu) {
+            throw std::runtime_error("Could not find a suitable GPU adapter");
+        }
+        m_device = prev::core::device::DeviceFactory{}.Create(*gpu, m_xr->GetRequiredDeviceExtensions());
     }
 
-    prev::core::device::PhysicalDevice physicalDevice{ selectedAdapter };
-
-    const std::vector<std::string> extensions{
-        GFX_DEVICE_EXTENSION_SWAPCHAIN,
-        GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
-        GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
-        GFX_DEVICE_EXTENSION_MULTIVIEW,
-    };
-
-    m_device = prev::core::device::DeviceFactory{}.Create(physicalDevice, extensions, m_xr->GetVulkanDeviceExtensions());
     if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }
     m_device->Print();
 
     const auto& queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
-    m_xr->UpdateGraphicsBinding(*m_instance, selectedAdapter, *m_device, queue.family, queue.index);
+    m_xr->UpdateGraphicsBinding(*m_instance, selectedAdapter, *m_device, queue);
 }
 
 void XrEngineImpl::ResetRenderPass()
 {
     const auto colorFormat = m_xr->GetColorFormat();
     const auto depthFormat = m_xr->GetDepthFormat();
-    const uint32_t viewCount = GetViewCount();
+    // The render pass's view count is the number of views rendered in ONE pass (the multiview capability),
+    // not the XR eye count. With multiview shaders (OpenXR) that is MAX_PER_PASS_VIEW_COUNT_VALUE (2); on WebGPU,
+    // which has no multiview, MAX_PER_PASS_VIEW_COUNT_VALUE is 1 so the pass is mono and stereo is done per-eye.
+    // Clamp to the runtime view count so we never exceed what the runtime provides.
+    const uint32_t maxViews = static_cast<uint32_t>(MAX_PER_PASS_VIEW_COUNT_VALUE);
+    const uint32_t xrViews = GetViewCount();
+    const uint32_t viewCount = (xrViews < maxViews) ? xrViews : maxViews;
     const bool storeColor = true;
     const bool storeDepth = m_xr->HasDepthImages();
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
@@ -141,7 +159,7 @@ void XrEngineImpl::ResetRenderPass()
 void XrEngineImpl::ResetSwapchain()
 {
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
-    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount);
+    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount, m_config.maxFramesInFlight);
     m_swapchain->Print();
 }
 } // namespace prev::core::engine::impl

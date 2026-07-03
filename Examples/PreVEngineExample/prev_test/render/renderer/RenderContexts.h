@@ -30,15 +30,15 @@ struct NormalRenderContext : prev::render::RenderContext {
 
     uint32_t cameraCount;
 
-    glm::vec2 nearFarClippingPlanes[MAX_VIEW_COUNT]{};
+    glm::vec2 nearFarClippingPlanes[MAX_PER_PASS_VIEW_COUNT]{};
 
-    glm::mat4 viewMatrices[MAX_VIEW_COUNT]{};
+    glm::mat4 viewMatrices[MAX_PER_PASS_VIEW_COUNT]{};
 
-    glm::mat4 projectionMatrices[MAX_VIEW_COUNT]{};
+    glm::mat4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT]{};
 
-    glm::vec3 cameraPositions[MAX_VIEW_COUNT]{};
+    glm::vec3 cameraPositions[MAX_PER_PASS_VIEW_COUNT]{};
 
-    prev::util::intersection::Frustum frustums[MAX_VIEW_COUNT]{};
+    prev::util::intersection::Frustum frustums[MAX_PER_PASS_VIEW_COUNT]{};
 
     NormalRenderContext(const RenderContext& ctx, const glm::vec4& cp, const uint32_t cc)
         : RenderContext{ ctx }

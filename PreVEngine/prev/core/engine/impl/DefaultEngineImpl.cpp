@@ -9,6 +9,10 @@
 #include "../../../common/Logger.h"
 #include "../../../render/swapchain/SwapchainFactory.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -84,6 +88,25 @@ bool DefaultEngineImpl::EndFrame()
 {
     UpdateFps();
     return true;
+}
+
+void DefaultEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
+{
+#ifdef __EMSCRIPTEN__
+    // The tick outlives this call (fires after the unwind); one main loop per program, so a static fits.
+    static std::function<bool()> s_frameTick;
+    s_frameTick = tick;
+    emscripten_set_main_loop_arg(
+        [](void*) {
+            if (!s_frameTick()) {
+                emscripten_cancel_main_loop();
+            }
+        },
+        nullptr, 0, 1);
+#else
+    while (tick()) {
+    }
+#endif
 }
 
 void DefaultEngineImpl::ResetInstance()

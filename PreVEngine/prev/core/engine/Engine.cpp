@@ -58,15 +58,25 @@ void Engine::RunOneFrame()
     if (m_engineImpl->IsFocused()) {
         scene.Update(deltaTime);
 
+        // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
+        // one or more passes: a single multiview pass, or one pass per eye where there is no multiview
+        // (e.g. WebGPU). Each pass renders the view window the swapchain reports (viewOffset/viewCount) into
+        // that pass's framebuffer; EndFrame submits the command buffer once.
         prev::render::swapchain::FrameContext frameContext;
         if (swapchain.BeginFrame(frameContext)) {
-            // Retire resources from this slot's previous use, then record any async uploads into the
-            // frame encoder so they precede this frame's rendering and are flagged ready.
+            // Per-frame resource bookkeeping (once): retire this slot's previous resources, then record queued
+            // async uploads into the frame's command buffer so they precede all rendering this frame.
             m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
             m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
 
-            const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent } };
-            const prev::render::FrameSubmitSync submitSync{ rootRenderer.Render(renderContext, scene) };
+            const uint32_t passCount{ swapchain.GetPassCount() };
+            prev::render::FrameSubmitSync submitSync{};
+            for (uint32_t pass = 0; pass < passCount; ++pass) {
+                swapchain.BeginPass(frameContext, pass);
+                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent }, frameContext.viewOffset, frameContext.viewCount };
+                submitSync = rootRenderer.Render(renderContext, scene); // XR sync is empty; use the last pass's for the single submit
+                swapchain.EndPass(pass);
+            }
             swapchain.EndFrame(submitSync);
         }
     } else {
@@ -79,31 +89,30 @@ void Engine::RunOneFrame()
     m_engineImpl->EndFrame();
 }
 
-#ifdef __EMSCRIPTEN__
-void Engine::EmscriptenMainLoopCallback(void* arg)
+bool Engine::Tick()
 {
-    auto* engine = static_cast<Engine*>(arg);
-    if (!engine->m_engineImpl->Update()) {
-        emscripten_cancel_main_loop();
-        engine->m_engineImpl->EndMainLoop();
-        return;
+    if (!m_engineImpl->Update()) {
+        return false; // quit requested
     }
-    engine->RunOneFrame();
+    RunOneFrame();
+    return true;
 }
-#endif
 
 void Engine::MainLoop()
 {
     m_engineImpl->BeginMainLoop();
 
-#ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop_arg(EmscriptenMainLoopCallback, this, 0, 1);
-#else
-    while (m_engineImpl->Update()) {
-        RunOneFrame();
-    }
+    m_engineImpl->RunFrameLoop([this]() {
+        if (!Tick()) {
+            m_engineImpl->EndMainLoop();
+            return false;
+        }
+        return true;
+    });
 
-    m_engineImpl->EndMainLoop();
+#ifdef __EMSCRIPTEN__
+    // Web frame loops are asynchronous - keep the runtime alive after RunFrameLoop returns.
+    emscripten_exit_with_live_runtime();
 #endif
 }
 

@@ -20,8 +20,8 @@ namespace sandbox::render {
 // View and projection are kept separate (not pre-combined) so the shader can work in world/view
 // space; the renderer pairs them with each node's model matrix.
 struct ViewData {
-    std::array<glm::mat4, MAX_VIEW_COUNT_VALUE> viewMatrices{};
-    std::array<glm::mat4, MAX_VIEW_COUNT_VALUE> projectionMatrices{};
+    std::array<glm::mat4, MAX_PER_PASS_VIEW_COUNT_VALUE> viewMatrices{};
+    std::array<glm::mat4, MAX_PER_PASS_VIEW_COUNT_VALUE> projectionMatrices{};
     uint32_t viewCount{ 1 };
 };
 
@@ -49,8 +49,8 @@ private:
     struct alignas(16) SandboxUniforms {
         glm::mat4 modelMatrix;
         glm::mat4 normalMatrix;
-        glm::mat4 viewMatrices[MAX_VIEW_COUNT_VALUE];
-        glm::mat4 projectionMatrices[MAX_VIEW_COUNT_VALUE];
+        glm::mat4 viewMatrices[MAX_PER_PASS_VIEW_COUNT_VALUE];
+        glm::mat4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT_VALUE];
         glm::vec4 lightDirection;
         glm::vec4 color;
     };

@@ -138,6 +138,8 @@ private:
     uint32_t m_asyncMapIndex{ 0 };
 
     bool m_hasResolved{ false };
+
+    bool m_queryRecorded{ false };
 };
 } // namespace prev::render::query
 

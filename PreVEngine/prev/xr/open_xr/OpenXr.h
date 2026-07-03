@@ -1,7 +1,7 @@
 #ifndef __OPEN_XR_H__
 #define __OPEN_XR_H__
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "common/OpenXrCommon.h"
 
@@ -23,11 +23,11 @@ public:
     ~OpenXr();
 
 public:
-    std::vector<std::string> GetVulkanInstanceExtensions() const override;
+    std::vector<std::string> GetRequiredInstanceExtensions() const override;
 
-    std::vector<std::string> GetVulkanDeviceExtensions() const override;
+    std::vector<std::string> GetRequiredDeviceExtensions() const override;
 
-    GfxAdapter GetPhysicalDevice(GfxInstance instance) const override;
+    GfxAdapter GetAdapter(GfxInstance instance) const override;
 
     void CreateSession() override;
 
@@ -41,11 +41,11 @@ public:
 
     bool EndFrame() override;
 
-    void UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex) override;
+    void UpdateGraphicsBinding(GfxInstance instance, GfxAdapter adapter, GfxDevice device, GfxQueue queue) override;
 
-    std::vector<GfxTexture> GetColorImages() const override;
+    bool GetFrameImages(XrFrameImages& outImages) const override;
 
-    std::vector<GfxTexture> GetDepthImages() const override;
+    uint32_t GetImageCount() const override;
 
     bool HasDepthImages() const override;
 
@@ -57,9 +57,9 @@ public:
 
     uint32_t GetViewCount() const override;
 
-    uint32_t GetCurrentSwapchainIndex() const override;
-
     float GetCurrentDeltaTime() const override;
+
+    void RunFrameLoop(const std::function<bool()>& tick) override;
 
 private:
     bool m_loaded{ false };

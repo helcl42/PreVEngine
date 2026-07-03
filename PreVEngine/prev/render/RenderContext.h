@@ -15,11 +15,17 @@ struct RenderContext {
 
     GfxScissorRect rect{};
 
-    RenderContext(const GfxFramebuffer fb, const GfxCommandEncoder ce, const uint32_t frameIndex, const GfxScissorRect& r)
+    uint32_t viewOffset{ 0 };
+
+    uint32_t viewCount{ 1 };
+
+    RenderContext(const GfxFramebuffer fb, const GfxCommandEncoder ce, const uint32_t frameIndex, const GfxScissorRect& r, const uint32_t viewOffsetArg = 0, const uint32_t viewCountArg = 1)
         : frameBuffer{ fb }
         , commandEncoder{ ce }
         , frameInFlightIndex{ frameIndex }
         , rect{ r }
+        , viewOffset{ viewOffsetArg }
+        , viewCount{ viewCountArg }
     {
     }
 

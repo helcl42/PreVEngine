@@ -65,6 +65,7 @@ QueryPool::~QueryPool()
 void QueryPool::BeginQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder)
 {
     gfxRenderPassEncoderBeginOcclusionQuery(renderPassEncoder, m_querySets[m_index], queryIndex);
+    m_queryRecorded = true;
 }
 
 void QueryPool::EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderPassEncoder)
@@ -75,6 +76,7 @@ void QueryPool::EndQuery(const uint32_t queryIndex, GfxRenderPassEncoder renderP
 void QueryPool::WriteTimestamp(GfxCommandEncoder commandEncoder, uint32_t queryIndex)
 {
     gfxCommandEncoderWriteTimestamp(commandEncoder, m_querySets[m_index], queryIndex);
+    m_queryRecorded = true;
 }
 
 void QueryPool::Reset(GfxCommandEncoder commandEncoder)
@@ -94,6 +96,14 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
 
 void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
 {
+    if (!m_queryRecorded) {
+        // Nothing was begun/written into this set this frame (e.g. the occluder wasn't drawn yet while its
+        // assets still load). Resolving now would copy an unavailable query ("query may return no data").
+        // Leave the set current; the caller resets it each frame (before the pass), so it stays ready.
+        return;
+    }
+    m_queryRecorded = false;
+
     gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, *m_resolveBuffers[m_index], 0);
     // Copy from resolve buffer to mappable staging buffer
     GfxCopyBufferToBufferDescriptor copyDesc{};
@@ -105,9 +115,7 @@ void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
     gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
     m_readIndex = m_index; // remember which slot holds the latest result
     m_hasResolved = true;
-    ++m_index;
-    // Reset the next query set so it's ready for use
-    gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount);
+    ++m_index; // advance so the CPU can read this result while the next frame writes the next set
 }
 
 QueryPool::operator GfxQuerySet() const

@@ -1,35 +1,51 @@
-# Compiles this example's Slang shaders via slangc.
-#   Mono: SPIR-V (Vulkan) + WGSL (WebGPU).
-#   XR:   SPIR-V only, with multiview (SV_ViewID) enabled. XR is Vulkan-only.
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-set(SANDBOX_SHADER_MAX_VIEW_COUNT ${MAX_VIEW_COUNT})
+set(SANDBOX_SHADER_MAX_PER_PASS_VIEW_COUNT ${MAX_PER_PASS_VIEW_COUNT})
+# Multiview (both eyes in one pass via SV_ViewID) only for OpenXR + ENABLE_MULTIVIEW; else single-view per-eye (WGSL has no SV_ViewID).
+set(SANDBOX_SHADER_MV_ARGS)
+if(MAX_PER_PASS_VIEW_COUNT GREATER 1)
+    set(SANDBOX_SHADER_MV_ARGS --enable-multiview)
+    set(SANDBOX_SHADER_XR_MODE "multiview")
+else()
+    set(SANDBOX_SHADER_XR_MODE "per-eye")
+endif()
 
-if(ENABLE_XR)
+# In place for platforms that package the source tree (iOS/Web/Android); build dir otherwise (keeps the source tree clean).
+if(IOS OR EMSCRIPTEN OR ANDROID)
+    set(SANDBOX_SHADER_OUTPUT_ARGS)
+else()
+    set(SANDBOX_SHADER_OUTPUT_ARGS --output-dir ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+if(ENABLE_OPENXR)
     add_custom_target(CompileSandboxShaders ALL
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Scripts/compile_shaders.py
                 --shader-dir ${CMAKE_CURRENT_SOURCE_DIR}
+                ${SANDBOX_SHADER_OUTPUT_ARGS}
                 --spirv
-                --enable-xr
-                --max-view-count ${SANDBOX_SHADER_MAX_VIEW_COUNT}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/spirv"
-            "${CMAKE_CURRENT_BINARY_DIR}/spirv"
+                ${SANDBOX_SHADER_MV_ARGS}
+                --max-view-count ${SANDBOX_SHADER_MAX_PER_PASS_VIEW_COUNT}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Compiling Sandbox shaders (Slang -> SPIR-V, XR multiview)"
+        COMMENT "Compiling Sandbox shaders (Slang -> SPIR-V, OpenXR ${SANDBOX_SHADER_XR_MODE})"
+        VERBATIM
+    )
+elseif(ENABLE_WEBXR AND EMSCRIPTEN)
+    add_custom_target(CompileSandboxShaders ALL
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Scripts/compile_shaders.py
+                --shader-dir ${CMAKE_CURRENT_SOURCE_DIR}
+                ${SANDBOX_SHADER_OUTPUT_ARGS}
+                --wgsl
+                --max-view-count ${SANDBOX_SHADER_MAX_PER_PASS_VIEW_COUNT}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Compiling Sandbox shaders (Slang -> WGSL, WebXR per-eye stereo)"
         VERBATIM
     )
 else()
     add_custom_target(CompileSandboxShaders ALL
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Scripts/compile_shaders.py
                 --shader-dir ${CMAKE_CURRENT_SOURCE_DIR}
-                --max-view-count ${SANDBOX_SHADER_MAX_VIEW_COUNT}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/spirv"
-            "${CMAKE_CURRENT_BINARY_DIR}/spirv"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${CMAKE_CURRENT_SOURCE_DIR}/wgsl"
-            "${CMAKE_CURRENT_BINARY_DIR}/wgsl"
+                ${SANDBOX_SHADER_OUTPUT_ARGS}
+                --max-view-count ${SANDBOX_SHADER_MAX_PER_PASS_VIEW_COUNT}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Compiling Sandbox shaders (Slang -> SPIR-V + WGSL)"
         VERBATIM

@@ -61,6 +61,7 @@ file(GLOB SRC_LIST
     "prev/xr/open_xr/input/*.h" "prev/xr/open_xr/input/*.cpp"
     "prev/xr/open_xr/input/util/*.h" "prev/xr/open_xr/input/util/*.cpp"
     "prev/xr/open_xr/util/*.h" "prev/xr/open_xr/util/*.cpp"
+    "prev/xr/web_xr/*.h" "prev/xr/web_xr/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package
@@ -69,9 +70,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake") 
 option(ENABLE_LOGGING "Prints LOG* messages to Terminal or Android Logcat." ON)
 option(ENABLE_MULTITOUCH "Multi-touch screen support" OFF)
 option(ENABLE_REVERSE_DEPTH "Enable reverse depth" OFF)
-option(ENABLE_XR "Enable XR" OFF)
+option(ENABLE_OPENXR "Enable OpenXR backend (native VR/AR)" OFF)
 option(ENABLE_XR_EXTENDED_INIT "Enable XR extended init (currently applicable on Android only)" OFF)
 option(ENABLE_XR_DEPTH "Enable XR Depth" OFF)
+option(ENABLE_WEBXR "Enable WebXR (browser VR/AR over WebGPU) - experimental spike" OFF)
 option(BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
 option(BUILD_HEADLESS "Build without windowing system support (no surface creation)" OFF)
@@ -88,14 +90,46 @@ endif()
 if (ENABLE_REVERSE_DEPTH)
     add_definitions(-DENABLE_REVERSE_DEPTH)
 endif()
-if(ENABLE_XR)
+# XR umbrella: client/engine code keys only on ENABLE_XR; the backend (OpenXR vs WebXR) stays internal.
+if(ENABLE_OPENXR OR (ENABLE_WEBXR AND EMSCRIPTEN))
+    set(ENABLE_XR ON CACHE INTERNAL "XR enabled (OpenXR or WebXR backend)")
     add_definitions(-DENABLE_XR)
-    set(MAX_VIEW_COUNT 2 CACHE STRING "Maximum number of views for XR")
 else()
-    set(MAX_VIEW_COUNT 1 CACHE STRING "Maximum number of views (1 = mono)" FORCE)
+    set(ENABLE_XR OFF CACHE INTERNAL "XR enabled (OpenXR or WebXR backend)")
+endif()
+if(ENABLE_OPENXR)
+    add_definitions(-DENABLE_OPENXR)
+endif()
+# Single-pass stereo via multiview (SV_ViewID + per-view arrays). OFF => stereo is rendered per-eye
+# (one pass per eye). WebGPU/WGSL has no multiview, so WebXR is ALWAYS per-eye regardless of this option;
+# the option only affects OpenXR (native Vulkan), letting it choose multiview or per-eye rendering.
+option(ENABLE_MULTIVIEW "Use single-pass multiview stereo (OpenXR only; WebXR is always per-eye)" ON)
+
+# MAX_VIEW_COUNT = total XR eyes the camera/CameraEvent carry per frame: 2 for stereo XR, 1 otherwise.
+# Single source of truth for "how many views exist".
+if(ENABLE_XR)
+    set(MAX_VIEW_COUNT 2 CACHE STRING "Number of XR eyes (total views)" FORCE)
+else()
+    set(MAX_VIEW_COUNT 1 CACHE STRING "Number of XR eyes (total views)" FORCE)
+endif()
+
+# MAX_PER_PASS_VIEW_COUNT = views rendered in ONE pass (shader/UBO array width), DERIVED from the eye count:
+# all eyes at once when multiview (OpenXR + ENABLE_MULTIVIEW, via SV_ViewID), else 1 (per-eye / mono).
+# WebGPU/WGSL has no multiview, so WebXR is always per-eye (= 1) regardless of ENABLE_MULTIVIEW.
+if(ENABLE_OPENXR AND ENABLE_MULTIVIEW)
+    set(MAX_PER_PASS_VIEW_COUNT ${MAX_VIEW_COUNT} CACHE STRING "Shader views per pass (multiview = all eyes)" FORCE)
+else()
+    set(MAX_PER_PASS_VIEW_COUNT 1 CACHE STRING "Shader views per pass (per-eye / mono = 1)" FORCE)
 endif()
 if(ENABLE_XR_DEPTH)
     add_definitions(-DENABLE_XR_DEPTH)
+endif()
+if(ENABLE_WEBXR)
+    if(EMSCRIPTEN)
+        add_definitions(-DENABLE_WEBXR)
+    else()
+        message(WARNING "ENABLE_WEBXR is web-only (Emscripten/WebGPU) - ignoring on this platform")
+    endif()
 endif()
 
 include_directories("external")
@@ -150,8 +184,8 @@ else()
     endif()
 endif()
 
-if(IOS OR ANDROID OR ENABLE_XR)
-    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported on mobile and XR" FORCE)
+if(IOS OR ANDROID OR ENABLE_OPENXR)
+    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported on mobile and OpenXR" FORCE)
 endIf()
 
 # Add gfx as a subdirectory — it manages its own sources, backends, and Dawn
@@ -175,9 +209,9 @@ add_subdirectory(external/gfx)
 include_directories("external/worm_holes/WormHoles")
 include_directories("external/glm")
 
-# XR: Vulkan-only, fetch OpenXR loader
-if(ENABLE_XR)
-    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported with XR" FORCE)
+# OpenXR: Vulkan-only, fetch OpenXR loader
+if(ENABLE_OPENXR)
+    set(BUILD_WEBGPU_BACKEND OFF CACHE BOOL "WebGPU not supported with OpenXR" FORCE)
 
     include(FetchContent)
     set(DYNAMIC_LOADER OFF CACHE BOOL "Build OpenXR loader as static library" FORCE)
@@ -373,8 +407,8 @@ else()
     message(FATAL_ERROR "Unsupported platform.")
 endif()
 
-if(ENABLE_XR)
-    message("${PROJECT_NAME} - Using XR")
+if(ENABLE_OPENXR)
+    message("${PROJECT_NAME} - Using OpenXR")
     target_link_libraries(${PROJECT_NAME} openxr_loader)
     target_include_directories(${PROJECT_NAME} PUBLIC ${openxr_sdk_SOURCE_DIR}/include)
     if(ENABLE_XR_DEPTH)
@@ -386,8 +420,15 @@ else()
     message("${PROJECT_NAME} - Not using XR")
 endif()
 
-# Propagate MAX_VIEW_COUNT to all dependents
+# Propagate MAX_PER_PASS_VIEW_COUNT (shader/UBO view count) and MAX_VIEW_COUNT (XR eyes held by camera/events)
+target_compile_definitions(${PROJECT_NAME} PUBLIC MAX_PER_PASS_VIEW_COUNT_VALUE=${MAX_PER_PASS_VIEW_COUNT})
 target_compile_definitions(${PROJECT_NAME} PUBLIC MAX_VIEW_COUNT_VALUE=${MAX_VIEW_COUNT})
+# ENABLE_MULTIVIEW must reach consumers (the examples) too: their C++ gate (#ifdef ENABLE_MULTIVIEW) has to
+# match the multiview shaders (which get -DENABLE_MULTIVIEW). add_definitions is directory-scoped and would
+# NOT cross add_subdirectory into Examples/, so propagate it PUBLIC via the target instead.
+if(ENABLE_OPENXR AND ENABLE_MULTIVIEW)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_MULTIVIEW)
+endif()
 
 # Sanitizers (see top-level CMakeLists). No-op unless ENABLE_ASAN/UBSAN/TSAN is set.
 target_link_libraries(${PROJECT_NAME} prev_sanitizers)
