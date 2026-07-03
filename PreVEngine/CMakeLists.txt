@@ -62,6 +62,9 @@ file(GLOB SRC_LIST
     "prev/xr/open_xr/input/util/*.h" "prev/xr/open_xr/input/util/*.cpp"
     "prev/xr/open_xr/util/*.h" "prev/xr/open_xr/util/*.cpp"
     "prev/xr/web_xr/*.h" "prev/xr/web_xr/*.cpp"
+    "prev/xr/web_xr/core/*.h" "prev/xr/web_xr/core/*.cpp"
+    "prev/xr/web_xr/render/*.h" "prev/xr/web_xr/render/*.cpp"
+    "prev/xr/web_xr/input/*.h" "prev/xr/web_xr/input/*.cpp"
 )
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")  # for find_package

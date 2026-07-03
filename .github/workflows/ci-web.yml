@@ -11,8 +11,9 @@ permissions:
   pages: write
   id-token: write
 
+# Builds race per-branch (a superseded build is cancelled); deploys have their own group on the job below.
 concurrency:
-  group: "pages"
+  group: web-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -136,6 +137,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Deploys queue and are never cancelled mid-flight (a killed Pages deployment can wedge the service).
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
