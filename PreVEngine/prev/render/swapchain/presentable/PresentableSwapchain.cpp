@@ -139,10 +139,24 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
 
     GFXERRCHECK(gfxCommandEncoderBegin(frameInFlight.commandEncoder));
 
-    outContext.frameBuffer = *m_swapchainBuffers[m_acquiredIndex].framebuffer;
     outContext.commandEncoder = frameInFlight.commandEncoder;
     outContext.index = m_frameIndex;
     return true;
+}
+
+void PresentableSwapchain::BeginPass(FrameContext& outContext, uint32_t passIndex)
+{
+    (void)passIndex; // single-pass (mono): GetPassCount() == 1
+    ASSERT(m_isAcquired, "PresentableSwapchain: BeginPass without an acquired frame");
+    outContext.frameBuffer = *m_swapchainBuffers[m_acquiredIndex].framebuffer;
+    outContext.viewOffset = 0;
+    outContext.viewCount = 1;
+}
+
+void PresentableSwapchain::EndPass(uint32_t passIndex)
+{
+    (void)passIndex; // single-pass (mono): nothing to finalize between passes
+    ASSERT(m_isAcquired, "PresentableSwapchain: EndPass without an acquired frame");
 }
 
 void PresentableSwapchain::EndFrame(const FrameSubmitSync& submitSync)
@@ -209,6 +223,11 @@ GfxExtent2D PresentableSwapchain::GetExtent() const
 uint32_t PresentableSwapchain::GetImageCount() const
 {
     return static_cast<uint32_t>(m_swapchainBuffers.size());
+}
+
+uint32_t PresentableSwapchain::GetPassCount() const
+{
+    return 1; // mono: a single render pass per frame
 }
 
 void PresentableSwapchain::Print() const

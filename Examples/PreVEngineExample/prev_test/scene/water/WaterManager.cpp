@@ -4,12 +4,11 @@
 #include "WaterRefraction.h"
 
 namespace prev_test::scene::water {
-WaterManager::WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ, const uint32_t viewCount)
+WaterManager::WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ)
     : SceneNode()
     , m_device{ device }
     , m_gridMaxX(maxX)
     , m_gridMaxZ(maxZ)
-    , m_viewCount(viewCount)
 {
 }
 
@@ -22,10 +21,10 @@ void WaterManager::Init()
         }
     }
 
-    auto waterReflection = std::make_shared<WaterReflection>(m_device, m_viewCount);
+    auto waterReflection = std::make_shared<WaterReflection>(m_device);
     AddChild(waterReflection);
 
-    auto waterRefraction = std::make_shared<WaterRefraction>(m_device, m_viewCount);
+    auto waterRefraction = std::make_shared<WaterRefraction>(m_device);
     AddChild(waterRefraction);
 
     SceneNode::Init();

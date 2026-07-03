@@ -59,15 +59,22 @@ std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bo
     nativeExtsDesc.nativeExtensions = nativeExtPtrs.empty() ? nullptr : nativeExtPtrs.data();
     nativeExtsDesc.nativeExtensionCount = static_cast<uint32_t>(nativeExtPtrs.size());
 
-    const char* extensions[] = { GFX_INSTANCE_EXTENSION_SURFACE, GFX_INSTANCE_EXTENSION_DEBUG };
+    std::vector<const char*> extensions{ GFX_INSTANCE_EXTENSION_SURFACE };
+    if (enableValidation) {
+        extensions.push_back(GFX_INSTANCE_EXTENSION_DEBUG);
+    }
+#ifdef ENABLE_XR
+    extensions.push_back(GFX_INSTANCE_EXTENSION_XR_COMPATIBLE);
+#endif
+
     GfxInstanceDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_INSTANCE_DESCRIPTOR;
     desc.pNext = nativeExtensions.empty() ? nullptr : &nativeExtsDesc;
     desc.backend = backend;
     desc.applicationName = appName.c_str();
     desc.applicationVersion = 1;
-    desc.enabledExtensions = extensions;
-    desc.enabledExtensionCount = enableValidation ? 2u : 1u;
+    desc.enabledExtensions = extensions.data();
+    desc.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 
     GfxInstance instance{};
     if (gfxCreateInstance(&desc, &instance) != GFX_RESULT_SUCCESS) {

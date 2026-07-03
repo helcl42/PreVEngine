@@ -68,6 +68,17 @@ jobs:
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
 
+    - name: Configure CMake (WebXR)
+      run: |
+        emcmake cmake -B ${{ github.workspace }}/build_webxr \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_WEBXR=ON \
+        -S ${{ github.workspace }}
+
+    - name: Build (WebXR)
+      run: cmake --build ${{ github.workspace }}/build_webxr --config Release
+
     - name: Create Artifact
       run: |
         mkdir -p example-web
@@ -100,10 +111,21 @@ jobs:
 
     - name: Prepare Pages
       run: |
-        mkdir -p public
+        mkdir -p public public/webxr
         cp example-web/* public/
         cp sandbox-web/* public/
         cp public/PreVEngineExample.html public/index.html
+        # WebXR variants (require a WebXR-capable headset browser to enter a session)
+        cp ${{ github.workspace }}/build_webxr/Examples/PreVEngineExample/PreVEngineExample.html \
+           ${{ github.workspace }}/build_webxr/Examples/PreVEngineExample/PreVEngineExample.js \
+           ${{ github.workspace }}/build_webxr/Examples/PreVEngineExample/PreVEngineExample.wasm \
+           ${{ github.workspace }}/build_webxr/Examples/PreVEngineExample/PreVEngineExample.data \
+           public/webxr/
+        cp ${{ github.workspace }}/build_webxr/Examples/Sandbox/Sandbox.html \
+           ${{ github.workspace }}/build_webxr/Examples/Sandbox/Sandbox.js \
+           ${{ github.workspace }}/build_webxr/Examples/Sandbox/Sandbox.wasm \
+           ${{ github.workspace }}/build_webxr/Examples/Sandbox/Sandbox.data \
+           public/webxr/
 
     - name: Upload Pages Artifact
       uses: actions/upload-pages-artifact@v3

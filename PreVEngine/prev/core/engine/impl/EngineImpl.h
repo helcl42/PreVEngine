@@ -19,6 +19,7 @@
 #include "../../../window/IWindow.h"
 #include "../../../window/WindowEvents.h"
 
+#include <functional>
 #include <memory>
 
 namespace prev::core::engine::impl {
@@ -61,6 +62,10 @@ public:
     virtual uint32_t GetViewCount() const = 0;
 
     virtual float GetCurrentDeltaTime() const = 0;
+
+    // Invokes tick until it returns false; each impl owns its loop mechanics (WebXR is asynchronous -
+    // arms the session's rAF callback and returns immediately).
+    virtual void RunFrameLoop(const std::function<bool()>& tick) = 0;
 
 public:
     void InitScene(std::unique_ptr<prev::scene::IScene> scene);

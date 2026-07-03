@@ -38,10 +38,11 @@ prev::render::FrameSubmitSync MasterRenderer::Render(const prev::render::RenderC
     const GfxBackend backend{ m_device.GetGPU().GetInfo().backend };
 
     ViewData views{};
-    views.viewCount = camera->GetViewCount();
-    for (uint32_t view = 0; view < views.viewCount; ++view) {
-        views.viewMatrices[view] = camera->GetViewMatrix(view);
-        views.projectionMatrices[view] = AdjustProjectionForBackend(camera->GetProjectionMatrix(view), backend);
+    views.viewCount = renderContext.viewCount;
+    for (uint32_t slot = 0; slot < views.viewCount; ++slot) {
+        const uint32_t eye{ renderContext.viewOffset + slot };
+        views.viewMatrices[slot] = camera->GetViewMatrix(eye);
+        views.projectionMatrices[slot] = AdjustProjectionForBackend(camera->GetProjectionMatrix(eye), backend);
     }
 
     // Reset the renderer's bind-group pool to this frame's region (grow-on-demand), once per frame.

@@ -12,6 +12,8 @@
 #include <prev/render/image/ImageFactory.h>
 #include <prev/util/GfxUtils.h>
 
+#include <prev/common/Cache.h>
+
 namespace prev_test::component::terrain {
 TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, bool async, const unsigned int seed, const unsigned int vertexCount)
     : m_device{ device }
@@ -221,22 +223,42 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::Crea
 {
     prev::render::image::ImageFactory imageFactory{};
 
+    // Decoded (by path) and resized (by path + target size) images are identical across terrain tiles, so
+    // cache them - the grid rebuilds the same texture arrays per tile. CPU-only IImages, safe to hold static.
+    using ImageCache = prev::common::Cache<std::string, std::shared_ptr<prev::render::image::IImage>>;
+    static ImageCache s_decodedCache{};
+    static ImageCache s_resizedCache{};
+
     std::vector<std::shared_ptr<prev::render::image::IImage>> images;
     uint32_t maxWidth = 0, maxHeight = 0;
     for (const auto& path : paths) {
-        auto img = imageFactory.CreateImage(path);
+        std::shared_ptr<prev::render::image::IImage> img;
+        if (auto cached = s_decodedCache.Find(path)) {
+            img = *cached;
+        } else {
+            img = imageFactory.CreateImage(path);
+            s_decodedCache.Add(path, img);
+        }
         maxWidth = std::max(maxWidth, img->GetWidth());
         maxHeight = std::max(maxHeight, img->GetHeight());
-        images.push_back(std::move(img));
+        images.push_back(img);
     }
 
-    // Resize images that don't match the max dimensions
+    // Resize images that don't match the max dimensions (cached by path + target size)
     std::vector<std::shared_ptr<prev::render::image::IImage>> finalImages;
-    for (const auto& img : images) {
-        if (img->GetWidth() != maxWidth || img->GetHeight() != maxHeight) {
-            finalImages.push_back(imageFactory.CreateResizedImage(*img, maxWidth, maxHeight));
-        } else {
+    for (size_t i = 0; i < images.size(); ++i) {
+        const auto& img = images[i];
+        if (img->GetWidth() == maxWidth && img->GetHeight() == maxHeight) {
             finalImages.push_back(img);
+            continue;
+        }
+        const std::string rkey = paths[i] + "@" + std::to_string(maxWidth) + "x" + std::to_string(maxHeight);
+        if (auto cached = s_resizedCache.Find(rkey)) {
+            finalImages.push_back(*cached);
+        } else {
+            std::shared_ptr<prev::render::image::IImage> resized = imageFactory.CreateResizedImage(*img, maxWidth, maxHeight);
+            s_resizedCache.Add(rkey, resized);
+            finalImages.push_back(resized);
         }
     }
 

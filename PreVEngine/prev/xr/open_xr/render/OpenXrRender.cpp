@@ -1,6 +1,6 @@
 #include "OpenXrRender.h"
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../util/OpenXrUtils.h"
 
@@ -122,9 +122,10 @@ bool OpenXrRender::BeginFrame()
     }
 
     CameraEvent event{};
-    const uint32_t cameraViewCount{ viewCount < MAX_VIEW_COUNT ? viewCount : MAX_VIEW_COUNT };
-    if (viewCount > MAX_VIEW_COUNT) {
-        LOGW("OpenXR reported %u views but MAX_VIEW_COUNT is %u; truncating the camera event.", viewCount, MAX_VIEW_COUNT);
+    const uint32_t maxEyes{ static_cast<uint32_t>(MAX_VIEW_COUNT_VALUE) };
+    const uint32_t cameraViewCount{ viewCount < maxEyes ? viewCount : maxEyes };
+    if (viewCount > maxEyes) {
+        LOGW("OpenXR reported %u views but MAX_VIEW_COUNT is %u; truncating the camera event.", viewCount, maxEyes);
     }
     for (uint32_t i = 0; i < cameraViewCount; ++i) {
         const auto& view{ views[i] };
@@ -261,17 +262,27 @@ uint32_t OpenXrRender::GetCurrentSwapchainIndex() const
 
 uint32_t OpenXrRender::GetViewCount() const
 {
-    return MAX_VIEW_COUNT;
+    return static_cast<uint32_t>(m_viewConfigurationViews.size());
 }
 
-std::vector<GfxTexture> OpenXrRender::GetColorImages() const
+uint32_t OpenXrRender::GetImageCount() const
 {
-    return m_colorSwapchainInfo.textures;
+    return static_cast<uint32_t>(m_colorSwapchainInfo.textures.size());
 }
 
-std::vector<GfxTexture> OpenXrRender::GetDepthImages() const
+GfxTexture OpenXrRender::GetColorImage(uint32_t index) const
 {
-    return m_depthSwapchainInfo.textures;
+    return index < m_colorSwapchainInfo.textures.size() ? m_colorSwapchainInfo.textures[index] : GfxTexture{};
+}
+
+GfxTexture OpenXrRender::GetDepthImage(uint32_t index) const
+{
+    return index < m_depthSwapchainInfo.textures.size() ? m_depthSwapchainInfo.textures[index] : GfxTexture{};
+}
+
+bool OpenXrRender::HasDepthImages() const
+{
+    return !m_depthSwapchainInfo.textures.empty();
 }
 
 GfxExtent2D OpenXrRender::GetExtent() const
@@ -337,8 +348,8 @@ void OpenXrRender::CreateViewConfigurationViews()
     m_viewConfigurationViews.resize(viewConfigurationViewCount, prev::xr::open_xr::util::CreateStruct<XrViewConfigurationView>(XR_TYPE_VIEW_CONFIGURATION_VIEW));
     OPENXR_CHECK(xrEnumerateViewConfigurationViews(m_instance, m_systemId, m_viewConfiguration, viewConfigurationViewCount, &viewConfigurationViewCount, m_viewConfigurationViews.data()), "Failed to enumerate ViewConfiguration Views.");
 
-    if (viewConfigurationCount > MAX_VIEW_COUNT) {
-        LOGE("OpenXR view configuration count > maxViewCount: %d > %d", viewConfigurationCount, MAX_VIEW_COUNT);
+    if (viewConfigurationCount > MAX_VIEW_COUNT_VALUE) {
+        LOGE("OpenXR view configuration count > MAX_VIEW_COUNT (eyes): %d > %d", viewConfigurationCount, MAX_VIEW_COUNT_VALUE);
     }
 }
 
@@ -399,7 +410,9 @@ void OpenXrRender::CreateSwapchains()
     }
 
     const XrViewConfigurationView& viewConfigurationView{ m_viewConfigurationViews[0] };
-    const uint32_t viewCount{ MAX_VIEW_COUNT };
+    // The OpenXR color/depth swapchain holds one array layer per XR eye, independent of whether the engine
+    // fills them via multiview (one pass, SV_ViewID) or per-eye (one pass per eye into layer[i]).
+    const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
 
     m_colorSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
 

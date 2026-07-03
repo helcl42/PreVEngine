@@ -112,11 +112,11 @@ private:
 
         DEFAULT_ALIGNMENT glm::mat4 normalMatrix;
 
-        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_VIEW_COUNT];
+        DEFAULT_ALIGNMENT glm::mat4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];
 
-        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_VIEW_COUNT];
+        DEFAULT_ALIGNMENT glm::mat4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT];
 
-        DEFAULT_ALIGNMENT glm::vec4 cameraPositions[MAX_VIEW_COUNT];
+        DEFAULT_ALIGNMENT glm::vec4 cameraPositions[MAX_PER_PASS_VIEW_COUNT];
 
         DEFAULT_ALIGNMENT glm::vec4 clipPlane;
 

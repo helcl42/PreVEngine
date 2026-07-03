@@ -46,9 +46,7 @@ public:
 private:
     void RunOneFrame();
 
-#ifdef __EMSCRIPTEN__
-    static void EmscriptenMainLoopCallback(void* arg);
-#endif
+    bool Tick();
 
 private:
     std::unique_ptr<prev::core::engine::impl::EngineImpl> m_engineImpl{};

@@ -1,7 +1,7 @@
 #ifndef __OPEN_XR_RENDER_H__
 #define __OPEN_XR_RENDER_H__
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../common/IOpenXrEventObserver.h"
 
@@ -39,9 +39,13 @@ public:
 
     uint32_t GetViewCount() const;
 
-    std::vector<GfxTexture> GetColorImages() const;
+    uint32_t GetImageCount() const;
 
-    std::vector<GfxTexture> GetDepthImages() const;
+    GfxTexture GetColorImage(uint32_t index) const;
+
+    GfxTexture GetDepthImage(uint32_t index) const;
+
+    bool HasDepthImages() const;
 
     GfxExtent2D GetExtent() const;
 

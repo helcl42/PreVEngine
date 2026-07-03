@@ -10,7 +10,7 @@
 namespace prev_test::scene::water {
 class WaterReflection final : public prev::scene::graph::SceneNode {
 public:
-    WaterReflection(prev::core::device::Device& device, uint32_t viewCount);
+    WaterReflection(prev::core::device::Device& device);
 
     ~WaterReflection() = default;
 
@@ -31,8 +31,6 @@ private:
 
 private:
     prev::core::device::Device& m_device;
-
-    uint32_t m_viewCount;
 
 private:
     std::shared_ptr<prev_test::component::common::IOffScreenRenderPassComponent> m_reflectionComponent;

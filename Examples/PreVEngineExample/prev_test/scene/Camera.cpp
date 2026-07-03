@@ -7,6 +7,8 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 #include <prev/util/MathUtils.h>
 
+#include <algorithm>
+
 namespace prev_test::scene {
 Camera::Camera(uint32_t viewCount)
     : SceneNode({ TAG_MAIN_CAMERA, TAG_PLAYER })
@@ -147,7 +149,8 @@ void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 #ifdef ENABLE_XR
 void Camera::operator()(const prev::xr::CameraEvent& cameraEvent)
 {
-    for (uint32_t view = 0; view < cameraEvent.count; ++view) {
+    const uint32_t viewCount{ std::min(cameraEvent.count, static_cast<uint32_t>(m_cameraComponents.size())) };
+    for (uint32_t view = 0; view < viewCount; ++view) {
         auto& cameraComponent{ m_cameraComponents[view] };
         const auto previousFrustum{ cameraComponent->GetViewFrustum() };
 

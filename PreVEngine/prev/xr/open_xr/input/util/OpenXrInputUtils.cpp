@@ -1,6 +1,6 @@
 #include "OpenXrInputUtils.h"
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../../util/OpenXrUtils.h"
 

@@ -72,7 +72,7 @@ void SunRenderer::Init()
     m_queryPool = prev::render::query::QueryPoolBuilder{ m_device }
                       .SetQueryType(GFX_QUERY_TYPE_OCCLUSION)
                       .SetPoolCount(QueryPoolCount)
-                      .SetQueryCount(MAX_VIEW_COUNT)
+                      .SetQueryCount(MAX_PER_PASS_VIEW_COUNT)
                       .SetPrecise(m_device.HasExtension(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE))
                       .Build();
     m_passedSamples = 0;
@@ -86,6 +86,7 @@ void SunRenderer::BeginFrame(const NormalRenderContext& renderContext)
     m_uniformsPoolVS->BeginFrame(renderContext.frameInFlightIndex);
 
     m_renderPass.SetOcclusionQuerySet(*m_queryPool);
+    m_queryPool->Reset(renderContext.commandEncoder);
 
     if (m_queryPool->IsAsyncResultReady()) {
         if (m_queryPool->GetAsyncQueryResult<uint64_t>(0, m_passedSamples)) {

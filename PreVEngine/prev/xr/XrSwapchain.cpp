@@ -8,17 +8,20 @@
 
 #include "../common/Logger.h"
 
+#include <algorithm>
+
 namespace prev::xr {
-XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, GfxSampleCount sampleCount)
+XrSwapchain::XrSwapchain(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, xr::IXr& xr, GfxSampleCount sampleCount, uint32_t maxFramesInFlight)
     : m_device{ device }
     , m_renderPass{ renderPass }
     , m_xr{ xr }
     , m_sampleCount{ sampleCount }
     , m_graphicsQueue{ m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
+    , m_framesInFlight{ maxFramesInFlight > 0 ? maxFramesInFlight : 2 }
+    , m_frameInFlightIndex{ m_framesInFlight - 1 } // pre-incremented each frame -> first frame lands on 0
 {
-    m_extent = m_xr.GetExtent();
-    CreateResources();
-    LOGI("XR Swapchain created: %ux%u", m_extent.width, m_extent.height);
+    // Resources are built lazily in BeginFrame - images (and on WebXR the extent) exist only once frames arrive.
+    LOGI("XR Swapchain created");
 }
 
 XrSwapchain::~XrSwapchain()
@@ -28,95 +31,192 @@ XrSwapchain::~XrSwapchain()
     LOGI("XR Swapchain destroyed");
 }
 
-void XrSwapchain::CreateResources()
+bool XrSwapchain::IsMultiview() const
 {
-    const GfxFormat colorFormat = m_xr.GetColorFormat();
-    const GfxFormat depthFormat = m_xr.GetDepthFormat();
-    const uint32_t viewCount = m_xr.GetViewCount();
-    const GfxTextureViewType viewType = (viewCount > 1) ? GFX_TEXTURE_VIEW_TYPE_2D_ARRAY : GFX_TEXTURE_VIEW_TYPE_2D;
+    return MAX_PER_PASS_VIEW_COUNT_VALUE > 1;
+}
 
-    // Color textures come pre-imported from OpenXR; depth comes from OpenXR or, if absent, a shared depth.
-    const auto colorTextures = m_xr.GetColorImages();
-    const auto swapchainImagesCount = static_cast<uint32_t>(colorTextures.size());
+void XrSwapchain::CreateResources(const GfxExtent2D& extent)
+{
+    m_extent = extent;
     const bool hasXrDepth = m_xr.HasDepthImages();
-    const std::vector<GfxTexture> depthTextures{ hasXrDepth ? m_xr.GetDepthImages() : std::vector<GfxTexture>{} };
+    const uint32_t targetLayers = IsMultiview() ? m_xr.GetViewCount() : 1;
+    m_targets = std::make_unique<prev::render::swapchain::SwapchainTargets>(m_device, m_renderPass, m_extent, m_xr.GetColorFormat(), m_xr.GetDepthFormat(), m_sampleCount, targetLayers, /*createSharedDepth*/ !hasXrDepth);
 
-    // Shared MSAA color/depth + (when XR provides no depth) a shared depth, and per-image framebuffer assembly.
-    m_targets = std::make_unique<prev::render::swapchain::SwapchainTargets>(m_device, m_renderPass, m_extent, colorFormat, depthFormat, m_sampleCount, viewCount, /*createSharedDepth*/ !hasXrDepth);
-
-    m_swapchainBuffers.resize(swapchainImagesCount);
-    for (uint32_t i = 0; i < swapchainImagesCount; ++i) {
-        auto& sb = m_swapchainBuffers[i];
-
-        // Per-image color view over the OpenXR-imported color texture.
-        sb.colorTexture = colorTextures[i];
-        sb.colorView = prev::render::buffer::ImageBufferViewBuilder{ sb.colorTexture, viewType, colorFormat, viewCount }
-                           .Build();
-
-        // Use the OpenXR-provided depth when present; otherwise null -> the framebuffer uses the shared depth.
-        GfxTextureView depthView{};
-        if (hasXrDepth) {
-            sb.depthTexture = depthTextures[i];
-            sb.depthView = prev::render::buffer::ImageBufferViewBuilder{ sb.depthTexture, viewType, depthFormat, viewCount }
-                               .Build();
-            depthView = *sb.depthView;
-        }
-
-        sb.framebuffer = m_targets->CreateFramebuffer(*sb.colorView, depthView);
-
-        // Command encoder
-        GfxCommandEncoderDescriptor ceDesc{};
-        ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
-        ceDesc.label = "XrCommandEncoder";
-        GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &sb.commandEncoder));
-
-        // Fence (signaled initially)
-        sb.fence = std::make_unique<prev::core::sync::Fence>(m_device, true, "XrFence");
+    m_swapchainBuffers.resize(std::max(m_xr.GetImageCount(), 1u));
+    for (auto& sb : m_swapchainBuffers) {
+        CreateBufferCommands(sb);
     }
 }
 
 void XrSwapchain::DestroyResources()
 {
     for (auto& sb : m_swapchainBuffers) {
-        sb.fence.reset();
-        if (sb.commandEncoder) {
-            gfxCommandEncoderDestroy(sb.commandEncoder);
-        }
-        sb.framebuffer.reset();
-        sb.colorView.reset();
-        sb.depthView.reset();
-        // colorTexture/depthTexture owned by IXr or the shared depth — don't destroy here
+        DestroyBufferCommands(sb);
+        DestroySlotTargets(sb);
     }
     m_swapchainBuffers.clear();
 
     m_targets.reset();
 }
 
+void XrSwapchain::RecreateResources(const GfxExtent2D& extent)
+{
+    m_device.WaitIdle(); // targets may still be referenced by in-flight frames
+    DestroyResources();
+    CreateResources(extent);
+}
+
+void XrSwapchain::BuildSlotTargets(SwapchainBuffer& sb, GfxTexture colorTexture, GfxTexture depthTexture)
+{
+    DestroySlotTargets(sb);
+
+    sb.colorTexture = colorTexture;
+    sb.depthTexture = depthTexture;
+
+    const uint32_t viewCount = m_xr.GetViewCount();
+    if (IsMultiview()) {
+        const GfxTextureViewType viewType = GFX_TEXTURE_VIEW_TYPE_2D_ARRAY;
+        sb.multiviewTarget.colorView = prev::render::buffer::ImageBufferViewBuilder{ colorTexture, viewType, m_xr.GetColorFormat(), viewCount }
+                                           .Build();
+        GfxTextureView depthView{};
+        if (depthTexture) {
+            sb.multiviewTarget.depthView = prev::render::buffer::ImageBufferViewBuilder{ depthTexture, viewType, m_xr.GetDepthFormat(), viewCount }
+                                               .Build();
+            depthView = *sb.multiviewTarget.depthView;
+        }
+        sb.multiviewTarget.framebuffer = m_targets->CreateFramebuffer(*sb.multiviewTarget.colorView, depthView);
+    } else {
+        // All eyes built up front - every eye's views must stay alive for the frame's single command buffer.
+        sb.perEyeTargets.resize(viewCount);
+        for (uint32_t layer = 0; layer < viewCount; ++layer) {
+            sb.perEyeTargets[layer] = BuildLayerTarget(colorTexture, depthTexture, layer);
+        }
+    }
+}
+
+bool XrSwapchain::HasBuiltTargets(const SwapchainBuffer& sb) const
+{
+    return IsMultiview() ? (sb.multiviewTarget.framebuffer != nullptr) : !sb.perEyeTargets.empty();
+}
+
+void XrSwapchain::DestroySlotTargets(SwapchainBuffer& sb)
+{
+    // Reset in dependency order: framebuffers reference the views.
+    sb.perEyeTargets.clear();
+    sb.multiviewTarget.framebuffer.reset();
+    sb.multiviewTarget.depthView.reset();
+    sb.multiviewTarget.colorView.reset();
+}
+
+XrSwapchain::RenderTarget XrSwapchain::BuildLayerTarget(GfxTexture colorTexture, GfxTexture depthTexture, uint32_t layer)
+{
+    RenderTarget target{};
+    target.colorView = prev::render::buffer::ImageBufferViewBuilder{ colorTexture, GFX_TEXTURE_VIEW_TYPE_2D, m_xr.GetColorFormat(), 1 }
+                           .SetBaseArrayLayer(layer)
+                           .Build();
+    GfxTextureView depthView{};
+    if (depthTexture) {
+        target.depthView = prev::render::buffer::ImageBufferViewBuilder{ depthTexture, GFX_TEXTURE_VIEW_TYPE_2D, m_xr.GetDepthFormat(), 1 }
+                               .SetBaseArrayLayer(layer)
+                               .Build();
+        depthView = *target.depthView;
+    }
+    target.framebuffer = m_targets->CreateFramebuffer(*target.colorView, depthView);
+    return target;
+}
+
+void XrSwapchain::CreateBufferCommands(SwapchainBuffer& sb)
+{
+    GfxCommandEncoderDescriptor ceDesc{};
+    ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
+    ceDesc.label = "XrCommandEncoder";
+    GFXERRCHECK(gfxDeviceCreateCommandEncoder(m_device, &ceDesc, &sb.commandEncoder));
+
+    sb.fence = std::make_unique<prev::core::sync::Fence>(m_device, true, "XrFence");
+}
+
+void XrSwapchain::DestroyBufferCommands(SwapchainBuffer& sb)
+{
+    sb.fence.reset();
+    if (sb.commandEncoder) {
+        gfxCommandEncoderDestroy(sb.commandEncoder);
+        sb.commandEncoder = {};
+    }
+}
+
 bool XrSwapchain::BeginFrame(prev::render::swapchain::FrameContext& outContext)
 {
-    m_acquiredIndex = m_xr.GetCurrentSwapchainIndex();
+    XrFrameImages frameImages{};
+    if (!m_xr.GetFrameImages(frameImages)) {
+        return false; // no XR frame acquired (yet)
+    }
+
+    const GfxExtent2D extent = m_xr.GetExtent();
+    if (!m_targets || extent.width != m_extent.width || extent.height != m_extent.height) {
+        RecreateResources(extent);
+    }
+
+    m_acquiredIndex = frameImages.imageIndex;
+    m_imagesChanged = frameImages.imagesChanged;
+    ASSERT(m_acquiredIndex < m_swapchainBuffers.size(), "XrSwapchain: acquired image index out of range");
 
     auto& sb = m_swapchainBuffers[m_acquiredIndex];
+    if (frameImages.imagesChanged || !HasBuiltTargets(sb)) {
+        BuildSlotTargets(sb, frameImages.colorImage, frameImages.depthImage);
+    }
 
-    sb.fence->Wait();
-    sb.fence->Reset();
+    if (frameImages.imagesChanged) {
+        // Per-frame images (WebXR/WebGPU): no synchronous fence wait exists; rotate the in-flight slot -
+        // safe unfenced because submits are queue-ordered and resources live until their submission completes.
+        m_frameInFlightIndex = (m_frameInFlightIndex + 1) % m_framesInFlight;
+        outContext.index = m_frameInFlightIndex;
+    } else {
+        // Persistent images (OpenXR): fence-pace this slot before re-recording its encoder.
+        sb.fence->Wait();
+        sb.fence->Reset();
+        outContext.index = m_acquiredIndex;
+    }
+
     GFXERRCHECK(gfxCommandEncoderBegin(sb.commandEncoder));
-
-    outContext.frameBuffer = *sb.framebuffer;
     outContext.commandEncoder = sb.commandEncoder;
-    outContext.index = m_acquiredIndex;
     return true;
+}
+
+void XrSwapchain::BeginPass(prev::render::swapchain::FrameContext& outContext, uint32_t passIndex)
+{
+    ASSERT(!m_passActive, "XrSwapchain: BeginPass called before the previous pass ended");
+    m_passActive = true;
+
+    auto& sb = m_swapchainBuffers[m_acquiredIndex];
+    if (IsMultiview()) {
+        outContext.frameBuffer = *sb.multiviewTarget.framebuffer;
+        outContext.viewOffset = 0;
+        outContext.viewCount = m_xr.GetViewCount();
+    } else {
+        outContext.frameBuffer = *sb.perEyeTargets[passIndex].framebuffer;
+        outContext.viewOffset = passIndex;
+        outContext.viewCount = 1;
+    }
+}
+
+void XrSwapchain::EndPass(uint32_t passIndex)
+{
+    (void)passIndex;
+    ASSERT(m_passActive, "XrSwapchain: EndPass called without a matching BeginPass");
+    m_passActive = false;
 }
 
 void XrSwapchain::EndFrame(const prev::render::FrameSubmitSync& submitSync)
 {
+    ASSERT(!m_passActive, "XrSwapchain: EndFrame called with a pass still open");
+
     auto& sb = m_swapchainBuffers[m_acquiredIndex];
 
     GFXERRCHECK(gfxCommandEncoderEnd(sb.commandEncoder));
 
     GfxCommandEncoder encoders[] = { sb.commandEncoder };
 
-    // Wait on / signal any cross-submission deps from this frame's renderers (XR owns image sync separately).
     std::vector<GfxSemaphore> waitSems;
     std::vector<GfxPipelineStageFlags> waitStages;
     std::vector<uint64_t> waitValues;
@@ -143,26 +243,36 @@ void XrSwapchain::EndFrame(const prev::render::FrameSubmitSync& submitSync)
     submitDesc.signalSemaphores = signalSems.empty() ? nullptr : signalSems.data();
     submitDesc.signalValues = signalValues.empty() ? nullptr : signalValues.data();
     submitDesc.signalSemaphoreCount = static_cast<uint32_t>(signalSems.size());
-    submitDesc.signalFence = *sb.fence;
+    // Per-frame-image backends submit unfenced (see BeginFrame).
+    submitDesc.signalFence = m_imagesChanged ? GfxFence{} : static_cast<GfxFence>(*sb.fence);
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 }
 
 GfxExtent2D XrSwapchain::GetExtent() const
 {
-    return m_extent;
+    // Live extent until the first frame builds targets - consumers must never see a transient 0x0.
+    return m_targets ? m_extent : m_xr.GetExtent();
 }
 
 uint32_t XrSwapchain::GetImageCount() const
 {
-    return static_cast<uint32_t>(m_swapchainBuffers.size());
+    // Upper bound of FrameContext.index values; over-reporting is safe, under-reporting is not.
+    return std::max(m_xr.GetImageCount(), m_framesInFlight);
+}
+
+uint32_t XrSwapchain::GetPassCount() const
+{
+    return IsMultiview() ? 1 : m_xr.GetViewCount();
 }
 
 void XrSwapchain::Print() const
 {
     LOGI("XR Swapchain:");
-    LOGI("\tExtent  = %u x %u", m_extent.width, m_extent.height);
-    LOGI("\tBuffers = %zu", m_swapchainBuffers.size());
+    const GfxExtent2D extent = GetExtent();
+    LOGI("\tExtent  = %u x %u", extent.width, extent.height);
+    LOGI("\tImages  = %u", GetImageCount());
     LOGI("\tViews   = %u", m_xr.GetViewCount());
+    LOGI("\tMultiview = %s", IsMultiview() ? "true" : "false");
 }
 } // namespace prev::xr
 

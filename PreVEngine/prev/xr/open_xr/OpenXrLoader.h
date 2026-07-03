@@ -1,7 +1,7 @@
 #ifndef __OPENXR_LOADER_H__
 #define __OPENXR_LOADER_H__
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../../common/pattern/Singleton.h"
 

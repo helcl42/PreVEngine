@@ -1,6 +1,7 @@
 #include "BufferBuilder.h"
 #include "OwnedGfxBuffer.h"
 
+#include "../../common/Common.h"
 #include "../../core/DeferredResourceDestroyer.h"
 #include "../../core/DeferredResourceUploader.h"
 #include "../../util/MathUtils.h"
@@ -123,6 +124,11 @@ std::unique_ptr<Buffer> BufferBuilder::BuildImpl(GfxCommandEncoder commandEncode
 
 std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
 {
+    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
+        // The async path stages via a blocking buffer map; build synchronously (queue write) instead.
+        return BuildImpl(nullptr);
+    }
+
     if (!m_data || m_dataSize == 0) {
         // Nothing to stream; an async build with no data has no benefit, so build it ready immediately.
         return BuildImpl(nullptr);
@@ -153,16 +159,21 @@ std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
 
 void BufferBuilder::UploadData(GfxBuffer buffer, uint64_t size, GfxCommandEncoder commandEncoder) const
 {
-    if (commandEncoder) {
-        // Record into the caller's encoder: stage the data and record a buffer->buffer copy. The copy runs
-        // when the caller submits the encoder; the staging buffer is defer-destroyed so it outlives it.
-        const GfxBuffer staging{ CreateStagingBuffer(size) };
-        MakeCopyRecorder(staging, buffer, size)(commandEncoder);
-        m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<OwnedGfxBuffer>(staging));
-    } else {
-        // Immediate: gfxQueueWriteBuffer handles host-visible (direct write) and device-local (internal
-        // staging) targets, so the buffer holds its data when Build() returns.
+    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
         gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, size);
+        return;
+    } else {
+        if (commandEncoder) {
+            // Record into the caller's encoder: stage the data and record a buffer->buffer copy. The copy runs
+            // when the caller submits the encoder; the staging buffer is defer-destroyed so it outlives it.
+            const GfxBuffer staging{ CreateStagingBuffer(size) };
+            MakeCopyRecorder(staging, buffer, size)(commandEncoder);
+            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<OwnedGfxBuffer>(staging));
+        } else {
+            // Immediate: gfxQueueWriteBuffer handles host-visible (direct write) and device-local (internal
+            // staging) targets, so the buffer holds its data when Build() returns.
+            gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, size);
+        }
     }
 }
 

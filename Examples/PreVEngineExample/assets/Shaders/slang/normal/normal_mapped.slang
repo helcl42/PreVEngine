@@ -5,17 +5,17 @@ import common.lights;
 import common.shadows;
 import common.normal_mapping;
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 struct NormalMappedVSParams
 {
     float4x4 modelMatrix;
     float4x4 normalMatrix;
-    float4x4 viewMatrices[MAX_VIEW_COUNT];
-    float4x4 projectionMatrices[MAX_VIEW_COUNT];
-    float4 cameraPositions[MAX_VIEW_COUNT];
+    float4x4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];
+    float4x4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT];
+    float4 cameraPositions[MAX_PER_PASS_VIEW_COUNT];
     float4 clipPlane;
     Lightning lightning;
     float4 textureOffset;
@@ -73,12 +73,12 @@ struct Interpolants
 
 [shader("vertex")]
 Interpolants vertexMain(VertexInput input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID
 #endif
 )
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const int viewIndex = 0;
 #endif
     Interpolants output;

@@ -94,7 +94,7 @@ void Root::Init()
     auto terrainManager = std::make_shared<terrain::TerrainManager>(m_device, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
     AddChild(terrainManager);
 
-    auto water = std::make_shared<water::WaterManager>(m_device, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z, m_viewCount);
+    auto water = std::make_shared<water::WaterManager>(m_device, TERRAIN_GRID_MAX_X, TERRAIN_GRID_MAX_Z);
     AddChild(water);
 
     auto sun = std::make_shared<sky::Sun>(m_device);

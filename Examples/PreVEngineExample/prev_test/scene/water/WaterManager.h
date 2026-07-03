@@ -7,7 +7,7 @@
 namespace prev_test::scene::water {
 class WaterManager final : public prev::scene::graph::SceneNode {
 public:
-    WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ, const uint32_t viewCount);
+    WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ);
 
     ~WaterManager() = default;
 
@@ -24,8 +24,6 @@ private:
     int m_gridMaxX;
 
     int m_gridMaxZ;
-
-    uint32_t m_viewCount;
 };
 } // namespace prev_test::scene::water
 

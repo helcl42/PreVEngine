@@ -1,5 +1,7 @@
 #include "Queue.h"
 
+#include "../../common/Common.h"
+
 namespace prev::core::device {
 Queue::Queue(GfxQueue q, uint32_t f, uint32_t idx, GfxQueueFlags flgs)
     : handle{ q }
@@ -22,7 +24,11 @@ GfxResult Queue::Submit(const GfxSubmitDescriptor* submitDesc) const
 
 GfxResult Queue::WaitIdle() const
 {
-    std::scoped_lock lock{ mutex };
-    return gfxQueueWaitIdle(handle);
+    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
+        return GFX_RESULT_SUCCESS;
+    } else {
+        std::scoped_lock lock{ mutex };
+        return gfxQueueWaitIdle(handle);
+    }
 }
 } // namespace prev::core::device

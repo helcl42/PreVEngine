@@ -2,8 +2,8 @@
 import common.utils;
 import common.shadows;
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 struct WaterLight
@@ -15,9 +15,9 @@ struct WaterLight
 struct WaterVSParams
 {
     float4x4 modelMatrix;
-    float4x4 viewMatrices[MAX_VIEW_COUNT];
-    float4x4 projectionMatrices[MAX_VIEW_COUNT];
-    float4 cameraPositions[MAX_VIEW_COUNT];
+    float4x4 viewMatrices[MAX_PER_PASS_VIEW_COUNT];
+    float4x4 projectionMatrices[MAX_PER_PASS_VIEW_COUNT];
+    float4 cameraPositions[MAX_PER_PASS_VIEW_COUNT];
     float density;
     float gradient;
 };
@@ -37,7 +37,7 @@ struct WaterFSParams
 [[vk::binding(1)]] ConstantBuffer<WaterFSParams> uboFS;
 [[vk::binding(2)]] Texture2DArray depthTexture;
 [[vk::binding(3)]] SamplerState depthSampler;
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
 [[vk::binding(4)]] Texture2DArray reflectionTexture;
 [[vk::binding(5)]] SamplerState reflectionSampler;
 [[vk::binding(6)]] Texture2DArray refractionTexture;
@@ -83,12 +83,12 @@ struct Interpolants
 
 [shader("vertex")]
 Interpolants vertexMain(VertexInput input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID
 #endif
 )
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const int viewIndex = 0;
 #endif
     Interpolants output;
@@ -112,12 +112,12 @@ Interpolants vertexMain(VertexInput input
 
 [shader("fragment")]
 float4 fragmentMain(Interpolants input
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     , uint viewIndex : SV_ViewID
 #endif
 ) : SV_Target
 {
-#ifndef ENABLE_XR
+#ifndef ENABLE_MULTIVIEW
     const int viewIndex = 0;
 #endif
 
@@ -133,7 +133,7 @@ float4 fragmentMain(Interpolants input
     float2 refractTexCoord = float2(normalizedDeviceSpaceCoord.x, normalizedDeviceSpaceCoord.y);
 
     // Calculate water depth
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     float depth = depthMapTexture.Sample(depthMapSampler, float3(refractTexCoord, (float)viewIndex)).r;
 #else
     float depth = depthMapTexture.Sample(depthMapSampler, refractTexCoord).r;
@@ -152,7 +152,7 @@ float4 fragmentMain(Interpolants input
     refractTexCoord += totalDistortion;
     refractTexCoord = clamp(refractTexCoord, 0.001, 0.999);
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_MULTIVIEW
     float4 reflectColor = reflectionTexture.Sample(reflectionSampler, float3(reflectTexCoord, (float)viewIndex));
     float4 refractColor = refractionTexture.Sample(refractionSampler, float3(refractTexCoord, (float)viewIndex));
 #else

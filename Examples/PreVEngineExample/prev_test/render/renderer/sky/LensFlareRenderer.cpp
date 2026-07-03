@@ -113,7 +113,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
 
     const auto lightComponent{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::light::ILightComponent>(m_scene.GetRootNode(), { TAG_MAIN_LIGHT }) };
 
-    std::vector<glm::vec2> flarePositions[MAX_VIEW_COUNT];
+    std::vector<glm::vec2> flarePositions[MAX_PER_PASS_VIEW_COUNT];
     for (uint32_t viewIndex = 0; viewIndex < renderContext.cameraCount; ++viewIndex) {
         flarePositions[viewIndex] = lensFlareComponent->ComputeFlarePositions(renderContext.projectionMatrices[viewIndex], renderContext.viewMatrices[viewIndex], renderContext.cameraPositions[viewIndex], lightComponent->GetPosition());
     }

@@ -68,7 +68,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 2 --enable-xr
+        python3 Scripts/compile_shaders.py --spirv --max-view-count 2 --enable-multiview
 
     - name: Build
       run: |

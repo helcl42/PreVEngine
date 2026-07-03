@@ -1,6 +1,6 @@
 #include "OpenXrDebugMessenger.h"
 
-#ifdef ENABLE_XR
+#ifdef ENABLE_OPENXR
 
 #include "../util/OpenXrUtils.h"
 
@@ -120,4 +120,4 @@ OpenXrDebugMessenger::~OpenXrDebugMessenger()
 }
 } // namespace prev::xr::open_xr::core
 
-#endif // ENABLE_XR
+#endif // ENABLE_OPENXR

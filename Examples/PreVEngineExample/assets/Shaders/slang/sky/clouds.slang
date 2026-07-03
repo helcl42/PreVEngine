@@ -1,8 +1,8 @@
 // Clouds weather texture compute shader
 import common.utils;
 
-#ifndef MAX_VIEW_COUNT
-#define MAX_VIEW_COUNT 1
+#ifndef MAX_PER_PASS_VIEW_COUNT
+#define MAX_PER_PASS_VIEW_COUNT 1
 #endif
 
 struct CloudParams

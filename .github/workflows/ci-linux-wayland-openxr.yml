@@ -63,7 +63,7 @@ jobs:
 
     - name: Compile Shaders
       run: |
-        python3 Scripts/compile_shaders.py --spirv --max-view-count 2 --enable-xr
+        python3 Scripts/compile_shaders.py --spirv --max-view-count 2 --enable-multiview
 
     - name: Configure CMake
       run: |
@@ -72,7 +72,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DENABLE_XR=ON \
+        -DENABLE_OPENXR=ON \
         -DENABLE_XCB=OFF \
         -DENABLE_WAYLAND=ON \
         -S ${{ github.workspace }}
