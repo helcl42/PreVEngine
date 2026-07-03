@@ -1,28 +1,29 @@
-#include "PhysicalDevice.h"
+#include "Adapter.h"
+
 #include "../../common/Logger.h"
 #include "../../util/MathUtils.h"
 
 namespace prev::core::device {
-PhysicalDevice::PhysicalDevice(GfxAdapter adapter)
+Adapter::Adapter(GfxAdapter adapter)
     : m_adapter{ adapter }
 {
 }
 
-GfxAdapterInfo PhysicalDevice::GetInfo() const
+GfxAdapterInfo Adapter::GetInfo() const
 {
     GfxAdapterInfo info{};
     gfxAdapterGetInfo(m_adapter, &info);
     return info;
 }
 
-GfxDeviceLimits PhysicalDevice::GetLimits() const
+GfxDeviceLimits Adapter::GetLimits() const
 {
     GfxDeviceLimits limits{};
     gfxAdapterGetLimits(m_adapter, &limits);
     return limits;
 }
 
-std::vector<GfxQueueFamilyProperties> PhysicalDevice::GetQueueFamilies() const
+std::vector<GfxQueueFamilyProperties> Adapter::GetQueueFamilies() const
 {
     uint32_t count{ 0 };
     gfxAdapterEnumerateQueueFamilies(m_adapter, &count, nullptr);
@@ -31,7 +32,7 @@ std::vector<GfxQueueFamilyProperties> PhysicalDevice::GetQueueFamilies() const
     return families;
 }
 
-int32_t PhysicalDevice::FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlags, GfxSurface surface) const
+int32_t Adapter::FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlags, GfxSurface surface) const
 {
     const auto families{ GetQueueFamilies() };
     for (uint32_t i = 0; i < static_cast<uint32_t>(families.size()); ++i) {
@@ -54,13 +55,13 @@ int32_t PhysicalDevice::FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwan
     return -1;
 }
 
-void PhysicalDevice::Print() const
+void Adapter::Print() const
 {
     const auto info{ GetInfo() };
     LOGI("Physical Device: %s (vendor: 0x%X device: 0x%X)", info.name, info.vendorID, info.deviceID);
 }
 
-PhysicalDevice::operator GfxAdapter() const
+Adapter::operator GfxAdapter() const
 {
     return m_adapter;
 }

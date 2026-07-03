@@ -35,7 +35,7 @@ prev::render::FrameSubmitSync MasterRenderer::Render(const prev::render::RenderC
 {
     const auto camera{ prev::scene::component::NodeComponentHelper::Find<sandbox::component::CameraComponent>(scene.GetRootNode(), { sandbox::TAG_MAIN_CAMERA }) };
 
-    const GfxBackend backend{ m_device.GetGPU().GetInfo().backend };
+    const GfxBackend backend{ m_device.GetAdapter().GetInfo().backend };
 
     ViewData views{};
     views.viewCount = renderContext.viewCount;

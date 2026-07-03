@@ -2,7 +2,7 @@
 #define __DEVICE_FACTORY_H__
 
 #include "Device.h"
-#include "PhysicalDevice.h"
+#include "Adapter.h"
 
 #include <memory>
 #include <string>
@@ -11,7 +11,7 @@
 namespace prev::core::device {
 class DeviceFactory final {
 public:
-    std::unique_ptr<Device> Create(const PhysicalDevice& gpu, const std::vector<std::string>& extensions = {}, const std::vector<std::string>& nativeExtensions = {}) const;
+    std::unique_ptr<Device> Create(const Adapter& adapter, const std::vector<std::string>& extensions = {}, const std::vector<std::string>& nativeExtensions = {}) const;
 };
 } // namespace prev::core::device
 

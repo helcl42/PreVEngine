@@ -33,7 +33,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/clouds_comp") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/clouds_comp") }
         })
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::Buffer("uboCS", 0, GFX_SHADER_STAGE_COMPUTE),
@@ -52,7 +52,7 @@ Clouds CloudsFactory::Create(const uint32_t width, const uint32_t height) const
                              .SetSize(sizeof(Uniforms))
                              .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                              .SetMemoryProperties(GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT)
-                             .SetAlignment(static_cast<uint32_t>(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment))
+                             .SetAlignment(static_cast<uint32_t>(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment))
                              .Build();
 
     auto weatherImageBuffer = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }

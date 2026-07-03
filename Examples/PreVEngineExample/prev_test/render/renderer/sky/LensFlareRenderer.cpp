@@ -24,8 +24,8 @@ void LensFlareRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/lens_flare_vert") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/lens_flare_frag") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/lens_flare_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/lens_flare_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
@@ -65,7 +65,7 @@ void LensFlareRenderer::Init()
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                            .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
@@ -73,7 +73,7 @@ void LensFlareRenderer::Init()
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
-                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                            .BuildFrameScoped();
 
     LOGI("LensFlare Uniforms Pools created");
@@ -127,7 +127,7 @@ void LensFlareRenderer::Render(const NormalRenderContext& renderContext, const s
             static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y)
         };
         const float xScale{ flare.GetScale() };
-        const float yScale{ xScale * aspectRatio * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
+        const float yScale{ xScale * aspectRatio * (m_device.GetAdapter().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
 
         auto& uboVS = m_uniformsPoolVS->Next();
         UniformsVS uniformsVS{};

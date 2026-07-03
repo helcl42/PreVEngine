@@ -1,9 +1,9 @@
-#include "PhysicalDevices.h"
+#include "Adapters.h"
 
 #include "../../common/Logger.h"
 
 namespace prev::core::device {
-PhysicalDevices::PhysicalDevices(GfxInstance instance)
+Adapters::Adapters(GfxInstance instance)
 {
     uint32_t count{ 0 };
     gfxInstanceEnumerateAdapters(instance, &count, nullptr);
@@ -16,17 +16,17 @@ PhysicalDevices::PhysicalDevices(GfxInstance instance)
 
     m_adapters.resize(count);
     for (size_t i = 0; i < count; ++i) {
-        m_adapters[i] = std::make_unique<PhysicalDevice>(adapters[i]);
+        m_adapters[i] = std::make_unique<Adapter>(adapters[i]);
     }
 }
 
-std::optional<PhysicalDevice> PhysicalDevices::Find(GfxSurface surface, int32_t hintIndex) const
+std::optional<Adapter> Adapters::Find(GfxSurface surface, int32_t hintIndex) const
 {
     if (m_adapters.empty()) {
         return {};
     }
 
-    auto canPresent = [&](const PhysicalDevice& adapter) -> bool {
+    auto canPresent = [&](const Adapter& adapter) -> bool {
         if (!surface) {
             return true;
         }
@@ -66,7 +66,7 @@ std::optional<PhysicalDevice> PhysicalDevices::Find(GfxSurface surface, int32_t 
     return {};
 }
 
-void PhysicalDevices::Print() const
+void Adapters::Print() const
 {
     LOGI("Physical Devices: %zu", GetCount());
     for (size_t i = 0; i < m_adapters.size(); ++i) {
@@ -75,12 +75,12 @@ void PhysicalDevices::Print() const
     }
 }
 
-size_t PhysicalDevices::GetCount() const
+size_t Adapters::GetCount() const
 {
     return m_adapters.size();
 }
 
-const PhysicalDevice& PhysicalDevices::operator[](size_t i) const
+const Adapter& Adapters::operator[](size_t i) const
 {
     return *m_adapters[i];
 }

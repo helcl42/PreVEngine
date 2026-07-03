@@ -463,7 +463,7 @@ void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContex
 
 glm::mat4 MasterRenderer::AdjustProjection(const glm::mat4& projection) const
 {
-    if (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU) {
+    if (m_device.GetAdapter().GetInfo().backend == GFX_BACKEND_WEBGPU) {
         glm::mat4 result = projection;
         result[1][1] *= -1.0f; // Undo Vulkan Y-flip; WebGPU clip space is Y-up
         return result;

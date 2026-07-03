@@ -42,7 +42,7 @@ void SkyRenderer::Init()
     // clang-format off
     m_skyShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_comp") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sky_comp") }
         })
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
@@ -76,14 +76,14 @@ void SkyRenderer::Init()
                               .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                               .SetChunkSize(m_descriptorCount)
                               .SetStride(sizeof(UniformsSkyCS))
-                              .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                              .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                               .BuildFrameScoped();
 
     // compute sky post process
     // clang-format off
     m_skyPostProcessShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_post_process_comp") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sky_post_process_comp") }
         })
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outFragColor", 0, GFX_SHADER_STAGE_COMPUTE, COLOR_FORMAT),
@@ -110,15 +110,15 @@ void SkyRenderer::Init()
                                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                                          .SetChunkSize(m_descriptorCount)
                                          .SetStride(sizeof(UniformsSkyPostProcessCS))
-                                         .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                                         .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                                          .BuildFrameScoped();
 
     // compositor
     // clang-format off
     m_compositeShader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_composite_vert") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sky_composite_frag") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sky_composite_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sky_composite_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },

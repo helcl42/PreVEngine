@@ -2,7 +2,7 @@
 
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
-#include "../../device/PhysicalDevices.h"
+#include "../../device/Adapters.h"
 #include "../../device/Queue.h"
 #include "../../instance/InstanceFactory.h"
 
@@ -116,20 +116,20 @@ void DefaultEngineImpl::ResetInstance()
 
 void DefaultEngineImpl::ResetDevice()
 {
-    prev::core::device::PhysicalDevices physicalDevices{ m_instance->GetHandle() };
-    physicalDevices.Print();
+    prev::core::device::Adapters adapters{ m_instance->GetHandle() };
+    adapters.Print();
 
     const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
-    const auto gpu{ physicalDevices.Find(surface, m_config.gpuIndex) };
-    if (!gpu) {
+    const auto adapter{ adapters.Find(surface, m_config.gpuIndex) };
+    if (!adapter) {
         throw std::runtime_error("No suitable GPU adapter found");
     }
 
     // Enable precise occlusion queries only when the selected adapter reports support.
     uint32_t extensionCount{ 0 };
-    gfxAdapterEnumerateExtensions(*gpu, &extensionCount, nullptr);
+    gfxAdapterEnumerateExtensions(*adapter, &extensionCount, nullptr);
     std::vector<const char*> availableExtensions(extensionCount);
-    gfxAdapterEnumerateExtensions(*gpu, &extensionCount, availableExtensions.data());
+    gfxAdapterEnumerateExtensions(*adapter, &extensionCount, availableExtensions.data());
 
     auto isExtensionAvailable = [&](const std::string& ext) {
         return std::find_if(availableExtensions.begin(), availableExtensions.end(), [&](const char* e) {
@@ -154,7 +154,7 @@ void DefaultEngineImpl::ResetDevice()
         extensions.push_back(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE);
     }
 
-    m_device = prev::core::device::DeviceFactory{}.Create(*gpu, extensions);
+    m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions);
     if (!m_device) {
         throw std::runtime_error("Could not create logical device");
     }
@@ -163,7 +163,7 @@ void DefaultEngineImpl::ResetDevice()
 
 void DefaultEngineImpl::ResetRenderPass()
 {
-    const GfxFormat colorFormat = m_surface ? m_surface->GetPreferredFormat(m_device->GetGPU()) : GFX_FORMAT_B8G8R8A8_UNORM;
+    const GfxFormat colorFormat = m_surface ? m_surface->GetPreferredFormat(m_device->GetAdapter()) : GFX_FORMAT_B8G8R8A8_UNORM;
     const GfxFormat depthFormat = GFX_FORMAT_DEPTH32_FLOAT;
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
@@ -184,7 +184,7 @@ void DefaultEngineImpl::ResetSwapchain()
     GfxPresentMode presentMode = GFX_PRESENT_MODE_FIFO;
     if (surface) {
         const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
-        presentMode = m_surface->GetPreferredPresentMode(m_device->GetGPU(), preferred);
+        presentMode = m_surface->GetPreferredPresentMode(m_device->GetAdapter(), preferred);
     }
 
     m_swapchain = prev::render::swapchain::SwapchainFactory{}.Create(

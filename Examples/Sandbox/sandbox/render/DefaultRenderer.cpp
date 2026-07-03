@@ -23,7 +23,7 @@ DefaultRenderer::DefaultRenderer(prev::core::device::Device& device, prev::rende
 
 void DefaultRenderer::Init()
 {
-    const GfxBackend backend{ m_device.GetGPU().GetInfo().backend };
+    const GfxBackend backend{ m_device.GetAdapter().GetInfo().backend };
 
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
@@ -59,7 +59,7 @@ void DefaultRenderer::Init()
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                          .SetChunkSize(m_uniformPoolChunk)
                          .SetStride(sizeof(SandboxUniforms))
-                         .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                         .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                          .BuildFrameScoped();
 }
 

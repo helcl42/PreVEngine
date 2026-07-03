@@ -26,7 +26,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "shadow/animation_bump_mapped_shadows_vert") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "shadow/animation_bump_mapped_shadows_vert") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
@@ -67,7 +67,7 @@ void AnimationBumpMappedShadowsRenderer::Init()
                          .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                          .SetChunkSize(m_descriptorCount)
                          .SetStride(sizeof(Uniforms))
-                         .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                         .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                          .BuildFrameScoped();
 
     LOGI("Animation Bump Mapped Shadows Uniforms Pools created");

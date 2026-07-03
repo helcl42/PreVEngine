@@ -50,7 +50,7 @@ std::vector<std::string> OpenXr::GetRequiredDeviceExtensions() const
 
 GfxAdapter OpenXr::GetAdapter(GfxInstance instance) const
 {
-    return m_core->GetPhysicalDevice(instance);
+    return m_core->GetAdapter(instance);
 }
 
 void OpenXr::CreateSession()

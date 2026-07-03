@@ -2,9 +2,9 @@
 
 #ifdef ENABLE_XR
 
+#include "../../device/Adapters.h"
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
-#include "../../device/PhysicalDevices.h"
 #include "../../device/Queue.h"
 #include "../../instance/InstanceFactory.h"
 
@@ -108,21 +108,21 @@ void XrEngineImpl::ResetDevice()
     GfxAdapter selectedAdapter = m_xr->GetAdapter(*m_instance);
 
     if (selectedAdapter) {
-        prev::core::device::PhysicalDevice physicalDevice{ selectedAdapter };
+        prev::core::device::Adapter adapter{ selectedAdapter };
         const std::vector<std::string> extensions{
             GFX_DEVICE_EXTENSION_SWAPCHAIN,
             GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
             GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
             GFX_DEVICE_EXTENSION_MULTIVIEW,
         };
-        m_device = prev::core::device::DeviceFactory{}.Create(physicalDevice, extensions, m_xr->GetRequiredDeviceExtensions());
+        m_device = prev::core::device::DeviceFactory{}.Create(adapter, extensions, m_xr->GetRequiredDeviceExtensions());
     } else {
-        prev::core::device::PhysicalDevices physicalDevices{ m_instance->GetHandle() };
-        const auto gpu{ physicalDevices.Find(nullptr, m_config.gpuIndex) };
-        if (!gpu) {
+        prev::core::device::Adapters adapters{ m_instance->GetHandle() };
+        const auto adapter{ adapters.Find(nullptr, m_config.gpuIndex) };
+        if (!adapter) {
             throw std::runtime_error("Could not find a suitable GPU adapter");
         }
-        m_device = prev::core::device::DeviceFactory{}.Create(*gpu, m_xr->GetRequiredDeviceExtensions());
+        m_device = prev::core::device::DeviceFactory{}.Create(*adapter, m_xr->GetRequiredDeviceExtensions());
     }
 
     if (!m_device) {

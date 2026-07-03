@@ -1,7 +1,7 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
-#include "PhysicalDevice.h"
+#include "Adapter.h"
 #include "Queue.h"
 
 #include "../DeferredResourceDestroyer.h"
@@ -14,7 +14,7 @@
 namespace prev::core::device {
 class Device {
 public:
-    Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions = {});
+    Device(const Adapter& adapter, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions = {});
 
     ~Device();
 
@@ -29,7 +29,7 @@ public:
 
     uint32_t GetQueueTypeCount(const QueueType queueType) const;
 
-    const PhysicalDevice& GetGPU() const;
+    const Adapter& GetAdapter() const;
 
     prev::core::DeferredResourceDestroyer& GetDeferredResourceDestroyer() const;
 
@@ -43,7 +43,7 @@ public:
     bool HasExtension(const std::string& extension) const;
 
 private:
-    PhysicalDevice m_gpu;
+    Adapter m_adapter;
 
     GfxDevice m_handle;
 

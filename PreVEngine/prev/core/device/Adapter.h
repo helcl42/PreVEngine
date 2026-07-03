@@ -1,5 +1,5 @@
-#ifndef __PHYSICAL_DEVICE_H__
-#define __PHYSICAL_DEVICE_H__
+#ifndef __ADAPTER_H__
+#define __ADAPTER_H__
 
 #include "../Core.h"
 
@@ -8,11 +8,11 @@
 #include <vector>
 
 namespace prev::core::device {
-class PhysicalDevice {
+class Adapter {
 public:
-    PhysicalDevice(GfxAdapter adapter);
+    Adapter(GfxAdapter adapter);
 
-    ~PhysicalDevice() = default;
+    ~Adapter() = default;
 
 public:
     GfxAdapterInfo GetInfo() const;

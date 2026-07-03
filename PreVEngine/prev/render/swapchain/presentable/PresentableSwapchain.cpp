@@ -19,7 +19,7 @@ PresentableSwapchain::PresentableSwapchain(core::device::Device& device, pass::R
 {
     // Clamp the requested count to the surface's supported [min, max] image count.
     GfxSurfaceInfo surfaceInfo{};
-    GFXERRCHECK(gfxSurfaceGetInfo(surface, m_device.GetGPU(), &surfaceInfo));
+    GFXERRCHECK(gfxSurfaceGetInfo(surface, m_device.GetAdapter(), &surfaceInfo));
     const uint32_t clampedImageCount{ std::max(surfaceInfo.minImageCount, std::min(imageCount, surfaceInfo.maxImageCount > 0 ? surfaceInfo.maxImageCount : imageCount)) };
 
     GfxSwapchainDescriptor swapchainDesc{};

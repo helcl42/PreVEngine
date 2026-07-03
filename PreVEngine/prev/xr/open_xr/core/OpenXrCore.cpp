@@ -177,7 +177,7 @@ std::vector<std::string> OpenXrCore::GetVulkanDeviceExtensions() const
     return extensions;
 }
 
-GfxAdapter OpenXrCore::GetPhysicalDevice(GfxInstance instance) const
+GfxAdapter OpenXrCore::GetAdapter(GfxInstance instance) const
 {
     void* nativeInstance{};
     gfxInstanceGetNativeHandle(instance, &nativeInstance);

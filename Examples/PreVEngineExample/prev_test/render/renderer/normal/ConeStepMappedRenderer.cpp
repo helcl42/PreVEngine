@@ -39,8 +39,8 @@ void ConeStepMappedRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "normal/cone_step_mapped_vert") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "normal/cone_step_mapped_frag") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "normal/cone_step_mapped_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "normal/cone_step_mapped_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
@@ -88,7 +88,7 @@ void ConeStepMappedRenderer::Init()
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                            .BuildFrameScoped();
 
     m_uniformsPoolFS = prev::render::buffer::BufferPoolBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
@@ -96,7 +96,7 @@ void ConeStepMappedRenderer::Init()
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsFS))
-                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                            .BuildFrameScoped();
 
     LOGI("Cone Step Mapped Uniforms Pools created");
@@ -208,7 +208,7 @@ void ConeStepMappedRenderer::Render(const NormalRenderContext& renderContext, co
             // shadows
             for (uint32_t i = 0; i < prev_test::component::shadow::CASCADES_COUNT; ++i) {
                 const auto& cascade{ shadowsComponent->GetCascadeFrameData(i) };
-                uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU), glm::vec4(cascade.endSplitDepth));
+                uniformsFS.shadows.cascades[i] = ShadowsCascadeUniform(cascade.GetBiasedViewProjectionMatrix(m_device.GetAdapter().GetInfo().backend == GFX_BACKEND_WEBGPU), glm::vec4(cascade.endSplitDepth));
             }
             uniformsFS.shadows.enabled = prev_test::component::shadow::SHADOWS_ENABLED;
             uniformsFS.shadows.useReverseDepth = REVERSE_DEPTH;

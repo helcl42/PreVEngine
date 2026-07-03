@@ -10,8 +10,8 @@
 #include <stdexcept>
 
 namespace prev::core::device {
-Device::Device(const PhysicalDevice& gpu, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions)
-    : m_gpu{ gpu }
+Device::Device(const Adapter& adapter, GfxDevice handle, std::map<QueueType, std::vector<std::unique_ptr<Queue>>>&& queues, std::vector<std::string> enabledExtensions)
+    : m_adapter{ adapter }
     , m_handle{ handle }
     , m_queues{ std::move(queues) }
     , m_enabledExtensions{ std::move(enabledExtensions) }
@@ -89,9 +89,9 @@ uint32_t Device::GetQueueTypeCount(const QueueType queueType) const
     return static_cast<uint32_t>(queuesIter->second.size());
 }
 
-const PhysicalDevice& Device::GetGPU() const
+const Adapter& Device::GetAdapter() const
 {
-    return m_gpu;
+    return m_adapter;
 }
 
 prev::core::DeferredResourceDestroyer& Device::GetDeferredResourceDestroyer() const

@@ -163,7 +163,7 @@ void MasterRenderer::RenderParallel(prev::render::pass::RenderPass& renderPass, 
     };
 
     // Vulkan supports parallel command buffer recording, WebGPU/Dawn does not
-    const bool parallel = m_device.GetGPU().GetInfo().backend != GFX_BACKEND_WEBGPU;
+    const bool parallel = m_device.GetAdapter().GetInfo().backend != GFX_BACKEND_WEBGPU;
 
     if (parallel) {
         std::vector<std::future<void>> futures;

@@ -24,7 +24,7 @@ CloudsNoise CloudsNoiseFactory::CreatePerlinWorleyNoise(const uint32_t width, co
     // clang-format off
     auto shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/clouds_perlin_worley_noise_3d_comp") }
+            { GFX_SHADER_STAGE_COMPUTE, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/clouds_perlin_worley_noise_3d_comp") }
         })
         .AddBindGroupEntries({
             prev::render::shader::ShaderBuilder::BindGroupEntry::StorageTexture("outVolumeTexture", 0, GFX_SHADER_STAGE_COMPUTE, noiseImageFormat, GFX_TEXTURE_VIEW_TYPE_3D)

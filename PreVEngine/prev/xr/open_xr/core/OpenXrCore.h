@@ -29,7 +29,7 @@ public:
 
     std::vector<std::string> GetVulkanDeviceExtensions() const;
 
-    GfxAdapter GetPhysicalDevice(GfxInstance instance) const;
+    GfxAdapter GetAdapter(GfxInstance instance) const;
 
     void CreateSession(const XrGraphicsBindingVulkanKHR& graphicsBinding, const XrViewConfigurationType viewConfiguration);
 

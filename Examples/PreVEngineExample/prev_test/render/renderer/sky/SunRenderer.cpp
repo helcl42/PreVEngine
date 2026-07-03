@@ -26,8 +26,8 @@ void SunRenderer::Init()
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
         .AddShaderStagePaths({
-            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sun_occlusion_vert") },
-            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetGPU().GetInfo().backend, "sky/sun_occlusion_frag") }
+            { GFX_SHADER_STAGE_VERTEX, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sun_occlusion_vert") },
+            { GFX_SHADER_STAGE_FRAGMENT, prev_test::common::ShaderAssetManager::Instance().GetAssetPath(m_device.GetAdapter().GetInfo().backend, "sky/sun_occlusion_frag") }
         })
         .AddVertexInputAttributes({
             prev::render::shader::VertexInputAttribute{ 0, 0, GFX_FORMAT_R32G32B32_FLOAT, 0 },
@@ -64,7 +64,7 @@ void SunRenderer::Init()
                            .SetUsageFlags(GFX_BUFFER_USAGE_UNIFORM | GFX_BUFFER_USAGE_MAP_WRITE)
                            .SetChunkSize(m_descriptorCount)
                            .SetStride(sizeof(UniformsVS))
-                           .SetAlignment(m_device.GetGPU().GetLimits().minUniformBufferOffsetAlignment)
+                           .SetAlignment(m_device.GetAdapter().GetLimits().minUniformBufferOffsetAlignment)
                            .BuildFrameScoped();
 
     LOGI("Sun Uniforms Pools created");
@@ -129,7 +129,7 @@ void SunRenderer::Render(const NormalRenderContext& renderContext, const std::sh
         static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) / static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y)
     };
     const float xScale{ sunComponent->GetFlare().GetScale() };
-    const float yScale{ xScale * aspectRatio * (m_device.GetGPU().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
+    const float yScale{ xScale * aspectRatio * (m_device.GetAdapter().GetInfo().backend == GFX_BACKEND_WEBGPU ? -1.0f : 1.0f) };
 
     m_maxNumberOfSamples = static_cast<uint64_t>(xScale * static_cast<float>(renderContext.rect.extent.width - renderContext.rect.origin.x) * yScale * static_cast<float>(renderContext.rect.extent.height - renderContext.rect.origin.y));
     m_queryPool->BeginQuery(0, renderContext.renderPassEncoder);
