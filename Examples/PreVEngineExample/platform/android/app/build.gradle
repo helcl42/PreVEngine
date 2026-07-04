@@ -78,17 +78,3 @@ dependencies {
 //    implementation 'org.khronos.openxr:openxr_loader_for_android:1.0.34'
 
 }
-
-// Shaders are (re)compiled into the source assets tree by the CMake native build (compile_shaders.py),
-// but AGP's merge*Assets snapshots those assets BEFORE buildCMake* runs. So the first build after a
-// shader-config change (e.g. flipping -PnoMultiview) would package the PREVIOUS build's shaders. Force
-// each variant's asset merge to run after its OWN native build so it always picks up the freshly compiled
-// shaders. Scoped per variant so a debug build doesn't drag in the release native build (or vice versa);
-// AGP maps the release variant to the "RelWithDebInfo" CMake build type, others to a same-named type.
-afterEvaluate {
-    tasks.matching { it.name.startsWith('merge') && it.name.endsWith('Assets') }.configureEach { mergeTask ->
-        def variant = mergeTask.name - 'merge' - 'Assets'                  // "Debug" / "Release"
-        def cmakeType = (variant == 'Release') ? 'RelWithDebInfo' : variant
-        mergeTask.dependsOn(tasks.matching { it.name.startsWith("buildCMake${cmakeType}") })
-    }
-}

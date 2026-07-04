@@ -27,7 +27,12 @@ android {
                 arguments '-DANDROID_STL=c++_static',
                           '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
                 if (project.hasProperty('enableXr')) {
-                    arguments '-DENABLE_XR=ON'
+                    arguments '-DENABLE_OPENXR=ON'
+                    // -PnoMultiview => OpenXR per-eye (single-view shaders, one pass per eye) instead of
+                    // the default single-pass multiview.
+                    if (project.hasProperty('noMultiview')) {
+                        arguments '-DENABLE_MULTIVIEW=OFF'
+                    }
                 }
             }
         }
