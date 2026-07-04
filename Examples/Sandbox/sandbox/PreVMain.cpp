@@ -33,6 +33,7 @@ void PrintUsage(const char* programName)
     std::printf("  --backend <string>     Render backend: vulkan, webgpu (default: platform)\n");
     std::printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
     std::printf("  --vsync <0|1>          Enable VSync (default: 1)\n");
+    std::printf("  --ar                   Start in AR (passthrough) mode on XR builds (default: VR)\n");
     std::printf("  --help                 Print this help message\n");
 }
 
@@ -56,6 +57,8 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
             config.samplesCount = static_cast<uint32_t>(std::stoi(argv[++i]));
         } else if (std::strcmp(argv[i], "--vsync") == 0 && i + 1 < argc) {
             config.VSync = std::stoi(argv[++i]) != 0;
+        } else if (std::strcmp(argv[i], "--ar") == 0) {
+            config.xrMode = prev::core::engine::XrMode::AR;
         } else if (std::strcmp(argv[i], "--help") == 0) {
             PrintUsage(argv[0]);
             return false;

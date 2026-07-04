@@ -9,12 +9,14 @@
 #endif
 
 namespace prev::xr {
-std::unique_ptr<IXr> XrFactory::Create() const
+std::unique_ptr<IXr> XrFactory::Create(prev::core::engine::XrMode xrMode) const
 {
 #if defined(ENABLE_WEBXR)
-    return std::make_unique<web_xr::WebXr>();
+    return std::make_unique<web_xr::WebXr>(xrMode);
 #elif defined(ENABLE_OPENXR)
-    return std::make_unique<open_xr::OpenXr>();
+    return std::make_unique<open_xr::OpenXr>(xrMode);
+#else
+#error "Not implemented XR backend!"
 #endif
 }
 } // namespace prev::xr

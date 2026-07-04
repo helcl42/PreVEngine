@@ -12,13 +12,15 @@
 
 #include "../IXr.h"
 
+#include "../../core/engine/Config.h"
+
 #include <memory>
 #include <vector>
 
 namespace prev::xr::open_xr {
 class OpenXr final : public IXr {
 public:
-    OpenXr();
+    explicit OpenXr(prev::core::engine::XrMode xrMode);
 
     ~OpenXr();
 

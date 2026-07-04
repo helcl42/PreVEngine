@@ -10,13 +10,15 @@
 
 #include "../IXr.h"
 
+#include "../../core/engine/Config.h"
+
 #include <memory>
 
 namespace prev::xr::web_xr {
-// Experimental WebXR backend (browser VR over WebGPU, XRGPUBinding). Emscripten-only.
+// Experimental WebXR backend (browser VR/AR over WebGPU, XRGPUBinding). Emscripten-only.
 class WebXr final : public IXr {
 public:
-    WebXr();
+    explicit WebXr(prev::core::engine::XrMode xrMode);
 
     ~WebXr() = default;
 

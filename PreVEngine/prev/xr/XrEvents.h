@@ -25,6 +25,16 @@ struct CameraFeedbackEvent {
     float maxDepth{};
 };
 
+// Client -> backend: request switching VR <-> AR (passthrough) at runtime (OpenXR supports in-session).
+struct XrPassthroughChangeRequestEvent {
+    bool enabled{};
+};
+
+// Backend -> clients: the actual mode after a request resolved (clamped to what the runtime supports).
+struct XrPassthroughChangedEvent {
+    bool enabled{};
+};
+
 enum class HandEventFlags : uint32_t {
     NONE = 0,
     SQUEEZE = 1,

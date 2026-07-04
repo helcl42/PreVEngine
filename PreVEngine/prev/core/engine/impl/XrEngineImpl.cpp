@@ -34,7 +34,7 @@ float XrEngineImpl::GetCurrentDeltaTime() const
 
 void XrEngineImpl::Init()
 {
-    m_xr = prev::xr::XrFactory{}.Create();
+    m_xr = prev::xr::XrFactory{}.Create(m_config.xrMode);
 
     ResetTiming();
     ResetInstance();

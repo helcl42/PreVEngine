@@ -12,7 +12,7 @@
 namespace prev::xr::open_xr::render {
 class OpenXrRender final : public common::IOpenXrEventObserver {
 public:
-    OpenXrRender(XrInstance instance, XrSystemId systemId);
+    OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled);
 
     ~OpenXrRender();
 
@@ -57,11 +57,16 @@ public:
 
     const XrGraphicsBindingVulkanKHR& GetGraphicsBinding() const;
 
+    // AR passthrough (XR_FB_passthrough); no-op when the runtime lacks the extension.
+    void SetPassthroughEnabled(bool enabled);
+
 public:
     void OnEvent(const XrEventDataBuffer& evt) override;
 
 public:
     void operator()(const CameraFeedbackEvent& event);
+
+    void operator()(const XrPassthroughChangeRequestEvent& event);
 
 private:
     struct SwapchainInfo;
@@ -82,6 +87,10 @@ private:
     SwapchainInfo CreateSwapchain(const XrViewConfigurationView& viewConfigurationView, const uint32_t viewCount, const VkFormat format, const XrSwapchainUsageFlags usageFlags);
 
     void DestroySwapchain(SwapchainInfo& swapchainInfo);
+
+    void CreatePassthrough();
+
+    void DestroyPassthrough();
 
 private:
     XrInstance m_instance{ XR_NULL_HANDLE };
@@ -124,6 +133,12 @@ private:
         std::vector<XrCompositionLayerDepthInfoKHR> layerDepthInfos;
     };
 
+    bool m_passthroughSupported{ false };
+    bool m_passthroughEnabled{ false };
+    XrPassthroughFB m_passthrough{ XR_NULL_HANDLE };
+    XrPassthroughLayerFB m_passthroughLayer{ XR_NULL_HANDLE };
+    XrCompositionLayerPassthroughFB m_passthroughCompositionLayer{};
+
     uint32_t m_currentSwapchainIndex{ 0 };
     RenderLayerInfo m_renderLayerInfo{};
     XrFrameState m_frameState{};
@@ -136,6 +151,8 @@ private:
 
 private:
     prev::event::EventHandler<OpenXrRender, CameraFeedbackEvent> m_cameraFeedbackHandler{ *this };
+
+    prev::event::EventHandler<OpenXrRender, XrPassthroughChangeRequestEvent> m_passthroughChangeRequestHandler{ *this };
 };
 } // namespace prev::xr::open_xr::render
 

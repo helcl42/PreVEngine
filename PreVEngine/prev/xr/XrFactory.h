@@ -5,12 +5,14 @@
 
 #include "IXr.h"
 
+#include "../core/engine/Config.h"
+
 #include <memory>
 
 namespace prev::xr {
 class XrFactory final {
 public:
-    std::unique_ptr<IXr> Create() const;
+    std::unique_ptr<IXr> Create(prev::core::engine::XrMode xrMode) const;
 };
 } // namespace prev::xr
 

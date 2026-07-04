@@ -11,34 +11,30 @@ EM_JS(int, prev_webxr_is_supported, (), {
     return (navigator.xr && navigator.xr.isSessionSupported) ? 1 : 0;
 });
 
-EM_JS(void, prev_webxr_install_enter_button, (void* self, void* devicePtr), {
-    let btn = document.getElementById('prev-enter-vr');
-    if (!btn) {
-        btn = document.createElement('button');
-        btn.id = 'prev-enter-vr';
-        btn.textContent = 'Enter VR';
-        btn.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);' +
-                            'padding:16px 28px;font-size:20px;z-index:9999;cursor:pointer;';
-        document.body.appendChild(btn);
-    }
-    btn.onclick = async function() {
+EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
+    const buttons = [];
+    const showButtons = function() {
+        if (Module.__prevWebXr && Module.__prevWebXr.running) { return; }
+        buttons.forEach(function(b) { b.btn.style.display = b.supported ? 'block' : 'none'; });
+    };
+    const hideButtons = function() {
+        buttons.forEach(function(b) { b.btn.style.display = 'none'; });
+    };
+
+    const startSession = async function(mode) {
         try {
-            if (!navigator.xr || !(await navigator.xr.isSessionSupported('immersive-vr'))) {
-                console.error('WebXR: immersive-vr not supported');
-                return;
-            }
-            const session = await navigator.xr.requestSession('immersive-vr', { requiredFeatures: ['webgpu'], optionalFeatures: ['hand-tracking', 'local-floor'] });
+            const session = await navigator.xr.requestSession(mode, { requiredFeatures: ['webgpu'], optionalFeatures: ['hand-tracking', 'local-floor'] });
             let refSpace;
             try { refSpace = await session.requestReferenceSpace('local-floor'); }
             catch (e) { refSpace = await session.requestReferenceSpace('local'); }
 
             const state = { session: session, refSpace: refSpace, frame: null, running: true, visible: true,
-                            binding: null, layer: null,
+                            binding: null, layer: null, blendMode: session.environmentBlendMode,
                             colorTexturePtr: 0, devicePtr: devicePtr, extentW: 0, extentH: 0, deltaTime: 0.0 };
             Module.__prevWebXr = state;
             session.addEventListener('end', function() {
                 if (Module.__prevWebXr === state) { state.running = false; }
-                btn.style.display = 'block'; // allow re-entering VR
+                showButtons(); // allow re-entering (either mode)
             });
             session.addEventListener('visibilitychange', function() {
                 state.visible = (session.visibilityState === 'visible');
@@ -54,7 +50,7 @@ EM_JS(void, prev_webxr_install_enter_button, (void* self, void* devicePtr), {
             state.colorFormat = fmt;
             state.extentW = layer.textureWidth | 0;   // undefined -> 0
             state.extentH = layer.textureHeight | 0;
-            btn.style.display = 'none';
+            hideButtons();
 
             const onXrFrame = function(time, frame) {
                 if (!state.running) { return; }
@@ -67,9 +63,31 @@ EM_JS(void, prev_webxr_install_enter_button, (void* self, void* devicePtr), {
             };
             session.requestAnimationFrame(onXrFrame);
         } catch (e) {
-            console.error('WebXR: failed to start immersive session:', e);
+            console.error('WebXR: failed to start ' + mode + ' session:', e);
         }
     };
+
+    const MODES = [
+        { id: 'prev-enter-vr', label: 'Enter VR', mode: 'immersive-vr', dx: '-105%' },
+        { id: 'prev-enter-ar', label: 'Enter AR', mode: 'immersive-ar', dx: '5%' }
+    ];
+    MODES.forEach(function(m) {
+        let btn = document.getElementById(m.id);
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = m.id;
+            btn.textContent = m.label;
+            btn.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(' + m.dx + ',-50%);' +
+                                'padding:16px 28px;font-size:20px;z-index:9999;cursor:pointer;display:none;';
+            document.body.appendChild(btn);
+        }
+        const entry = { btn: btn, supported: false };
+        buttons.push(entry);
+        btn.onclick = function() { startSession(m.mode); };
+        if (navigator.xr && navigator.xr.isSessionSupported) {
+            navigator.xr.isSessionSupported(m.mode).then(function(ok) { entry.supported = ok; showButtons(); });
+        }
+    });
 });
 
 EM_JS(void, prev_webxr_end_session, (), {
@@ -115,8 +133,8 @@ WebXrCore::WebXrCore()
 
 void WebXrCore::CreateSession(void* nativeDevice)
 {
-    prev_webxr_install_enter_button(this, nativeDevice);
-    LOGI("WebXr: 'Enter VR' button installed - click it to start the immersive session");
+    prev_webxr_install_enter_buttons(this, nativeDevice);
+    LOGI("WebXr: 'Enter VR' / 'Enter AR' buttons installed - click one to start the immersive session");
 }
 
 void WebXrCore::DestroySession()

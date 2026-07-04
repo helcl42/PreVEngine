@@ -9,6 +9,11 @@ enum class RenderBackend {
     WebGPU
 };
 
+enum class XrMode {
+    VR,
+    AR
+};
+
 struct Config {
     bool validation{ true };
 
@@ -37,6 +42,8 @@ struct Config {
     uint32_t samplesCount{ 1 };
 
     int32_t gpuIndex{ -1 };
+
+    XrMode xrMode{ XrMode::VR }; // initial XR compositing mode (XR builds only)
 };
 } // namespace prev::core::engine
 

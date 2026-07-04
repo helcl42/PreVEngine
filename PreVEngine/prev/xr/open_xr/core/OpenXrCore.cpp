@@ -332,6 +332,11 @@ bool OpenXrCore::IsHandTrackingSupported() const
     return m_handTrackingSystemProperties.supportsHandTracking;
 }
 
+bool OpenXrCore::IsPassthroughSupported() const
+{
+    return m_passthroughSupported;
+}
+
 void OpenXrCore::CreateInstance()
 {
     const std::vector<const char*> requestedApiLayerNames = {
@@ -349,6 +354,8 @@ void OpenXrCore::CreateInstance()
 
         XR_EXT_HAND_TRACKING_EXTENSION_NAME,
         XR_EXT_HAND_INTERACTION_EXTENSION_NAME,
+
+        XR_FB_PASSTHROUGH_EXTENSION_NAME,
     };
 
     const auto allApiLayers{ GetAllApiLayers() };
@@ -356,6 +363,8 @@ void OpenXrCore::CreateInstance()
 
     const auto allInstanceExtensions{ GetAllInstanceExtensions() };
     const auto activeInstanceExtensions{ GetActiveInstanceExtension(allInstanceExtensions, requestedInstanceExtensionNames) };
+
+    m_passthroughSupported = ContainsInstanceExtension(allInstanceExtensions, XR_FB_PASSTHROUGH_EXTENSION_NAME);
 
     XrApplicationInfo applicationInfo{};
     strncpy(applicationInfo.applicationName, "OpenXR PreVEngineApp", XR_MAX_APPLICATION_NAME_SIZE);

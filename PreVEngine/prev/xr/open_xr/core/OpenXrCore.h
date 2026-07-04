@@ -49,6 +49,8 @@ public:
 
     bool IsHandTrackingSupported() const;
 
+    bool IsPassthroughSupported() const;
+
 private:
     void CreateInstance();
 
@@ -81,6 +83,8 @@ private:
 
     bool m_applicationRunning;
     bool m_sessionRunning;
+
+    bool m_passthroughSupported{ false };
 
     prev::common::pattern::Observer<open_xr::common::IOpenXrEventObserver> m_eventObserver;
 

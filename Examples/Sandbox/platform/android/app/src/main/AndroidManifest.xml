@@ -14,6 +14,9 @@
       android:name="android.hardware.vr.headtracking"
       android:required="false" />
 
+  <!-- AR passthrough (Quest); optional so the APK still runs in plain VR. -->
+  <uses-feature android:name="com.oculus.feature.PASSTHROUGH" android:required="false" />
+
   <!-- This .apk has no Java code itself; NativeActivity drives the NDK code. -->
   <application
       android:allowBackup="false"

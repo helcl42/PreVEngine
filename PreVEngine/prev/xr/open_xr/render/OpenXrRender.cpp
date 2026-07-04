@@ -31,11 +31,32 @@ namespace {
             return GFX_FORMAT_UNDEFINED;
         }
     }
+
+    // XR_FB_passthrough entry points (extension functions must be loaded via xrGetInstanceProcAddr).
+    PFN_xrCreatePassthroughFB xrCreatePassthroughFB{};
+    PFN_xrDestroyPassthroughFB xrDestroyPassthroughFB{};
+    PFN_xrCreatePassthroughLayerFB xrCreatePassthroughLayerFB{};
+    PFN_xrDestroyPassthroughLayerFB xrDestroyPassthroughLayerFB{};
+    PFN_xrPassthroughLayerResumeFB xrPassthroughLayerResumeFB{};
+    PFN_xrPassthroughLayerPauseFB xrPassthroughLayerPauseFB{};
+
+    bool LoadPassthroughApi(XrInstance instance)
+    {
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrCreatePassthroughFB", (PFN_xrVoidFunction*)&xrCreatePassthroughFB), "Failed to get xrCreatePassthroughFB.");
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrDestroyPassthroughFB", (PFN_xrVoidFunction*)&xrDestroyPassthroughFB), "Failed to get xrDestroyPassthroughFB.");
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrCreatePassthroughLayerFB", (PFN_xrVoidFunction*)&xrCreatePassthroughLayerFB), "Failed to get xrCreatePassthroughLayerFB.");
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrDestroyPassthroughLayerFB", (PFN_xrVoidFunction*)&xrDestroyPassthroughLayerFB), "Failed to get xrDestroyPassthroughLayerFB.");
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrPassthroughLayerResumeFB", (PFN_xrVoidFunction*)&xrPassthroughLayerResumeFB), "Failed to get xrPassthroughLayerResumeFB.");
+        OPENXR_CHECK(xrGetInstanceProcAddr(instance, "xrPassthroughLayerPauseFB", (PFN_xrVoidFunction*)&xrPassthroughLayerPauseFB), "Failed to get xrPassthroughLayerPauseFB.");
+        return xrCreatePassthroughFB && xrDestroyPassthroughFB && xrCreatePassthroughLayerFB && xrDestroyPassthroughLayerFB && xrPassthroughLayerResumeFB && xrPassthroughLayerPauseFB;
+    }
 } // namespace
 
-OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId)
+OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled)
     : m_instance{ instance }
     , m_systemId{ systemId }
+    , m_passthroughSupported{ passthroughSupported }
+    , m_passthroughEnabled{ passthroughSupported && passthroughEnabled }
 {
     CreateViewConfigurationViews();
     CreateEnvironmentBlendModes();
@@ -52,10 +73,14 @@ void OpenXrRender::OnSessionCreate(XrSession session)
     m_session = session;
 
     CreateSwapchains();
+    if (m_passthroughSupported) {
+        CreatePassthrough();
+    }
 }
 
 void OpenXrRender::OnSessionDestroy()
 {
+    DestroyPassthrough();
     DestroySwapchains();
 
     m_session = XR_NULL_HANDLE;
@@ -210,8 +235,15 @@ bool OpenXrRender::EndFrame()
     m_renderLayerInfo.layerProjection.viewCount = static_cast<uint32_t>(m_renderLayerInfo.layerProjectionViews.size());
     m_renderLayerInfo.layerProjection.views = m_renderLayerInfo.layerProjectionViews.data();
 
-    m_renderLayerInfo.layers.resize(1);
-    m_renderLayerInfo.layers[0] = reinterpret_cast<XrCompositionLayerBaseHeader*>(&m_renderLayerInfo.layerProjection);
+    m_renderLayerInfo.layers.clear();
+    if (m_passthroughEnabled && m_passthroughLayer != XR_NULL_HANDLE) {
+        // Passthrough composites beneath the projection layer; the projection's SOURCE_ALPHA flag lets it through.
+        m_passthroughCompositionLayer = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerPassthroughFB>(XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB) };
+        m_passthroughCompositionLayer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+        m_passthroughCompositionLayer.layerHandle = m_passthroughLayer;
+        m_renderLayerInfo.layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&m_passthroughCompositionLayer));
+    }
+    m_renderLayerInfo.layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&m_renderLayerInfo.layerProjection));
 
     // Tell OpenXR that we are finished with this frame; specifying its display time, environment blending and layers.
     XrFrameEndInfo frameEndInfo{ prev::xr::open_xr::util::CreateStruct<XrFrameEndInfo>(XR_TYPE_FRAME_END_INFO) };
@@ -320,6 +352,11 @@ void OpenXrRender::operator()(const CameraFeedbackEvent& event)
     m_farClippingPlane = event.fatClippingPlane;
     m_minDepth = event.minDepth;
     m_maxDepth = event.maxDepth;
+}
+
+void OpenXrRender::operator()(const XrPassthroughChangeRequestEvent& event)
+{
+    SetPassthroughEnabled(event.enabled);
 }
 
 void OpenXrRender::CreateViewConfigurationViews()
@@ -478,6 +515,63 @@ OpenXrRender::SwapchainInfo OpenXrRender::CreateSwapchain(const XrViewConfigurat
         swapchainInfo.textures.push_back(texture);
     }
     return swapchainInfo;
+}
+
+void OpenXrRender::CreatePassthrough()
+{
+    if (!LoadPassthroughApi(m_instance)) {
+        m_passthroughSupported = false;
+        m_passthroughEnabled = false;
+        return;
+    }
+
+    XrPassthroughCreateInfoFB passthroughCreateInfo{ prev::xr::open_xr::util::CreateStruct<XrPassthroughCreateInfoFB>(XR_TYPE_PASSTHROUGH_CREATE_INFO_FB) };
+    passthroughCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
+    OPENXR_CHECK(xrCreatePassthroughFB(m_session, &passthroughCreateInfo, &m_passthrough), "Failed to create Passthrough.");
+    if (m_passthrough == XR_NULL_HANDLE) {
+        m_passthroughSupported = false;
+        m_passthroughEnabled = false;
+        return;
+    }
+
+    XrPassthroughLayerCreateInfoFB layerCreateInfo{ prev::xr::open_xr::util::CreateStruct<XrPassthroughLayerCreateInfoFB>(XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB) };
+    layerCreateInfo.passthrough = m_passthrough;
+    layerCreateInfo.purpose = XR_PASSTHROUGH_LAYER_PURPOSE_RECONSTRUCTION_FB;
+    if (m_passthroughEnabled) {
+        layerCreateInfo.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB;
+    }
+    OPENXR_CHECK(xrCreatePassthroughLayerFB(m_session, &layerCreateInfo, &m_passthroughLayer), "Failed to create Passthrough Layer.");
+
+    LOGI("OpenXR passthrough created (%s)", m_passthroughEnabled ? "AR" : "VR");
+}
+
+void OpenXrRender::DestroyPassthrough()
+{
+    if (m_passthroughLayer != XR_NULL_HANDLE) {
+        OPENXR_CHECK(xrDestroyPassthroughLayerFB(m_passthroughLayer), "Failed to destroy Passthrough Layer.");
+        m_passthroughLayer = XR_NULL_HANDLE;
+    }
+    if (m_passthrough != XR_NULL_HANDLE) {
+        OPENXR_CHECK(xrDestroyPassthroughFB(m_passthrough), "Failed to destroy Passthrough.");
+        m_passthrough = XR_NULL_HANDLE;
+    }
+}
+
+void OpenXrRender::SetPassthroughEnabled(bool enabled)
+{
+    m_passthroughEnabled = enabled && m_passthroughSupported;
+    if (m_passthroughLayer == XR_NULL_HANDLE) {
+        return; // no session yet - applied when CreatePassthrough runs
+    }
+    if (m_passthroughEnabled) {
+        OPENXR_CHECK(xrPassthroughLayerResumeFB(m_passthroughLayer), "Failed to resume Passthrough Layer.");
+    } else {
+        OPENXR_CHECK(xrPassthroughLayerPauseFB(m_passthroughLayer), "Failed to pause Passthrough Layer.");
+    }
+    LOGI("OpenXR passthrough %s", m_passthroughEnabled ? "enabled (AR)" : "disabled (VR)");
+
+    // Broadcast the actual (clamped) mode so clients can react (e.g. suppress the opaque environment in AR).
+    prev::event::EventChannel::Post(XrPassthroughChangedEvent{ m_passthroughEnabled });
 }
 
 void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
