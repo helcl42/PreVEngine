@@ -67,8 +67,6 @@ private:
     std::unique_ptr<render::WebXrRender> m_render{};
 
     std::unique_ptr<input::WebXrInput> m_input{};
-
-    GfxDevice m_device{};
 };
 } // namespace prev::xr::web_xr
 

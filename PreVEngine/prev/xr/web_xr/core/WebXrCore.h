@@ -3,6 +3,8 @@
 
 #ifdef ENABLE_WEBXR
 
+#include "../../../core/Core.h"
+
 #include <functional>
 
 namespace prev::xr::web_xr::core {
@@ -14,7 +16,7 @@ public:
     ~WebXrCore() = default;
 
 public:
-    void CreateSession(void* nativeDevice);
+    void CreateSession(GfxDevice device);
 
     void DestroySession();
 

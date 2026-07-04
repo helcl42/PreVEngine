@@ -27,17 +27,13 @@ GfxAdapter WebXr::GetAdapter(GfxInstance /*instance*/) const
 
 void WebXr::UpdateGraphicsBinding(GfxInstance /*instance*/, GfxAdapter /*adapter*/, GfxDevice device, GfxQueue /*queue*/)
 {
-    m_device = device;
     m_render->UpdateGraphicsBinding(device);
 }
 
 void WebXr::CreateSession()
 {
-    void* nativeDevice = nullptr;
-    if (m_device) {
-        gfxDeviceGetNativeHandle(m_device, &nativeDevice);
-    }
-    m_core->CreateSession(nativeDevice);
+    m_core->CreateSession(m_render->GetDevice());
+    m_render->OnSessionCreate();
 }
 
 void WebXr::DestroySession()

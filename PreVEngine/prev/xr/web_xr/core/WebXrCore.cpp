@@ -131,8 +131,12 @@ WebXrCore::WebXrCore()
     }
 }
 
-void WebXrCore::CreateSession(void* nativeDevice)
+void WebXrCore::CreateSession(GfxDevice device)
 {
+    void* nativeDevice = nullptr;
+    if (device) {
+        gfxDeviceGetNativeHandle(device, &nativeDevice);
+    }
     prev_webxr_install_enter_buttons(this, nativeDevice);
     LOGI("WebXr: 'Enter VR' / 'Enter AR' buttons installed - click one to start the immersive session");
 }

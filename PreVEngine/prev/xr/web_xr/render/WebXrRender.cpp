@@ -117,6 +117,16 @@ void WebXrRender::UpdateGraphicsBinding(GfxDevice device)
     m_device = device;
 }
 
+GfxDevice WebXrRender::GetDevice() const
+{
+    return m_device;
+}
+
+void WebXrRender::OnSessionCreate()
+{
+    // Nothing to set up: the XRSession is created asynchronously in JS; textures are imported per frame.
+}
+
 void WebXrRender::OnSessionDestroy()
 {
     ReleaseFrameTextures();

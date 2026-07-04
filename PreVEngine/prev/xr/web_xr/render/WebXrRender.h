@@ -17,6 +17,10 @@ public:
 public:
     void UpdateGraphicsBinding(GfxDevice device);
 
+    GfxDevice GetDevice() const;
+
+    void OnSessionCreate();
+
     void OnSessionDestroy();
 
     bool BeginFrame();
