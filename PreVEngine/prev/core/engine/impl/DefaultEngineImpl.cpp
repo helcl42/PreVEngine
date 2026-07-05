@@ -1,8 +1,8 @@
 #include "DefaultEngineImpl.h"
 
+#include "../../device/Adapters.h"
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
-#include "../../device/Adapters.h"
 #include "../../device/Queue.h"
 #include "../../instance/InstanceFactory.h"
 
@@ -51,6 +51,9 @@ void DefaultEngineImpl::Init()
 
 void DefaultEngineImpl::ShutDown()
 {
+    if (m_device) {
+        m_device->WaitIdle();
+    }
     if (m_rootRenderer) {
         m_rootRenderer->ShutDown();
     }

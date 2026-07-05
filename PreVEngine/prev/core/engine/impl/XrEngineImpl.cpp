@@ -49,6 +49,9 @@ void XrEngineImpl::Init()
 
 void XrEngineImpl::ShutDown()
 {
+    if (m_device) {
+        m_device->WaitIdle();
+    }
     if (m_rootRenderer) {
         m_rootRenderer->ShutDown();
     }
