@@ -243,6 +243,27 @@ bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                     m_eventQueue.Push(OnKeyEvent(ActionType::UP, key));
                     break;
                 }
+                case NSEventTypeFlagsChanged:
+                {
+                    uint8_t key{ 0 };
+                    NSEventModifierFlags mask{ 0 };
+                    switch ([event keyCode]) {
+                        case 56: key = 225; mask = NSEventModifierFlagShift;   break; // Left Shift
+                        case 60: key = 229; mask = NSEventModifierFlagShift;   break; // Right Shift
+                        case 59: key = 224; mask = NSEventModifierFlagControl; break; // Left Control
+                        case 62: key = 228; mask = NSEventModifierFlagControl; break; // Right Control
+                        case 58: key = 226; mask = NSEventModifierFlagOption;  break; // Left Option/Alt
+                        case 61: key = 230; mask = NSEventModifierFlagOption;  break; // Right Option/Alt
+                        case 55: key = 227; mask = NSEventModifierFlagCommand; break; // Left Command
+                        case 54: key = 231; mask = NSEventModifierFlagCommand; break; // Right Command
+                        default: break;
+                    }
+                    if (key != 0) {
+                        const ActionType action{ ([event modifierFlags] & mask) ? ActionType::DOWN : ActionType::UP };
+                        m_eventQueue.Push(OnKeyEvent(action, key));
+                    }
+                    break;
+                }
                 default:
                     break;
             }
