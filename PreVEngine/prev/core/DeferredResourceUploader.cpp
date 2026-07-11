@@ -1,5 +1,7 @@
 #include "DeferredResourceUploader.h"
 
+#include "OwnedGfxHandle.h"
+
 #include "../common/Logger.h"
 
 #include <iterator>
@@ -15,26 +17,6 @@ namespace {
     // of its data until flushed. Beyond this, builders fall back to synchronous uploads, which free their
     // staging immediately.
     constexpr uint64_t MaxOutstandingUploadBytes{ 64ull * 1024 * 1024 };
-
-    // RAII owner of a staging GfxBuffer. Core-local (raw handles only) to avoid a core -> render dependency.
-    class StagingBuffer final {
-    public:
-        explicit StagingBuffer(GfxBuffer buffer)
-            : m_buffer{ buffer }
-        {
-        }
-        StagingBuffer(const StagingBuffer&) = delete;
-        StagingBuffer& operator=(const StagingBuffer&) = delete;
-        ~StagingBuffer()
-        {
-            if (m_buffer) {
-                gfxBufferDestroy(m_buffer);
-            }
-        }
-
-    private:
-        GfxBuffer m_buffer{};
-    };
 } // namespace
 
 DeferredResourceUploader::DeferredResourceUploader(DeferredResourceDestroyer& destroyer)
@@ -58,6 +40,34 @@ void DeferredResourceUploader::Enqueue(std::function<void(GfxCommandEncoder)> re
     std::lock_guard<std::mutex> lock(m_mutex);
     m_pending.push_back(Entry{ std::move(record), std::move(state), staging, bytes });
     m_outstandingBytes.fetch_add(bytes, std::memory_order_relaxed);
+}
+
+void DeferredResourceUploader::Flush(GfxDevice device, GfxQueue queue)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (m_pending.empty()) {
+            return;
+        }
+    }
+
+    GfxCommandEncoderDescriptor ceDesc{};
+    ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
+    ceDesc.label = "UploadCommandEncoder";
+    GfxCommandEncoder encoder{};
+    GFXERRCHECK(gfxDeviceCreateCommandEncoder(device, &ceDesc, &encoder));
+
+    GFXERRCHECK(gfxCommandEncoderBegin(encoder));
+    Flush(encoder);
+    GFXERRCHECK(gfxCommandEncoderEnd(encoder));
+
+    GfxSubmitDescriptor submitDesc{};
+    submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
+    submitDesc.commandEncoders = &encoder;
+    submitDesc.commandEncoderCount = 1;
+    GFXERRCHECK(gfxQueueSubmit(queue, &submitDesc));
+
+    m_destroyer.Destroy(std::make_unique<OwnedGfxCommandEncoder>(encoder));
 }
 
 bool DeferredResourceUploader::CanQueue(uint64_t bytes) const
@@ -98,7 +108,7 @@ void DeferredResourceUploader::Flush(GfxCommandEncoder encoder)
         }
         if (entry.staging) {
             // Defer-destroy so the staging outlives the just-recorded copy (or just free it if cancelled).
-            m_destroyer.Destroy(std::make_unique<StagingBuffer>(entry.staging));
+            m_destroyer.Destroy(std::make_unique<OwnedGfxBuffer>(entry.staging));
         }
     }
 }

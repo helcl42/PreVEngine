@@ -57,16 +57,19 @@ void Engine::RunOneFrame()
 
     scene.Update(deltaTime);
 
+    // Uploads get their own submit: a rejected frame submit (WebGPU destroyed-texture on a mid-frame
+    // yield) must not take them with it.
+    auto& device{ m_engineImpl->GetDevice() };
+    m_engineImpl->GetDeferredResourceUploader().Flush(device, device.GetQueue(prev::core::device::QueueType::GRAPHICS));
+
     // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
     // one or more passes: a single multiview pass, or one pass per eye where there is no multiview
     // (e.g. WebGPU). Each pass renders the view window the swapchain reports (viewOffset/viewCount) into
     // that pass's framebuffer; EndFrame submits the command buffer once.
     prev::render::swapchain::FrameContext frameContext;
     if (swapchain.BeginFrame(frameContext)) {
-        // Per-frame resource bookkeeping (once): retire this slot's previous resources, then record queued
-        // async uploads into the frame's command buffer so they precede all rendering this frame.
+        // Per-frame resource bookkeeping (once): retire this slot's previous resources.
         m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
-        m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
 
         const uint32_t passCount{ swapchain.GetPassCount() };
         prev::render::FrameSubmitSync submitSync{};

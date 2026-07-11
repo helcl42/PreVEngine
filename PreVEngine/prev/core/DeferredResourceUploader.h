@@ -35,6 +35,10 @@ public:
     // the rest queued for later frames. Called at frame start, before rendering and outside a render pass.
     void Flush(GfxCommandEncoder encoder);
 
+    // Flush into a one-off encoder submitted right away, so the uploads never share a frame submit's
+    // fate. No fence: queue order suffices and the encoder is defer-destroyed. No-op when queue is empty.
+    void Flush(GfxDevice device, GfxQueue queue);
+
     // True if queuing an upload of `bytes` would keep the outstanding (queued-but-not-yet-flushed) staging
     // memory within budget; builders fall back to a synchronous upload when this returns false.
     bool CanQueue(uint64_t bytes) const;
