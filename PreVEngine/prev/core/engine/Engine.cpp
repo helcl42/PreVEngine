@@ -55,35 +55,28 @@ void Engine::RunOneFrame()
 
     prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 
-    if (m_engineImpl->IsFocused()) {
-        scene.Update(deltaTime);
+    scene.Update(deltaTime);
 
-        // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
-        // one or more passes: a single multiview pass, or one pass per eye where there is no multiview
-        // (e.g. WebGPU). Each pass renders the view window the swapchain reports (viewOffset/viewCount) into
-        // that pass's framebuffer; EndFrame submits the command buffer once.
-        prev::render::swapchain::FrameContext frameContext;
-        if (swapchain.BeginFrame(frameContext)) {
-            // Per-frame resource bookkeeping (once): retire this slot's previous resources, then record queued
-            // async uploads into the frame's command buffer so they precede all rendering this frame.
-            m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
-            m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
+    // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
+    // one or more passes: a single multiview pass, or one pass per eye where there is no multiview
+    // (e.g. WebGPU). Each pass renders the view window the swapchain reports (viewOffset/viewCount) into
+    // that pass's framebuffer; EndFrame submits the command buffer once.
+    prev::render::swapchain::FrameContext frameContext;
+    if (swapchain.BeginFrame(frameContext)) {
+        // Per-frame resource bookkeeping (once): retire this slot's previous resources, then record queued
+        // async uploads into the frame's command buffer so they precede all rendering this frame.
+        m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
+        m_engineImpl->GetDeferredResourceUploader().Flush(frameContext.commandEncoder);
 
-            const uint32_t passCount{ swapchain.GetPassCount() };
-            prev::render::FrameSubmitSync submitSync{};
-            for (uint32_t pass = 0; pass < passCount; ++pass) {
-                swapchain.BeginPass(frameContext, pass);
-                const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent }, frameContext.viewOffset, frameContext.viewCount };
-                submitSync = rootRenderer.Render(renderContext, scene); // XR sync is empty; use the last pass's for the single submit
-                swapchain.EndPass(pass);
-            }
-            swapchain.EndFrame(submitSync);
+        const uint32_t passCount{ swapchain.GetPassCount() };
+        prev::render::FrameSubmitSync submitSync{};
+        for (uint32_t pass = 0; pass < passCount; ++pass) {
+            swapchain.BeginPass(frameContext, pass);
+            const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent }, frameContext.viewOffset, frameContext.viewCount };
+            submitSync = rootRenderer.Render(renderContext, scene); // XR sync is empty; use the last pass's for the single submit
+            swapchain.EndPass(pass);
         }
-    } else {
-        LOGW("No focus...");
-#ifndef __EMSCRIPTEN__
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-#endif
+        swapchain.EndFrame(submitSync);
     }
 
     m_engineImpl->EndFrame();
