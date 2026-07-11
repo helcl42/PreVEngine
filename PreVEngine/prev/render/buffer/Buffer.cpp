@@ -1,7 +1,7 @@
 #include "Buffer.h"
-#include "OwnedGfxBuffer.h"
 
 #include "../../core/DeferredResourceDestroyer.h"
+#include "../../core/OwnedGfxHandle.h"
 
 #include <cassert>
 #include <memory>
@@ -90,7 +90,7 @@ void Buffer::ReleaseBuffer()
     }
     if (IsDeferred()) {
         // Defer destruction past any in-flight work; no queue stall.
-        m_deferredResourceDestroyer->Destroy(std::make_unique<OwnedGfxBuffer>(m_buffer));
+        m_deferredResourceDestroyer->Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(m_buffer));
     } else {
         gfxQueueWaitIdle(m_queue);
         gfxBufferDestroy(m_buffer);

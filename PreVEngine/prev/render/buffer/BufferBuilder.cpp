@@ -1,9 +1,9 @@
 #include "BufferBuilder.h"
-#include "OwnedGfxBuffer.h"
 
 #include "../../common/Common.h"
 #include "../../core/DeferredResourceDestroyer.h"
 #include "../../core/DeferredResourceUploader.h"
+#include "../../core/OwnedGfxHandle.h"
 #include "../../util/MathUtils.h"
 #include "../../util/Utils.h"
 
@@ -168,7 +168,7 @@ void BufferBuilder::UploadData(GfxBuffer buffer, uint64_t size, GfxCommandEncode
             // when the caller submits the encoder; the staging buffer is defer-destroyed so it outlives it.
             const GfxBuffer staging{ CreateStagingBuffer(size) };
             MakeCopyRecorder(staging, buffer, size)(commandEncoder);
-            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<OwnedGfxBuffer>(staging));
+            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staging));
         } else {
             // Immediate: gfxQueueWriteBuffer handles host-visible (direct write) and device-local (internal
             // staging) targets, so the buffer holds its data when Build() returns.

@@ -1,6 +1,7 @@
 #include "ImageBuffer.h"
 
 #include "../../core/DeferredResourceDestroyer.h"
+#include "../../core/OwnedGfxHandle.h"
 
 #include <cassert>
 #include <memory>
@@ -55,29 +56,6 @@ namespace {
         }
     }
 
-    // Owns a texture and its view, destroying both when it dies. Handed to the deferred resource
-    // manager so the GPU handles outlive any in-flight work that still references them.
-    class OwnedGfxTexture final {
-    public:
-        OwnedGfxTexture(ImageBufferView&& view, GfxTexture texture)
-            : m_view{ std::move(view) }
-            , m_texture{ texture }
-        {
-        }
-        OwnedGfxTexture(const OwnedGfxTexture&) = delete;
-        OwnedGfxTexture& operator=(const OwnedGfxTexture&) = delete;
-        ~OwnedGfxTexture()
-        {
-            // m_view's destructor releases the texture view; destroy the texture itself here.
-            if (m_texture) {
-                gfxTextureDestroy(m_texture);
-            }
-        }
-
-    private:
-        ImageBufferView m_view;
-        GfxTexture m_texture{};
-    };
 } // namespace
 
 ImageBuffer::ImageBuffer(GfxDevice device, GfxQueue queue, CreateInfo&& createInfo)
@@ -121,14 +99,16 @@ ImageBuffer::~ImageBuffer()
         m_state->store(prev::core::ResourceState::Destroying);
     }
 
-    // Move the GPU handles into an owner that destroys them. When a deferred manager is active, hand
-    // it over so destruction happens after any in-flight work; otherwise wait for the queue to drain
-    // and let the owner destroy them here as it leaves scope.
-    auto handles{ std::make_unique<OwnedGfxTexture>(std::move(m_view), m_texture) };
+    // Move the GPU handles into owners that destroy them. When a deferred manager is active, hand
+    // them over so destruction happens after any in-flight work; otherwise wait for the queue to
+    // drain and let the owners destroy them here as they leave scope.
+    auto texture{ std::make_unique<prev::core::OwnedGfxTexture>(m_texture) };
+    auto view{ std::make_unique<ImageBufferView>(std::move(m_view)) };
     m_texture = nullptr;
 
     if (IsDeferred()) {
-        m_deferredResourceDestroyer->Destroy(std::move(handles));
+        m_deferredResourceDestroyer->Destroy(std::move(texture));
+        m_deferredResourceDestroyer->Destroy(std::move(view));
     } else {
         gfxQueueWaitIdle(m_queue);
     }

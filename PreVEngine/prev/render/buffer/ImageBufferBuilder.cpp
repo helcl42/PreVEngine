@@ -1,9 +1,9 @@
 #include "ImageBufferBuilder.h"
 #include "ImageBufferViewBuilder.h"
-#include "OwnedGfxBuffer.h"
 
 #include "../../common/Common.h"
 #include "../../core/CommandsExecutor.h"
+#include "../../core/OwnedGfxHandle.h"
 #include "../../util/MathUtils.h"
 
 #include <algorithm>
@@ -293,7 +293,7 @@ void ImageBufferBuilder::UploadLayerData(GfxTexture texture, GfxCommandEncoder c
         // Immediate path already submitted + waited, so the staging buffer can be freed now; the recorded path
         // runs when the caller submits its encoder, so defer-destroy it to outlive that submission.
         if (commandEncoder) {
-            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<OwnedGfxBuffer>(staging));
+            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staging));
         } else {
             gfxBufferDestroy(staging);
         }
