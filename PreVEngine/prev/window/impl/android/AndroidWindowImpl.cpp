@@ -205,9 +205,7 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
                 handled = 0;
             }
 
-            if (!handled) {
-                AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled);
-            }
+            AInputQueue_finishEvent(m_app->inputQueue, aEvent, handled); // NDK contract: finish EVERY event, handled or not (else ANR)
         }
 
     } else if (id == LOOPER_ID_USER) {
