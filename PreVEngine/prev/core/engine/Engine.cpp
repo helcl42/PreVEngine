@@ -2,6 +2,7 @@
 
 #include "impl/EngineImplFactory.h"
 
+#include "../CommandsExecutor.h"
 #include "../CoreEvents.h"
 
 #include "../../common/Logger.h"
@@ -59,8 +60,14 @@ void Engine::RunOneFrame()
 
     // Uploads get their own submit: a rejected frame submit (WebGPU destroyed-texture on a mid-frame
     // yield) must not take them with it.
-    auto& device{ m_engineImpl->GetDevice() };
-    m_engineImpl->GetDeferredResourceUploader().Flush(device, device.GetQueue(prev::core::device::QueueType::GRAPHICS));
+    auto& uploader{ m_engineImpl->GetDeferredResourceUploader() };
+    if (uploader.HasPending()) {
+        auto& device{ m_engineImpl->GetDevice() };
+        prev::core::CommandsExecutor commandsExecutor{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) };
+        commandsExecutor.ExecuteDeferred(m_engineImpl->GetDeferredResourceDestroyer(), [&uploader](GfxCommandEncoder encoder) {
+            uploader.Flush(encoder);
+        });
+    }
 
     // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
     // one or more passes: a single multiview pass, or one pass per eye where there is no multiview

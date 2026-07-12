@@ -42,32 +42,10 @@ void DeferredResourceUploader::Enqueue(std::function<void(GfxCommandEncoder)> re
     m_outstandingBytes.fetch_add(bytes, std::memory_order_relaxed);
 }
 
-void DeferredResourceUploader::Flush(GfxDevice device, GfxQueue queue)
+bool DeferredResourceUploader::HasPending() const
 {
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        if (m_pending.empty()) {
-            return;
-        }
-    }
-
-    GfxCommandEncoderDescriptor ceDesc{};
-    ceDesc.sType = GFX_STRUCTURE_TYPE_COMMAND_ENCODER_DESCRIPTOR;
-    ceDesc.label = "UploadCommandEncoder";
-    GfxCommandEncoder encoder{};
-    GFXERRCHECK(gfxDeviceCreateCommandEncoder(device, &ceDesc, &encoder));
-
-    GFXERRCHECK(gfxCommandEncoderBegin(encoder));
-    Flush(encoder);
-    GFXERRCHECK(gfxCommandEncoderEnd(encoder));
-
-    GfxSubmitDescriptor submitDesc{};
-    submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
-    submitDesc.commandEncoders = &encoder;
-    submitDesc.commandEncoderCount = 1;
-    GFXERRCHECK(gfxQueueSubmit(queue, &submitDesc));
-
-    m_destroyer.Destroy(std::make_unique<OwnedGfxCommandEncoder>(encoder));
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return !m_pending.empty();
 }
 
 bool DeferredResourceUploader::CanQueue(uint64_t bytes) const
