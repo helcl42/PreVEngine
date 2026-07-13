@@ -14,12 +14,16 @@ namespace {
     GfxBindGroupEntryType ToBindGroupEntryType(GfxBindingType bindingType)
     {
         switch (bindingType) {
-        case GFX_BINDING_TYPE_BUFFER:
+        case GFX_BINDING_TYPE_UNIFORM_BUFFER:
+        case GFX_BINDING_TYPE_STORAGE_BUFFER:
             return GFX_BIND_GROUP_ENTRY_TYPE_BUFFER;
         case GFX_BINDING_TYPE_SAMPLER:
             return GFX_BIND_GROUP_ENTRY_TYPE_SAMPLER;
-        default:
+        case GFX_BINDING_TYPE_TEXTURE:
+        case GFX_BINDING_TYPE_STORAGE_TEXTURE:
             return GFX_BIND_GROUP_ENTRY_TYPE_TEXTURE_VIEW;
+        default:
+            throw std::runtime_error("Unsupported bind group binding type");
         }
     }
 
@@ -221,6 +225,8 @@ GfxBindGroupLayout ShaderBuilder::CreateBindGroupLayout() const
             entry.storageTexture.format = ds.storageTextureFormat;
             entry.storageTexture.viewDimension = ds.storageTextureViewDimension;
             entry.storageTexture.access = ds.storageTextureAccess;
+        } else if (entry.type == GFX_BINDING_TYPE_STORAGE_BUFFER) {
+            entry.storageBuffer.access = ds.storageBufferAccess;
         }
         entries.push_back(entry);
     }

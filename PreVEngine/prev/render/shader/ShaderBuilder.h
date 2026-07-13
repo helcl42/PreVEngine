@@ -20,6 +20,7 @@ public:
         GfxFormat storageTextureFormat{ GFX_FORMAT_UNDEFINED };
         GfxTextureViewType storageTextureViewDimension{ GFX_TEXTURE_VIEW_TYPE_2D };
         GfxStorageTextureAccess storageTextureAccess{ GFX_STORAGE_TEXTURE_ACCESS_WRITE_ONLY };
+        GfxStorageBufferAccess storageBufferAccess{ GFX_STORAGE_BUFFER_ACCESS_READ_ONLY };
         GfxTextureViewType textureViewDimension{ GFX_TEXTURE_VIEW_TYPE_2D };
         GfxTextureSampleType textureSampleType{ GFX_TEXTURE_SAMPLE_TYPE_FLOAT };
         bool samplerNonFiltering{};
@@ -29,8 +30,19 @@ public:
             BindGroupEntry bge{};
             bge.name = name;
             bge.binding = binding;
-            bge.bindingType = GFX_BINDING_TYPE_BUFFER;
+            bge.bindingType = GFX_BINDING_TYPE_UNIFORM_BUFFER;
             bge.stageFlags = stageFlags;
+            return bge;
+        }
+
+        static BindGroupEntry StorageBuffer(const std::string& name, uint32_t binding, GfxShaderStageFlags stageFlags, GfxStorageBufferAccess access = GFX_STORAGE_BUFFER_ACCESS_READ_ONLY)
+        {
+            BindGroupEntry bge{};
+            bge.name = name;
+            bge.binding = binding;
+            bge.bindingType = GFX_BINDING_TYPE_STORAGE_BUFFER;
+            bge.stageFlags = stageFlags;
+            bge.storageBufferAccess = access;
             return bge;
         }
 
