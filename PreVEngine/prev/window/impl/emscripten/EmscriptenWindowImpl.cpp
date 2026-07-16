@@ -151,7 +151,12 @@ EM_BOOL EmscriptenWindowImpl::KeyCallback(int eventType, const EmscriptenKeyboar
 {
     auto* self = static_cast<EmscriptenWindowImpl*>(userData);
 
-    const uint8_t keyCode = DOM_TO_HID[keyEvent->keyCode & 0xFF];
+    uint8_t keyCode = DOM_TO_HID[keyEvent->keyCode & 0xFF];
+    // Legacy DOM keyCode is one value for both keys of a modifier pair, so the table maps each to its LEFT
+    // HID usage; use the event location to pick the right-hand variant (HID right = left + 4).
+    if (keyEvent->location == 2 /* DOM_KEY_LOCATION_RIGHT */ && keyCode >= 224 && keyCode <= 227) {
+        keyCode += 4;
+    }
 
     switch (eventType) {
     case EMSCRIPTEN_EVENT_KEYDOWN:
