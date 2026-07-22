@@ -162,4 +162,10 @@ Event WindowImpl::OnChangeEvent()
 {
     return { Event::EventType::CHANGE };
 }
+
+void WindowImpl::SetSurfaceObserver(ISurfaceObserver* observer)
+{
+    m_surfaceObserver = observer;
+}
+
 } // namespace prev::window::impl

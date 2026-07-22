@@ -109,6 +109,17 @@ void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
     ResetSwapchain();
 }
 
+void EngineImpl::operator()(const prev::window::WindowSurfaceLostEvent& surfaceLostEvent)
+{
+    if (!m_device) {
+        return; // surface lost mid-init (before the device exists): nothing to drop yet
+    }
+    m_device->WaitIdle();
+    m_swapchain.reset();
+    m_surface.reset();
+    m_device->GetDeferredResourceDestroyer().RetireAll();
+}
+
 void EngineImpl::ResetTiming()
 {
     m_clock = std::make_unique<prev::util::Clock<float>>();

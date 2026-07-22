@@ -16,6 +16,10 @@ struct WindowChangeEvent {
     IWindow* window{};
 };
 
+struct WindowSurfaceLostEvent {
+    IWindow* window{};
+};
+
 struct WindowResizeEvent {
     IWindow* window{};
 

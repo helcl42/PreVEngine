@@ -6,6 +6,7 @@ namespace prev::window {
 Window::Window(const WindowCreateInfo& createInfo)
     : m_windowImpl{ impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.headless, createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
 {
+    m_windowImpl->SetSurfaceObserver(this);
 }
 
 GfxPlatformWindowHandle Window::GetNativeWindowHandle() const
@@ -88,6 +89,11 @@ void Window::SetMouseCursorVisible(bool visible)
 void Window::Close()
 {
     m_windowImpl->Close();
+}
+
+void Window::OnSurfaceLost()
+{
+    prev::event::EventChannel::Post(WindowSurfaceLostEvent{ this }); // synchronous: consumers tear down NOW
 }
 
 bool Window::ProcessEvents(bool waitForEvent)

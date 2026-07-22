@@ -14,7 +14,7 @@
 #include <memory>
 
 namespace prev::window {
-class Window final : public IWindow {
+class Window final : public IWindow, public impl::ISurfaceObserver {
 public:
     Window(const WindowCreateInfo& createInfo);
 
@@ -54,6 +54,9 @@ public:
     void Close() override;
 
     bool ProcessEvents(bool waitForEvent = false) override; // Poll events, and call event handlers. Returns false if window is closing.
+
+public:
+    void OnSurfaceLost() override; // impl callback, fired while the OS still holds the surface alive
 
 public:
     void operator()(const prev::input::mouse::MouseLockRequest& mouseLock);

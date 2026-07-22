@@ -80,7 +80,7 @@ bool DefaultEngineImpl::Update()
 
 bool DefaultEngineImpl::BeginFrame()
 {
-    return true;
+    return m_swapchain != nullptr; // no surface (Android background): skip the frame, keep pumping events
 }
 
 void DefaultEngineImpl::PollActions()

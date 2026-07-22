@@ -7,6 +7,16 @@
 #include "../../util/Utils.h"
 
 namespace prev::window::impl {
+// Synchronous surface-lifecycle observer. OnSurfaceLost fires while the OS still keeps the surface
+// alive (Android blocks in the TERM_WINDOW handshake until the command is acked), so the consumer can
+// tear down swapchain/surface safely before the OS reclaims it.
+class ISurfaceObserver {
+public:
+    virtual ~ISurfaceObserver() = default;
+
+    virtual void OnSurfaceLost() = 0;
+};
+
 class WindowImpl {
 public:
     WindowImpl();
@@ -38,6 +48,8 @@ public:
     virtual bool HasTextInput() const;
 
     virtual void Close();
+
+    void SetSurfaceObserver(ISurfaceObserver* observer);
 
 public:
     virtual bool PollEvent(bool waitForEvent, Event& outEvent) = 0;
@@ -74,6 +86,8 @@ protected:
     Event OnChangeEvent();
 
 protected:
+    ISurfaceObserver* m_surfaceObserver{};
+
     prev::util::CircularQueue<Event, 32> m_eventQueue{};
 
     bool m_running{};

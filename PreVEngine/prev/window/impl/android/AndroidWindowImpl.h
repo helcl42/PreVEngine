@@ -17,6 +17,8 @@ public:
 public:
     bool PollEvent(bool waitForEvent, Event& outEvent) override;
 
+    void Close() override;
+
     void SetTextInput(bool enabled) override;
 
     void SetTitle(const std::string& title) override;

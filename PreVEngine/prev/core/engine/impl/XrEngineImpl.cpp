@@ -80,6 +80,9 @@ bool XrEngineImpl::Update()
 
 bool XrEngineImpl::BeginFrame()
 {
+    if (!m_swapchain) { // window surface lost (see EngineImpl's WindowSurfaceLostEvent): skip the frame
+        return false;
+    }
     return m_xr->BeginFrame();
 }
 

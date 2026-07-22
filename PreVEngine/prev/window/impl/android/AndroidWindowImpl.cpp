@@ -85,7 +85,8 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
 
     int events{};
     android_poll_source* source{};
-    int timeoutMillis = waitForEvent ? -1 : 0; // Blocking or non-blocking mode
+    // Blocking / non-blocking; no window (backgrounded) = park in 100ms slices (cmds still wake it).
+    int timeoutMillis = waitForEvent ? -1 : (m_app->window ? 0 : 100);
     int id;
     do {
         id = ALooper_pollOnce(timeoutMillis, NULL, &events, (void**)&source);
@@ -118,7 +119,12 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
             m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
             break;
         case APP_CMD_TERM_WINDOW:
-            // event = OnCloseEvent();
+            // Background, not a close: INIT_WINDOW (CHANGE) rebuilds on return. Synchronous observer:
+            // the teardown must run while the Surface is alive (Mali device-losts otherwise) - the java
+            // thread blocks in set_window(NULL) until this cmd is acked below.
+            if (m_surfaceObserver) {
+                m_surfaceObserver->OnSurfaceLost();
+            }
             break;
         default:
             break;
@@ -212,16 +218,24 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         // handle events from other event queues (sensors, ...)
     }
 
-    // if (m_app->destroyRequested) {
-    //   LOGI("destroyRequested");
-    //	m_eventQueue.Push({ Event::EventType::CLOSE });
-    // }
+    if (m_app->destroyRequested) {
+        // Activity destruction: CLOSE exits the loop so android_main returns - android_app_free BLOCKS
+        // on that (skipping it = "Activity destroy timeout" + a headless zombie process).
+        m_eventQueue.Push(OnCloseEvent());
+    }
 
     if (!m_eventQueue.IsEmpty()) {
         outEvent = m_eventQueue.Pop();
         return true;
     }
     return false;
+}
+
+void AndroidWindowImpl::Close()
+{
+    // Request finish; destroyRequested -> CLOSE (PollEvent) ends the loop. NOT WindowImpl::Close():
+    // an immediate CLOSE exits before Android finishes the activity -> dead-input window, ANR.
+    ANativeActivity_finish(m_app->activity);
 }
 
 //--Show / Hide keyboard--

@@ -83,6 +83,8 @@ public:
 
     void operator()(const prev::window::WindowResizeEvent& resizeEvent);
 
+    void operator()(const prev::window::WindowSurfaceLostEvent& surfaceLostEvent);
+
 protected:
     void ResetTiming();
 
@@ -110,6 +112,8 @@ private:
     prev::event::EventHandler<EngineImpl, prev::window::WindowChangeEvent> m_windowChangedHandler{ *this };
 
     prev::event::EventHandler<EngineImpl, prev::window::WindowResizeEvent> m_windowResizeEvent{ *this };
+
+    prev::event::EventHandler<EngineImpl, prev::window::WindowSurfaceLostEvent> m_windowSurfaceLostHandler{ *this };
 
 protected:
     Config m_config;
