@@ -58,25 +58,26 @@ void Engine::RunOneFrame()
 
     scene.Update(deltaTime);
 
-    // Uploads get their own submit: a rejected frame submit (WebGPU destroyed-texture on a mid-frame
-    // yield) must not take them with it.
-    auto& uploader{ m_engineImpl->GetDeferredResourceUploader() };
-    if (uploader.HasPending()) {
-        auto& device{ m_engineImpl->GetDevice() };
-        prev::core::CommandsExecutor commandsExecutor{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) };
-        commandsExecutor.ExecuteDeferred(m_engineImpl->GetDeferredResourceDestroyer(), [&uploader](GfxCommandEncoder encoder) {
-            uploader.Flush(encoder);
-        });
-    }
-
     // Frame scope: acquire the image + begin the single command buffer once. A frame is then rendered in
     // one or more passes: a single multiview pass, or one pass per eye where there is no multiview
     // (e.g. WebGPU). Each pass renders the view window the swapchain reports (viewOffset/viewCount) into
     // that pass's framebuffer; EndFrame submits the command buffer once.
     prev::render::swapchain::FrameContext frameContext;
     if (swapchain.BeginFrame(frameContext)) {
-        // Per-frame resource bookkeeping (once): retire this slot's previous resources.
+        // Per-frame resource bookkeeping (once): retire this slot's previous resources. BeginFrame waited
+        // the slot's fence, so the GPU is done with everything keyed to it.
         m_engineImpl->GetDeferredResourceDestroyer().AdvanceFrame(frameContext.index);
+
+        // Own submit so a rejected frame submit doesn't take the uploads with it. Must follow AdvanceFrame:
+        // that keys their staging + one-shot command buffer to this slot, whose fence covers the upload.
+        auto& uploader{ m_engineImpl->GetDeferredResourceUploader() };
+        if (uploader.HasPending()) {
+            auto& device{ m_engineImpl->GetDevice() };
+            prev::core::CommandsExecutor commandsExecutor{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) };
+            commandsExecutor.ExecuteDeferred(m_engineImpl->GetDeferredResourceDestroyer(), [&uploader](GfxCommandEncoder encoder) {
+                uploader.Flush(encoder);
+            });
+        }
 
         const uint32_t passCount{ swapchain.GetPassCount() };
         prev::render::FrameSubmitSync submitSync{};
