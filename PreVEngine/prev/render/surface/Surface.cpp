@@ -2,6 +2,7 @@
 
 #include "../../common/Logger.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace prev::render::surface {
@@ -50,6 +51,21 @@ GfxFormat Surface::GetPreferredFormat(GfxAdapter adapter) const
     if (formats.empty()) {
         throw std::runtime_error("No supported surface formats found for the GPU");
     }
+    // The engine renders in gamma space (textures are UNORM, no linearization or tonemap), so shaders
+    // output display-ready color. Prefer a plain 8-bit UNORM surface for passthrough: an sRGB surface
+    // would re-encode and wash the image out, and some drivers report an HDR float format first (dull).
+    // Most-preferred first; fall back to the driver's first choice only if none are supported.
+    static constexpr GfxFormat preferredFormats[]{
+        GFX_FORMAT_R8G8B8A8_UNORM,
+        GFX_FORMAT_B8G8R8A8_UNORM,
+    };
+    for (const GfxFormat preferred : preferredFormats) {
+        if (std::find(formats.begin(), formats.end(), preferred) != formats.end()) {
+            LOGI("Preferred surface format found: %d", preferred);
+            return preferred;
+        }
+    }
+    LOGW("Preferred surface format not found, using first supported format: %d", formats[0]);
     return formats[0];
 }
 
