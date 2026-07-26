@@ -10,7 +10,7 @@
 namespace prev_test::scene::water {
 class Water final : public prev::scene::graph::SceneNode {
 public:
-    Water(prev::core::device::Device& device, const int x, const int z);
+    Water(prev::core::device::Device& device, bool colorManaged, const int x, const int z);
 
     ~Water() = default;
 
@@ -23,6 +23,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     int m_x;
 

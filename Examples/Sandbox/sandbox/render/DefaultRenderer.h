@@ -23,6 +23,7 @@ struct ViewData {
     std::array<glm::mat4, MAX_PER_PASS_VIEW_COUNT_VALUE> viewMatrices{};
     std::array<glm::mat4, MAX_PER_PASS_VIEW_COUNT_VALUE> projectionMatrices{};
     uint32_t viewCount{ 1 };
+    bool colorManaged{ false };
 };
 
 class DefaultRenderer final {

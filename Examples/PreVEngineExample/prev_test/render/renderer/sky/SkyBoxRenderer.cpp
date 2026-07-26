@@ -11,6 +11,7 @@
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/ColorSpace.h>
 
 namespace prev_test::render::renderer::sky {
 SkyBoxRenderer::SkyBoxRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
@@ -130,7 +131,7 @@ void SkyBoxRenderer::Render(const NormalRenderContext& renderContext, const std:
     auto& uboFS = m_uniformsPoolFS->Next();
 
     UniformsFS uniformsFS{};
-    uniformsFS.fogColor = prev_test::component::sky::FOG_COLOR;
+    uniformsFS.fogColor = renderContext.colorManaged ? prev::util::color::SrgbToLinear(prev_test::component::sky::FOG_COLOR) : prev_test::component::sky::FOG_COLOR;
     uniformsFS.lowerLimit = glm::vec4(0.0f);
     uniformsFS.upperLimit = glm::vec4(0.03f);
     uboFS.Write(uniformsFS);

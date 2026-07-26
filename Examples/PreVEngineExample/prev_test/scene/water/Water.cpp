@@ -9,9 +9,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::water {
-Water::Water(prev::core::device::Device& device, const int x, const int z)
+Water::Water(prev::core::device::Device& device, bool colorManaged, const int x, const int z)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_x(x)
     , m_z(z)
 {
@@ -26,7 +27,7 @@ void Water::Init()
     }
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
-    prev_test::component::water::WaterComponentFactory componentFactory{ m_device };
+    prev_test::component::water::WaterComponentFactory componentFactory{ m_device, m_colorManaged };
     m_waterComponent = componentFactory.Create(m_x, m_z);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::water::IWaterComponent>(GetThis(), m_waterComponent, { TAG_WATER_RENDER_COMPONENT });
 

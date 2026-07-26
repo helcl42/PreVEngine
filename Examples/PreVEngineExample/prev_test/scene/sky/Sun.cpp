@@ -8,15 +8,16 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-Sun::Sun(prev::core::device::Device& device)
+Sun::Sun(prev::core::device::Device& device, bool colorManaged)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
 {
 }
 
 void Sun::Init()
 {
-    m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device }.Create();
+    m_sunComponent = prev_test::component::sky::SunComponentFactory{ m_device, m_colorManaged }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISunComponent>(GetThis(), m_sunComponent, { TAG_SUN_RENDER_COMPONENT });
 
     SceneNode::Init();

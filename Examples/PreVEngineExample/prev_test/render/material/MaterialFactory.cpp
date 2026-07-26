@@ -6,6 +6,7 @@
 #include <prev/common/Cache.h>
 #include <prev/render/buffer/ImageBufferBuilder.h>
 #include <prev/render/image/ImageFactory.h>
+#include <prev/util/ColorSpace.h>
 #include <prev/util/GfxUtils.h>
 
 #include <stdexcept>
@@ -53,12 +54,16 @@ namespace {
         CUBE_MAP = 1,
     };
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool generateMipMaps, const bool async = false)
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateImageBuffer(const prev::core::device::Device& device, const std::vector<std::shared_ptr<prev::render::image::IImage>>& images, const ImageBufferViewType& imageViewType, const bool isColor, const bool generateMipMaps, const bool colorManaged, const bool async = false)
     {
         std::vector<const uint8_t*> layersData{};
         for (const auto& image : images) {
             layersData.emplace_back(image->GetRawDataPtr());
         }
+
+        // A color texture (albedo/emissive/skybox) is authored in sRGB; decode it to linear when the
+        // pipeline is color-managed. Data textures (normal/height) stay linear regardless.
+        const bool srgb{ isColor && colorManaged };
 
         GfxTextureViewType viewType{ GFX_TEXTURE_VIEW_TYPE_2D };
         GfxTextureType texType{ GFX_TEXTURE_TYPE_2D };
@@ -69,7 +74,7 @@ namespace {
 
         auto builder = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
-                           .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint()))
+                           .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint(), srgb))
                            .SetType(texType)
                            .SetMipMapEnabled(generateMipMaps)
                            .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
@@ -82,8 +87,9 @@ namespace {
 
 } // namespace
 
-MaterialFactory::MaterialFactory(prev::core::device::Device& device)
+MaterialFactory::MaterialFactory(prev::core::device::Device& device, bool colorManaged)
     : m_device{ device }
+    , m_colorManaged{ colorManaged }
 {
 }
 
@@ -95,7 +101,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, true, m_colorManaged, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer });
 }
@@ -103,10 +109,10 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, true, m_colorManaged, async) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true, async) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, false, true, m_colorManaged, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer });
 }
@@ -114,13 +120,13 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const Mate
 std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::Create(const MaterialProperties& materialProps, const std::string& colorImagePath, const std::string& normalMapPath, const std::string& heightMapPath, bool async) const
 {
     auto image{ CreateImage(colorImagePath) };
-    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async) };
+    auto imageBuffer{ CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, true, m_colorManaged, async) };
 
     auto normalImage{ CreateImage(normalMapPath) };
-    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, true, async) };
+    auto normalImageBuffer{ CreateImageBuffer(m_device, { normalImage }, ImageBufferViewType::REGULAR, false, true, m_colorManaged, async) };
 
     auto heightImage{ CreateImage(heightMapPath) };
-    auto heightImageBuffer{ CreateImageBuffer(m_device, { heightImage }, ImageBufferViewType::REGULAR, true, async) };
+    auto heightImageBuffer{ CreateImageBuffer(m_device, { heightImage }, ImageBufferViewType::REGULAR, false, true, m_colorManaged, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ imageBuffer, normalImageBuffer, heightImageBuffer });
 }
@@ -134,7 +140,7 @@ std::unique_ptr<prev_test::render::IMaterial> MaterialFactory::CreateCubeMap(con
         images.emplace_back(imageFactory.CreateImage(faceFilePath));
     }
 
-    auto cubeMapImageBuffer{ CreateImageBuffer(m_device, images, ImageBufferViewType::CUBE_MAP, true, async) };
+    auto cubeMapImageBuffer{ CreateImageBuffer(m_device, images, ImageBufferViewType::CUBE_MAP, true, true, m_colorManaged, async) };
 
     return std::make_unique<prev_test::render::material::Material>(materialProps, std::vector<std::shared_ptr<prev::render::buffer::ImageBuffer>>{ std::move(cubeMapImageBuffer) });
 }
@@ -164,12 +170,19 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
 
         for (const auto& textureType : textureTypes) {
             if (auto image = CreateModelImage(*scene, material, textureType)) {
-                imageBuffers.emplace_back(CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, true, async));
+                const bool isColor{ textureType == aiTextureType_DIFFUSE }; // DIFFUSE is albedo (sRGB); NORMALS/HEIGHT are data
+                imageBuffers.emplace_back(CreateImageBuffer(m_device, { image }, ImageBufferViewType::REGULAR, isColor, true, m_colorManaged, async));
             }
         }
 
         aiColor3D color(1.0f, 1.0f, 1.0f);
         material.Get(AI_MATKEY_COLOR_DIFFUSE, color);
+
+        // Assimp diffuse color is authored in sRGB; linearize it for the linear pipeline.
+        glm::vec3 diffuse{ color.r, color.g, color.b };
+        if (m_colorManaged) {
+            diffuse = prev::util::color::SrgbToLinear(diffuse);
+        }
 
         float shineness{ 1.0f };
         material.Get(AI_MATKEY_SHININESS, shineness);
@@ -177,7 +190,7 @@ std::vector<std::shared_ptr<prev_test::render::IMaterial>> MaterialFactory::Crea
         float reflectivity{ 1.0f };
         material.Get(AI_MATKEY_REFLECTIVITY, reflectivity);
 
-        const MaterialProperties materialProperties{ { color.r, color.g, color.b, 1.0f }, shineness, std::max(reflectivity, 1.0f) };
+        const MaterialProperties materialProperties{ glm::vec4{ diffuse, 1.0f }, shineness, std::max(reflectivity, 1.0f) };
 
         result.emplace_back(std::make_unique<prev_test::render::material::Material>(materialProperties, imageBuffers));
     }

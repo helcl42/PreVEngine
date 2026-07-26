@@ -1,5 +1,6 @@
 #include "DefaultEngineImpl.h"
 
+#include "../../Formats.h"
 #include "../../device/Adapters.h"
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
@@ -166,7 +167,15 @@ void DefaultEngineImpl::ResetDevice()
 
 void DefaultEngineImpl::ResetRenderPass()
 {
-    const GfxFormat colorFormat = m_surface ? m_surface->GetPreferredFormat(m_device->GetAdapter()) : GFX_FORMAT_B8G8R8A8_UNORM;
+    const GfxFormat colorFormat = m_surface
+        ? m_surface->GetPreferredFormat(m_device->GetAdapter(), m_config.colorManaged)
+        : (m_config.colorManaged ? GFX_FORMAT_B8G8R8A8_UNORM_SRGB : GFX_FORMAT_B8G8R8A8_UNORM);
+
+    if (m_config.colorManaged && !prev::core::format::IsSrgb(colorFormat)) {
+        LOGW("colorManaged requested but the present surface exposes no sRGB format; falling back to gamma passthrough");
+        m_config.colorManaged = false;
+    }
+
     const GfxFormat depthFormat = GFX_FORMAT_DEPTH32_FLOAT;
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 

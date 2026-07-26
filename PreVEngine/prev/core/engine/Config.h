@@ -27,6 +27,8 @@ struct Config {
 
     bool headless{ false };
 
+    bool colorManaged{ false };
+
     bool fullScreen{ false };
 
     glm::ivec2 windowSize{ 1920, 1080 };

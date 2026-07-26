@@ -10,7 +10,7 @@
 namespace prev_test::scene {
 class Fire final : public prev::scene::graph::SceneNode {
 public:
-    Fire(prev::core::device::Device& device, const glm::vec3& initPosition);
+    Fire(prev::core::device::Device& device, bool colorManaged, const glm::vec3& initPosition);
 
     ~Fire() = default;
 
@@ -23,6 +23,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     glm::vec3 m_initialPosition;
 

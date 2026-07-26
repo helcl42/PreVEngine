@@ -6,9 +6,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-Sky::Sky(prev::core::device::Device& device)
+Sky::Sky(prev::core::device::Device& device, bool colorManaged)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
 {
 }
 
@@ -16,7 +17,7 @@ void Sky::Init()
 {
     SceneNode::Init();
 
-    m_skyComponent = prev_test::component::sky::SkyComponentFactory{ m_device }.Create();
+    m_skyComponent = prev_test::component::sky::SkyComponentFactory{ m_device, m_colorManaged }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ISkyComponent>(GetThis(), m_skyComponent, { TAG_SKY_RENDER_COMPONENT });
 }
 

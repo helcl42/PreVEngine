@@ -4,9 +4,10 @@
 #include "WaterRefraction.h"
 
 namespace prev_test::scene::water {
-WaterManager::WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ)
+WaterManager::WaterManager(prev::core::device::Device& device, bool colorManaged, const int maxX, const int maxZ)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_gridMaxX(maxX)
     , m_gridMaxZ(maxZ)
 {
@@ -16,7 +17,7 @@ void WaterManager::Init()
 {
     for (int x = 0; x < m_gridMaxX; x++) {
         for (int z = 0; z < m_gridMaxZ; z++) {
-            auto waterTile = std::make_shared<Water>(m_device, x, z);
+            auto waterTile = std::make_shared<Water>(m_device, m_colorManaged, x, z);
             AddChild(waterTile);
         }
     }

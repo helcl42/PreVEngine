@@ -16,6 +16,11 @@ namespace prev::core::format {
     return format == GFX_FORMAT_DEPTH24_PLUS_STENCIL8 || format == GFX_FORMAT_DEPTH32_FLOAT_STENCIL8;
 }
 
+[[maybe_unused]] static bool IsSrgb(const GfxFormat format)
+{
+    return format == GFX_FORMAT_R8G8B8A8_UNORM_SRGB || format == GFX_FORMAT_B8G8R8A8_UNORM_SRGB;
+}
+
 } // namespace prev::core::format
 
 #endif

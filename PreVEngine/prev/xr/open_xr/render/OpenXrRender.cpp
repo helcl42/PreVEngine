@@ -52,11 +52,12 @@ namespace {
     }
 } // namespace
 
-OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled)
+OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled, bool colorManaged)
     : m_instance{ instance }
     , m_systemId{ systemId }
     , m_passthroughSupported{ passthroughSupported }
     , m_passthroughEnabled{ passthroughSupported && passthroughEnabled }
+    , m_colorFormat{ colorManaged ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM }
 {
     CreateViewConfigurationViews();
     CreateEnvironmentBlendModes();
@@ -324,7 +325,7 @@ GfxExtent2D OpenXrRender::GetExtent() const
 
 GfxFormat OpenXrRender::GetColorFormat() const
 {
-    return VkFormatToGfxFormat(m_preferredColorFormat);
+    return VkFormatToGfxFormat(m_colorFormat);
 }
 
 GfxFormat OpenXrRender::GetDepthFormat() const
@@ -432,9 +433,25 @@ void OpenXrRender::CreateSwapchains()
     std::vector<int64_t> formats(formatCount);
     OPENXR_CHECK(xrEnumerateSwapchainFormats(m_session, formatCount, &formatCount, formats.data()), "Failed to enumerate Swapchain Formats");
 
-    auto colorFormatIter = std::find(formats.begin(), formats.end(), m_preferredColorFormat);
-    if (colorFormatIter == formats.cend()) {
-        LOGE("Failed to find color format for Swapchain.");
+    // Use the preferred color format if the runtime offers it; otherwise fall back to a supported color
+    // format rather than forcing an unsupported one (which would fail xrCreateSwapchain). If the fallback
+    // isn't sRGB, XrEngineImpl reconciles colorManaged to gamma passthrough so content stays consistent.
+    // If the runtime lacks the preferred format, fall back to a supported one (forcing it fails
+    // xrCreateSwapchain). A non-sRGB fallback is reconciled to gamma passthrough by XrEngineImpl.
+    if (std::find(formats.begin(), formats.end(), static_cast<int64_t>(m_colorFormat)) == formats.cend()) {
+        LOGW("OpenXR runtime does not offer the preferred color format; selecting a supported fallback");
+        const VkFormat colorFallbacks[]{ VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_SRGB, VK_FORMAT_B8G8R8A8_SRGB };
+        bool found = false;
+        for (const VkFormat candidate : colorFallbacks) {
+            if (std::find(formats.begin(), formats.end(), static_cast<int64_t>(candidate)) != formats.cend()) {
+                m_colorFormat = candidate;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            LOGE("No supported color swapchain format found; xrCreateSwapchain may fail");
+        }
     }
 
     bool coherentViews = m_viewConfiguration == XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -451,7 +468,7 @@ void OpenXrRender::CreateSwapchains()
     // fills them via multiview (one pass, SV_ViewID) or per-eye (one pass per eye into layer[i]).
     const uint32_t viewCount{ static_cast<uint32_t>(m_viewConfigurationViews.size()) };
 
-    m_colorSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_preferredColorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
+    m_colorSwapchainInfo = CreateSwapchain(viewConfigurationView, viewCount, m_colorFormat, XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT);
 
 #ifdef ENABLE_XR_DEPTH
     auto depthFormatIter = std::find(formats.begin(), formats.end(), m_preferredDepthFormat);

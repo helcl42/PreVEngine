@@ -11,6 +11,7 @@
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/ColorSpace.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -102,7 +103,7 @@ void DefaultRenderer::Render(GfxRenderPassEncoder encoder, const GfxScissorRect&
         uniforms.projectionMatrices[view] = views.projectionMatrices[view];
     }
     uniforms.lightDirection = glm::vec4(glm::normalize(glm::vec3{ 0.5f, 1.0f, 0.4f }), 0.0f);
-    uniforms.color = colorComponent->GetColor();
+    uniforms.color = views.colorManaged ? prev::util::color::SrgbToLinear(colorComponent->GetColor()) : colorComponent->GetColor();
     ubo.Write(uniforms);
 
     m_shader->Bind("ubo", ubo);

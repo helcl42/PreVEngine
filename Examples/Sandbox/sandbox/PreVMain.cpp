@@ -23,6 +23,7 @@ prev::core::engine::Config GetDefaultConfig()
     config.samplesCount = 4;
     config.swapchainFrameCount = 3;
     config.maxFramesInFlight = 2;
+    config.colorManaged = true;
     return config;
 }
 
@@ -33,6 +34,7 @@ void PrintUsage(const char* programName)
     std::printf("  --backend <string>     Render backend: vulkan, webgpu (default: platform)\n");
     std::printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
     std::printf("  --vsync <0|1>          Enable VSync (default: 1)\n");
+    std::printf("  --color-managed <0|1>  Linear rendering + sRGB present (default: 1)\n");
     std::printf("  --ar                   Start in AR (passthrough) mode on XR builds (default: VR)\n");
     std::printf("  --help                 Print this help message\n");
 }
@@ -57,6 +59,8 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
             config.samplesCount = static_cast<uint32_t>(std::stoi(argv[++i]));
         } else if (std::strcmp(argv[i], "--vsync") == 0 && i + 1 < argc) {
             config.VSync = std::stoi(argv[++i]) != 0;
+        } else if (std::strcmp(argv[i], "--color-managed") == 0 && i + 1 < argc) {
+            config.colorManaged = std::stoi(argv[++i]) != 0;
         } else if (std::strcmp(argv[i], "--ar") == 0) {
             config.xrMode = prev::core::engine::XrMode::AR;
         } else if (std::strcmp(argv[i], "--help") == 0) {

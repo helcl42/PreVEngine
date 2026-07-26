@@ -11,7 +11,7 @@
 namespace prev_test::scene::text {
 class Text3d final : public prev::scene::graph::SceneNode {
 public:
-    Text3d(prev::core::device::Device& device);
+    Text3d(prev::core::device::Device& device, bool colorManaged);
 
     ~Text3d() = default;
 
@@ -24,6 +24,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
 private:
     std::shared_ptr<prev_test::component::font::IFontRenderComponent<prev_test::render::font::WorldSpaceText>> m_fontComponent;

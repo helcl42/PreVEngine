@@ -7,7 +7,7 @@
 namespace prev_test::scene::water {
 class WaterManager final : public prev::scene::graph::SceneNode {
 public:
-    WaterManager(prev::core::device::Device& device, const int maxX, const int maxZ);
+    WaterManager(prev::core::device::Device& device, bool colorManaged, const int maxX, const int maxZ);
 
     ~WaterManager() = default;
 
@@ -20,6 +20,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     int m_gridMaxX;
 

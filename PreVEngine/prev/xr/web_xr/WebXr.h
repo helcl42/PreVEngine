@@ -18,7 +18,7 @@ namespace prev::xr::web_xr {
 // Experimental WebXR backend (browser VR/AR over WebGPU, XRGPUBinding). Emscripten-only.
 class WebXr final : public IXr {
 public:
-    explicit WebXr(prev::core::engine::XrMode xrMode);
+    WebXr(prev::core::engine::XrMode xrMode, bool colorManaged);
 
     ~WebXr() = default;
 

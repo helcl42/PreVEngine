@@ -10,7 +10,7 @@
 namespace prev_test::scene {
 class Plane final : public prev::scene::graph::SceneNode {
 public:
-    Plane(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale);
+    Plane(prev::core::device::Device& device, bool colorManaged, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath, const std::string& normalMapPath, const std::string& heightMapPath, const float heightScale);
 
     ~Plane() = default;
 
@@ -23,6 +23,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     glm::vec3 m_initialPosition;
 

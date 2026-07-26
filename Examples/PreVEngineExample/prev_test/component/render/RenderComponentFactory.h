@@ -19,7 +19,7 @@ struct RenderComponentMaterialCreateInfo {
 
 class RenderComponentFactory {
 public:
-    RenderComponentFactory(prev::core::device::Device& device, bool async = true);
+    RenderComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async = true);
 
     ~RenderComponentFactory() = default;
 
@@ -70,6 +70,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     bool m_async{ true };
 };

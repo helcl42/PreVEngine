@@ -15,7 +15,7 @@ public:
 public:
     std::vector<GfxFormat> GetSupportedFormats(GfxAdapter adapter) const;
 
-    GfxFormat GetPreferredFormat(GfxAdapter adapter) const;
+    GfxFormat GetPreferredFormat(GfxAdapter adapter, bool preferSrgb) const;
 
     std::vector<GfxPresentMode> GetSupportedPresentModes(GfxAdapter adapter) const;
 

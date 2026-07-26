@@ -20,7 +20,7 @@
 namespace prev::xr::open_xr {
 class OpenXr final : public IXr {
 public:
-    explicit OpenXr(prev::core::engine::XrMode xrMode);
+    OpenXr(prev::core::engine::XrMode xrMode, bool colorManaged);
 
     ~OpenXr();
 

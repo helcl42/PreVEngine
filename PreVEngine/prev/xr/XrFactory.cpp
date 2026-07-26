@@ -9,12 +9,12 @@
 #endif
 
 namespace prev::xr {
-std::unique_ptr<IXr> XrFactory::Create(prev::core::engine::XrMode xrMode) const
+std::unique_ptr<IXr> XrFactory::Create(prev::core::engine::XrMode xrMode, bool colorManaged) const
 {
 #if defined(ENABLE_WEBXR)
-    return std::make_unique<web_xr::WebXr>(xrMode);
+    return std::make_unique<web_xr::WebXr>(xrMode, colorManaged);
 #elif defined(ENABLE_OPENXR)
-    return std::make_unique<open_xr::OpenXr>(xrMode);
+    return std::make_unique<open_xr::OpenXr>(xrMode, colorManaged);
 #else
 #error "Not implemented XR backend!"
 #endif

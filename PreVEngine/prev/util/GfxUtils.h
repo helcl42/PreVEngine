@@ -7,7 +7,7 @@
 #include <string>
 
 namespace prev::util::gfx {
-inline GfxFormat ToImageFormat(const uint32_t channels, const uint32_t bitDepth, const bool isFloatingPoint)
+inline GfxFormat ToImageFormat(const uint32_t channels, const uint32_t bitDepth, const bool isFloatingPoint, const bool srgb = false)
 {
     if (isFloatingPoint) {
         switch (channels) {
@@ -29,7 +29,7 @@ inline GfxFormat ToImageFormat(const uint32_t channels, const uint32_t bitDepth,
         case 2:
             return GFX_FORMAT_R8G8_UNORM;
         case 4:
-            return GFX_FORMAT_R8G8B8A8_UNORM;
+            return srgb ? GFX_FORMAT_R8G8B8A8_UNORM_SRGB : GFX_FORMAT_R8G8B8A8_UNORM;
         default:
             throw std::invalid_argument("Unsupported number of channels: " + std::to_string(channels));
         }

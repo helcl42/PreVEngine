@@ -10,7 +10,7 @@
 namespace prev_test::scene {
 class Root final : public prev::scene::graph::SceneNode {
 public:
-    Root(prev::core::device::Device& device, uint32_t viewCount);
+    Root(prev::core::device::Device& device, bool colorManaged, uint32_t viewCount);
 
     ~Root() = default;
 
@@ -33,6 +33,8 @@ private:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     uint32_t m_viewCount{};
 

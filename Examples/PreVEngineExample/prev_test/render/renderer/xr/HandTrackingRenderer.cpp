@@ -11,6 +11,7 @@
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/ColorSpace.h>
 
 namespace prev_test::render::renderer::xr {
 HandTrackingRenderer::HandTrackingRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
@@ -142,7 +143,7 @@ void HandTrackingRenderer::Render(const NormalRenderContext& renderContext, cons
             auto& uboFS = m_uniformsPoolFS->Next();
 
             UniformsFS uniformsFS{};
-            uniformsFS.color = HAND_COLORS[handIdx];
+            uniformsFS.color = renderContext.colorManaged ? prev::util::color::SrgbToLinear(HAND_COLORS[handIdx]) : HAND_COLORS[handIdx];
             uboFS.Write(uniformsFS);
 
             m_shader->Bind("uboVS", uboVS);

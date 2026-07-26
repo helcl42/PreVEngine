@@ -83,7 +83,7 @@ void Engine::RunOneFrame()
         prev::render::FrameSubmitSync submitSync{};
         for (uint32_t pass = 0; pass < passCount; ++pass) {
             swapchain.BeginPass(frameContext, pass);
-            const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent }, frameContext.viewOffset, frameContext.viewCount };
+            const prev::render::RenderContext renderContext{ frameContext.frameBuffer, frameContext.commandEncoder, frameContext.index, { { 0, 0 }, extent }, frameContext.viewOffset, frameContext.viewCount, m_engineImpl->GetConfig().colorManaged };
             submitSync = rootRenderer.Render(renderContext, scene); // XR sync is empty; use the last pass's for the single submit
             swapchain.EndPass(pass);
         }

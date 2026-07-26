@@ -11,7 +11,7 @@
 namespace prev_test::render::material {
 class MaterialFactory final {
 public:
-    MaterialFactory(prev::core::device::Device& device);
+    MaterialFactory(prev::core::device::Device& device, bool colorManaged);
 
     ~MaterialFactory() = default;
 
@@ -32,6 +32,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 };
 } // namespace prev_test::render::material
 

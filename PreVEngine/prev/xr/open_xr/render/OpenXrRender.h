@@ -12,7 +12,7 @@
 namespace prev::xr::open_xr::render {
 class OpenXrRender final : public common::IOpenXrEventObserver {
 public:
-    OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled);
+    OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled, bool colorManaged);
 
     ~OpenXrRender();
 
@@ -112,7 +112,7 @@ private:
     XrSession m_session{ XR_NULL_HANDLE };
     XrSpace m_localSpace{ XR_NULL_HANDLE };
 
-    const VkFormat m_preferredColorFormat{ VK_FORMAT_R8G8B8A8_UNORM };
+    VkFormat m_colorFormat{ VK_FORMAT_UNDEFINED };
     const VkFormat m_preferredDepthFormat{ VK_FORMAT_D32_SFLOAT };
 
     struct SwapchainInfo {

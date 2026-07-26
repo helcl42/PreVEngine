@@ -9,7 +9,7 @@
 namespace prev_test::scene::terrain {
 class TerrainManager final : public prev::scene::graph::SceneNode {
 public:
-    TerrainManager(prev::core::device::Device& device, const uint32_t maxX, const uint32_t maxZ);
+    TerrainManager(prev::core::device::Device& device, bool colorManaged, const uint32_t maxX, const uint32_t maxZ);
 
     virtual ~TerrainManager() = default;
 
@@ -22,6 +22,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     uint32_t m_gridMaxX;
 

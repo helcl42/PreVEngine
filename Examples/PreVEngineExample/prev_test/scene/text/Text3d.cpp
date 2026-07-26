@@ -5,14 +5,16 @@
 #include "../../component/font/FontRenderComponentsFactory.h"
 
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/ColorSpace.h>
 
 #include <iomanip>
 #include <sstream>
 
 namespace prev_test::scene::text {
-Text3d::Text3d(prev::core::device::Device& device)
+Text3d::Text3d(prev::core::device::Device& device, bool colorManaged)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
 {
 }
 
@@ -34,7 +36,11 @@ void Text3d::Update(float deltaTime)
         fpsString << std::fixed << std::setprecision(1) << std::setfill('0');
         fpsString << std::setw(5) << m_fpsCounter.GetAverageFPS() << " FPS";
 
-        auto fancyText = std::make_shared<prev_test::render::font::WorldSpaceText>(fpsString.str(), 32.0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0), glm::vec3(10.0f, 10.0f, 10.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), false, 100.0f, false, 0.5f, 0.05f);
+        glm::vec4 textColor{ 1.0f, 0.0f, 1.0f, 1.0f };
+        if (m_colorManaged) {
+            textColor = prev::util::color::SrgbToLinear(textColor);
+        }
+        auto fancyText = std::make_shared<prev_test::render::font::WorldSpaceText>(fpsString.str(), 32.0f, textColor, glm::vec3(10.0f, 10.0f, 10.0f), glm::quat(glm::radians(glm::vec3(0.0f, 0.0f, 0.0f))), false, 100.0f, false, 0.5f, 0.05f);
         m_fontComponent->AddText(FpsTextKey, fancyText);
     }
 

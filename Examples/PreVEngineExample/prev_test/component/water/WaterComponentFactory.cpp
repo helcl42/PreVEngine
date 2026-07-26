@@ -8,8 +8,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::water {
-WaterComponentFactory::WaterComponentFactory(prev::core::device::Device& device, bool async)
+WaterComponentFactory::WaterComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async)
     : m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_async{ async }
 {
 }
@@ -19,7 +20,7 @@ std::unique_ptr<IWaterComponent> WaterComponentFactory::Create(const int x, cons
     const std::string dudvMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/waterDUDV.png") };
     const std::string normalMapPath{ prev_test::common::AssetManager::Instance().GetAssetPath("Textures/matchingNormalMap.png") };
 
-    auto material{ prev_test::render::material::MaterialFactory{ m_device }.Create({ WATER_COLOR, 1.0f, 0.0f }, dudvMapPath, normalMapPath, m_async) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_colorManaged }.Create({ WATER_COLOR, 1.0f, 0.0f }, dudvMapPath, normalMapPath, m_async) };
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateQuad(prev_test::render::FlatMeshConstellation::ZERO_Y, false) };
     auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh), m_async) };
 

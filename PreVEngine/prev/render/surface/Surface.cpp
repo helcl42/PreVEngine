@@ -3,6 +3,7 @@
 #include "../../common/Logger.h"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 
 namespace prev::render::surface {
@@ -45,20 +46,17 @@ std::vector<GfxFormat> Surface::GetSupportedFormats(GfxAdapter adapter) const
     return formats;
 }
 
-GfxFormat Surface::GetPreferredFormat(GfxAdapter adapter) const
+GfxFormat Surface::GetPreferredFormat(GfxAdapter adapter, bool preferSrgb) const
 {
     const auto formats = GetSupportedFormats(adapter);
     if (formats.empty()) {
         throw std::runtime_error("No supported surface formats found for the GPU");
     }
-    // The engine renders in gamma space (textures are UNORM, no linearization or tonemap), so shaders
-    // output display-ready color. Prefer a plain 8-bit UNORM surface for passthrough: an sRGB surface
-    // would re-encode and wash the image out, and some drivers report an HDR float format first (dull).
-    // Most-preferred first; fall back to the driver's first choice only if none are supported.
-    static constexpr GfxFormat preferredFormats[]{
-        GFX_FORMAT_R8G8B8A8_UNORM,
-        GFX_FORMAT_B8G8R8A8_UNORM,
-    };
+    // Prefer an 8-bit format in the requested space (sRGB if preferSrgb, else UNORM), skipping the HDR
+    // float format some drivers list first (no output path targets it). Fall back to the driver's first.
+    static constexpr std::array<GfxFormat, 2> srgbFormats{ GFX_FORMAT_B8G8R8A8_UNORM_SRGB, GFX_FORMAT_R8G8B8A8_UNORM_SRGB };
+    static constexpr std::array<GfxFormat, 2> unormFormats{ GFX_FORMAT_B8G8R8A8_UNORM, GFX_FORMAT_R8G8B8A8_UNORM };
+    const std::array<GfxFormat, 2>& preferredFormats{ preferSrgb ? srgbFormats : unormFormats };
     for (const GfxFormat preferred : preferredFormats) {
         if (std::find(formats.begin(), formats.end(), preferred) != formats.end()) {
             LOGI("Preferred surface format found: %d", preferred);

@@ -11,6 +11,7 @@
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
 #include <prev/scene/component/NodeComponentHelper.h>
+#include <prev/util/ColorSpace.h>
 #include <prev/util/MathUtils.h>
 
 namespace prev_test::render::renderer::debug {
@@ -122,7 +123,7 @@ void SelectionDebugRenderer::Render(const NormalRenderContext& renderContext, co
         auto& uboFS = m_uniformsPoolFS->Next();
 
         UniformsFS uniformsFS{};
-        uniformsFS.color = glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
+        uniformsFS.color = renderContext.colorManaged ? prev::util::color::SrgbToLinear(glm::vec4(0.0f, 1.0f, 0.0f, 0.7f)) : glm::vec4(0.0f, 1.0f, 0.0f, 0.7f);
         uboFS.Write(uniformsFS);
 
         m_shader->Bind("uboVS", uboVS);

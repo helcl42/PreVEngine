@@ -12,7 +12,7 @@
 namespace prev_test::component::terrain {
 class TerrainComponentFactory {
 public:
-    TerrainComponentFactory(prev::core::device::Device& device, bool async = true, const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
+    TerrainComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async = true, const unsigned int seed = 21236728, const unsigned int vertexCount = 28);
 
     ~TerrainComponentFactory() = default;
 
@@ -51,10 +51,12 @@ private:
 
     std::unique_ptr<HeightMapInfo> CreateHeightMap(const HeightGenerator& generator) const;
 
-    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateTextureArray(const std::vector<std::string>& paths) const;
+    std::shared_ptr<prev::render::buffer::ImageBuffer> CreateTextureArray(const std::vector<std::string>& paths, bool isColor) const;
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     bool m_async{ true };
 

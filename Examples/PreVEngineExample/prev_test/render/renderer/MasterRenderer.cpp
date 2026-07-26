@@ -339,7 +339,7 @@ void MasterRenderer::RenderSceneReflection(const prev::render::RenderContext& re
     const auto reflectionComponent{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFLECTION_RENDER_COMPONENT }) };
     const auto cameraComponents{ prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::camera::ICameraComponent>(m_scene.GetRootNode(), { TAG_MAIN_CAMERA }) };
 
-    const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() } };
+    const prev::render::RenderContext customRenderContextBase{ reflectionComponent->GetFrameBuffer(), renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, reflectionComponent->GetExtent() }, 0, 1, renderContext.colorManaged };
     const uint32_t viewCount{ renderContext.viewCount };
     NormalRenderContext customRenderContext{
         customRenderContextBase,
@@ -385,7 +385,7 @@ void MasterRenderer::RenderSceneRefraction(const prev::render::RenderContext& re
     const auto refractionComponent{ prev::scene::component::NodeComponentHelper::Find<prev_test::component::common::IOffScreenRenderPassComponent>(m_scene.GetRootNode(), { TAG_WATER_REFRACTION_RENDER_COMPONENT }) };
     const auto cameraComponents{ prev::scene::component::NodeComponentHelper::FindAll<prev_test::component::camera::ICameraComponent>(m_scene.GetRootNode(), { TAG_MAIN_CAMERA }) };
 
-    const prev::render::RenderContext customRenderContextBase{ refractionComponent->GetFrameBuffer(), renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() } };
+    const prev::render::RenderContext customRenderContextBase{ refractionComponent->GetFrameBuffer(), renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, refractionComponent->GetExtent() }, 0, 1, renderContext.colorManaged };
 
     const uint32_t viewCount{ renderContext.viewCount };
     NormalRenderContext customRenderContext{
@@ -451,7 +451,7 @@ void MasterRenderer::RenderScene(const prev::render::RenderContext& renderContex
 
 void MasterRenderer::RenderDebug(const prev::render::RenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& root)
 {
-    const prev::render::RenderContext customRenderContext{ renderContext.frameBuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, { renderContext.rect.extent.width / 2, renderContext.rect.extent.height / 2 } } };
+    const prev::render::RenderContext customRenderContext{ renderContext.frameBuffer, renderContext.commandEncoder, renderContext.frameInFlightIndex, { { 0, 0 }, { renderContext.rect.extent.width / 2, renderContext.rect.extent.height / 2 } }, 0, 1, renderContext.colorManaged };
 
 #ifdef PARALLEL_COMMAND_RECORDING
     const auto& debugCommandBuffers{ m_debugCommandBuffersGroup->GetEncoders(customRenderContext.frameInFlightIndex) };

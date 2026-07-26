@@ -11,7 +11,7 @@
 namespace prev_test::scene::sky {
 class Sun final : public prev::scene::graph::SceneNode {
 public:
-    Sun(prev::core::device::Device& device);
+    Sun(prev::core::device::Device& device, bool colorManaged);
 
     ~Sun() = default;
 
@@ -27,6 +27,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
 private:
     std::shared_ptr<prev_test::component::sky::ISunComponent> m_sunComponent{};

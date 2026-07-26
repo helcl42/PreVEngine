@@ -8,15 +8,16 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::sky {
-LensFlare::LensFlare(prev::core::device::Device& device)
+LensFlare::LensFlare(prev::core::device::Device& device, bool colorManaged)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
 {
 }
 
 void LensFlare::Init()
 {
-    m_lensFlareComponent = prev_test::component::sky::LensFlareComponentFactory{ m_device }.Create();
+    m_lensFlareComponent = prev_test::component::sky::LensFlareComponentFactory{ m_device, m_colorManaged }.Create();
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::sky::ILensFlareComponent>(GetThis(), m_lensFlareComponent, { TAG_LENS_FLARE_RENDER_COMPONENT });
 
     SceneNode::Init();

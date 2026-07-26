@@ -9,9 +9,10 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::scene::robot {
-CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
+CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, bool colorManaged, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale, const std::string& texturePath)
     : SceneNode()
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_initialPosition(position)
     , m_initialOrientation(orientation)
     , m_initialScale(scale)
@@ -21,7 +22,7 @@ CubeRobotPart::CubeRobotPart(prev::core::device::Device& device, const glm::vec3
 
 void CubeRobotPart::Init()
 {
-    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device };
+    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device, m_colorManaged };
     std::shared_ptr<prev_test::component::render::IRenderComponent> renderComponent = renderComponentFactory.CreateCubeRenderComponent(m_texturePath, true, true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IRenderComponent>(GetThis(), renderComponent, { TAG_RENDER_COMPONENT });
 

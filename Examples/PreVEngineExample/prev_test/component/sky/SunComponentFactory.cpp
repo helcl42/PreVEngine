@@ -7,8 +7,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-SunComponentFactory::SunComponentFactory(prev::core::device::Device& device, bool async)
+SunComponentFactory::SunComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async)
     : m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_async{ async }
 {
 }
@@ -24,7 +25,7 @@ std::unique_ptr<ISunComponent> SunComponentFactory::Create() const
 
     auto mesh{ prev_test::render::mesh::MeshFactory{}.CreateQuad() };
     auto model{ prev_test::render::model::ModelFactory{ m_device }.Create(std::move(mesh), m_async) };
-    auto material{ prev_test::render::material::MaterialFactory{ m_device }.Create({ { 1.0f, 1.0f, 1.0f, 1.0f }, 1.0f, 1.0f }, sunFlareCreateInfo.path, m_async) };
+    auto material{ prev_test::render::material::MaterialFactory{ m_device, m_colorManaged }.Create({ { 1.0f, 1.0f, 1.0f, 1.0f }, 1.0f, 1.0f }, sunFlareCreateInfo.path, m_async) };
     auto flare{ Flare{ sunFlareCreateInfo.scale } };
 
     return std::make_unique<SunComponent>(flare, std::move(material), std::move(model));

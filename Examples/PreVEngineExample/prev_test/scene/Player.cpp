@@ -18,9 +18,10 @@ namespace {
     };
 } // namespace
 
-Player::Player(prev::core::device::Device& device, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
+Player::Player(prev::core::device::Device& device, bool colorManaged, const glm::vec3& position, const glm::quat& orientation, const glm::vec3& scale)
     : SceneNode({ TAG_MAIN_CAMERA, TAG_PLAYER })
     , m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_initialPosition(position)
     , m_initialOrientation(orientation)
     , m_initialScale(scale)
@@ -36,7 +37,7 @@ void Player::Init()
     }
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::transform::ITransformComponent>(GetThis(), m_transformComponent, { TAG_TRANSFORM_COMPONENT });
 
-    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device };
+    prev_test::component::render::RenderComponentFactory renderComponentFactory{ m_device, m_colorManaged };
     // m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/XBot.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Xbot/Jump.fbx") }, { glm::vec4(0.49f, 0.3f, 0.28f, 1.0f), glm::vec4(0.52f, 0.42f, 0.4f, 1.0f) }, true, true);
     m_animationRenderComponent = renderComponentFactory.CreateAnimatedModelRenderComponent(prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/erika_archer_bow_arrow.fbx"), { prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Walking.fbx"), prev_test::common::AssetManager::Instance().GetAssetPath("Models/Archer/Jumping.fbx") }, true, true);
     prev::scene::component::NodeComponentHelper::AddComponent<prev_test::component::render::IAnimationRenderComponent>(GetThis(), m_animationRenderComponent, { TAG_ANIMATION_NORMAL_MAPPED_RENDER_COMPONENT });

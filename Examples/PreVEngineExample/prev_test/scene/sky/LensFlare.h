@@ -11,7 +11,7 @@
 namespace prev_test::scene::sky {
 class LensFlare final : public prev::scene::graph::SceneNode {
 public:
-    LensFlare(prev::core::device::Device& device);
+    LensFlare(prev::core::device::Device& device, bool colorManaged);
 
     ~LensFlare() = default;
 
@@ -27,6 +27,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
 private:
     std::shared_ptr<prev_test::component::sky::ILensFlareComponent> m_lensFlareComponent{};

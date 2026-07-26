@@ -10,6 +10,7 @@
 #include <prev/render/pipeline/GraphicsPipelineBuilder.h>
 #include <prev/render/sampler/SamplerBuilder.h>
 #include <prev/render/shader/ShaderBuilder.h>
+#include <prev/util/ColorSpace.h>
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::particle {
@@ -139,7 +140,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
     auto& uboFS = m_uniformsPoolFS->Next();
 
     UniformsFS uniformsFS{};
-    uniformsFS.color = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    uniformsFS.color = renderContext.colorManaged ? prev::util::color::SrgbToLinear(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f)) : glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     uboFS.Write(uniformsFS);
 
     m_shader->Bind("uboVS", uboVS);

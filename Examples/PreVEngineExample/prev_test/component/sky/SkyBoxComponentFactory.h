@@ -8,7 +8,7 @@
 namespace prev_test::component::sky {
 class SkyBoxComponentFactory final {
 public:
-    SkyBoxComponentFactory(prev::core::device::Device& device, bool async = true);
+    SkyBoxComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async = true);
 
     ~SkyBoxComponentFactory() = default;
 
@@ -17,6 +17,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     bool m_async{ true };
 };

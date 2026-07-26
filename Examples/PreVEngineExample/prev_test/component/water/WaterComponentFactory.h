@@ -8,7 +8,7 @@
 namespace prev_test::component::water {
 class WaterComponentFactory final {
 public:
-    WaterComponentFactory(prev::core::device::Device& device, bool async = true);
+    WaterComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async = true);
 
     ~WaterComponentFactory() = default;
 
@@ -17,6 +17,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     bool m_async{ true };
 };

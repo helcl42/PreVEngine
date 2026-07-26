@@ -12,7 +12,7 @@
 namespace prev_test::scene::terrain {
 class Terrain final : public prev::scene::graph::SceneNode {
 public:
-    Terrain(prev::core::device::Device& device, const int x, const int z);
+    Terrain(prev::core::device::Device& device, bool colorManaged, const int x, const int z);
 
     ~Terrain() = default;
 
@@ -25,6 +25,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     int m_xIndex;
 

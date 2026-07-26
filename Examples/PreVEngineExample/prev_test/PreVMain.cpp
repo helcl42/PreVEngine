@@ -15,6 +15,7 @@ void PrintUsage(const char* programName)
     printf("  --top <int>            Window Y position (default: 40)\n");
     printf("  --fullscreen <0|1>     Enable fullscreen mode (default: 0)\n");
     printf("  --vsync <0|1>          Enable VSync (default: 1)\n");
+    printf("  --color-managed <0|1>  Linear rendering + sRGB present (default: 1)\n");
     printf("  --validation <0|1>     Enable validation layers (default: 1)\n");
     printf("  --headless <0|1>       Run in headless mode (default: 0)\n");
     printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
@@ -41,6 +42,7 @@ prev::core::engine::Config GetDefaultConfig()
     config.samplesCount = 4;
     config.swapchainFrameCount = 3;
     config.maxFramesInFlight = 2;
+    config.colorManaged = true; // color-managed (linear) pipeline by default; toggle with --color-managed
     return config;
 }
 
@@ -61,6 +63,8 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
             config.fullScreen = std::stoi(argv[++i]) != 0;
         } else if (strcmp(argv[i], "--vsync") == 0 && i + 1 < argc) {
             config.VSync = std::stoi(argv[++i]) != 0;
+        } else if (strcmp(argv[i], "--color-managed") == 0 && i + 1 < argc) {
+            config.colorManaged = std::stoi(argv[++i]) != 0;
         } else if (strcmp(argv[i], "--validation") == 0 && i + 1 < argc) {
             config.validation = std::stoi(argv[++i]) != 0;
         } else if (strcmp(argv[i], "--headless") == 0 && i + 1 < argc) {

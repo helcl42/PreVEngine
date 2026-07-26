@@ -7,8 +7,9 @@
 #include "../../render/model/ModelFactory.h"
 
 namespace prev_test::component::sky {
-LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, bool async)
+LensFlareComponentFactory::LensFlareComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async)
     : m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_async{ async }
 {
 }
@@ -38,7 +39,7 @@ std::unique_ptr<ILensFlareComponent> LensFlareComponentFactory::Create() const
     prev_test::render::model::ModelFactory modelFactory{ m_device };
     auto model{ modelFactory.Create(std::move(mesh), m_async) };
 
-    prev_test::render::material::MaterialFactory materialFactory{ m_device };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_colorManaged };
 
     std::vector<std::shared_ptr<prev_test::render::IMaterial>> materials{};
     std::vector<Flare> flares{};

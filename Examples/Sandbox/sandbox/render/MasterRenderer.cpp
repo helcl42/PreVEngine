@@ -39,6 +39,7 @@ prev::render::FrameSubmitSync MasterRenderer::Render(const prev::render::RenderC
 
     ViewData views{};
     views.viewCount = renderContext.viewCount;
+    views.colorManaged = renderContext.colorManaged;
     for (uint32_t slot = 0; slot < views.viewCount; ++slot) {
         const uint32_t eye{ renderContext.viewOffset + slot };
         views.viewMatrices[slot] = camera->GetViewMatrix(eye);

@@ -15,8 +15,9 @@
 #include <prev/common/Cache.h>
 
 namespace prev_test::component::terrain {
-TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, bool async, const unsigned int seed, const unsigned int vertexCount)
+TerrainComponentFactory::TerrainComponentFactory(prev::core::device::Device& device, bool colorManaged, bool async, const unsigned int seed, const unsigned int vertexCount)
     : m_device{ device }
+    , m_colorManaged{ colorManaged }
     , m_async{ async }
     , m_seed{ seed }
     , m_vertexCount{ vertexCount }
@@ -29,7 +30,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{ m_device };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_colorManaged };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -49,7 +50,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrain(
         result->m_heightSteps.emplace_back(layer.heightStep);
         colorPaths.push_back(layer.materialPath);
     }
-    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths, true);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -60,7 +61,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainN
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{ m_device };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_colorManaged };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -82,8 +83,8 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainN
         colorPaths.push_back(layer.materialPath);
         normalPaths.push_back(layer.materialNormalPath);
     }
-    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
-    result->m_textureArrays[1] = CreateTextureArray(normalPaths);
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths, true);
+    result->m_textureArrays[1] = CreateTextureArray(normalPaths, false);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -94,7 +95,7 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
     const std::shared_ptr<HeightMapInfo> heightMap{ CreateHeightMap(heightGenerator) };
     const std::shared_ptr<VertexData> vertexData{ GenerateVertexData(heightMap, size) };
 
-    prev_test::render::material::MaterialFactory materialFactory{ m_device };
+    prev_test::render::material::MaterialFactory materialFactory{ m_device, m_colorManaged };
 
     const float layerTransitionWidth{ 0.1f };
     const TerrainLayerCreateInfo terrainLayers[] = {
@@ -120,9 +121,9 @@ std::unique_ptr<ITerrainComponent> TerrainComponentFactory::CreateRandomTerrainC
         normalPaths.push_back(layer.materialNormalPath);
         heightPaths.push_back(layer.materialHeightPath);
     }
-    result->m_textureArrays[0] = CreateTextureArray(colorPaths);
-    result->m_textureArrays[1] = CreateTextureArray(normalPaths);
-    result->m_textureArrays[2] = CreateTextureArray(heightPaths);
+    result->m_textureArrays[0] = CreateTextureArray(colorPaths, true);
+    result->m_textureArrays[1] = CreateTextureArray(normalPaths, false);
+    result->m_textureArrays[2] = CreateTextureArray(heightPaths, false);
     result->m_transitionRange = layerTransitionWidth;
     return result;
 }
@@ -219,9 +220,12 @@ std::unique_ptr<HeightMapInfo> TerrainComponentFactory::CreateHeightMap(const He
     return heightMapInfo;
 }
 
-std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::CreateTextureArray(const std::vector<std::string>& paths) const
+std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::CreateTextureArray(const std::vector<std::string>& paths, const bool isColor) const
 {
     prev::render::image::ImageFactory imageFactory{};
+
+    // Albedo layers are sRGB (decode to linear when color-managed); normal/cone-step arrays stay linear.
+    const bool srgb{ isColor && m_colorManaged };
 
     // Decoded (by path) and resized (by path + target size) images are identical across terrain tiles, so
     // cache them - the grid rebuilds the same texture arrays per tile. CPU-only IImages, safe to hold static.
@@ -269,7 +273,7 @@ std::shared_ptr<prev::render::buffer::ImageBuffer> TerrainComponentFactory::Crea
 
     auto builder = prev::render::buffer::ImageBufferBuilder{ m_device, m_device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                        .SetExtent({ maxWidth, maxHeight, 1 })
-                       .SetFormat(prev::util::gfx::ToImageFormat(finalImages[0]->GetChannels(), finalImages[0]->GetBitDepth(), finalImages[0]->IsFloatingPoint()))
+                       .SetFormat(prev::util::gfx::ToImageFormat(finalImages[0]->GetChannels(), finalImages[0]->GetBitDepth(), finalImages[0]->IsFloatingPoint(), srgb))
                        .SetType(GFX_TEXTURE_TYPE_2D)
                        .SetViewType(GFX_TEXTURE_VIEW_TYPE_2D_ARRAY)
                        .SetLayerCount(static_cast<uint32_t>(paths.size()))

@@ -5,10 +5,10 @@
 #include "OpenXrLoader.h"
 
 namespace prev::xr::open_xr {
-OpenXr::OpenXr(prev::core::engine::XrMode xrMode)
+OpenXr::OpenXr(prev::core::engine::XrMode xrMode, bool colorManaged)
     : m_loaded{ OpenXrLoader::Instance().IsLoaded() }
     , m_core{ std::make_unique<core::OpenXrCore>() }
-    , m_render{ std::make_unique<render::OpenXrRender>(m_core->GetInstance(), m_core->GetSystemId(), m_core->IsPassthroughSupported(), xrMode == prev::core::engine::XrMode::AR) }
+    , m_render{ std::make_unique<render::OpenXrRender>(m_core->GetInstance(), m_core->GetSystemId(), m_core->IsPassthroughSupported(), xrMode == prev::core::engine::XrMode::AR, colorManaged) }
     , m_input{ std::make_unique<input::OpenXrInput>(m_core->GetInstance(), m_core->GetSystemId(), m_core->IsHandTrackingSupported()) }
 {
     m_core->RegisterOpenXrEventObserver(*m_render);

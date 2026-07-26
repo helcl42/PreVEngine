@@ -9,7 +9,7 @@
 namespace prev_test::scene::sky {
 class Sky final : public prev::scene::graph::SceneNode {
 public:
-    Sky(prev::core::device::Device& device);
+    Sky(prev::core::device::Device& device, bool colorManaged);
 
     ~Sky() = default;
 
@@ -22,6 +22,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
     std::shared_ptr<prev_test::component::sky::ISkyComponent> m_skyComponent;
 };

@@ -3,7 +3,7 @@
 #ifdef ENABLE_WEBXR
 
 namespace prev::xr::web_xr {
-WebXr::WebXr(prev::core::engine::XrMode /*xrMode*/) // web mode is chosen at runtime via the Enter VR / Enter AR buttons
+WebXr::WebXr(prev::core::engine::XrMode /*xrMode*/, bool /*colorManaged*/) // web mode is chosen at runtime via the Enter VR / Enter AR buttons
     : m_core{ std::make_unique<core::WebXrCore>() }
     , m_render{ std::make_unique<render::WebXrRender>() }
     , m_input{ std::make_unique<input::WebXrInput>() }

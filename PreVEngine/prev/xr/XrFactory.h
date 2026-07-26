@@ -12,7 +12,7 @@
 namespace prev::xr {
 class XrFactory final {
 public:
-    std::unique_ptr<IXr> Create(prev::core::engine::XrMode xrMode) const;
+    std::unique_ptr<IXr> Create(prev::core::engine::XrMode xrMode, bool colorManaged) const;
 };
 } // namespace prev::xr
 

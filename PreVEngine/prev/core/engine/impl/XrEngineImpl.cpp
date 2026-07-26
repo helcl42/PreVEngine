@@ -2,12 +2,14 @@
 
 #ifdef ENABLE_XR
 
+#include "../../Formats.h"
 #include "../../device/Adapters.h"
 #include "../../device/Device.h"
 #include "../../device/DeviceFactory.h"
 #include "../../device/Queue.h"
 #include "../../instance/InstanceFactory.h"
 
+#include "../../../common/Logger.h"
 #include "../../../xr/XrFactory.h"
 #include "../../../xr/XrSwapchain.h"
 
@@ -34,16 +36,16 @@ float XrEngineImpl::GetCurrentDeltaTime() const
 
 void XrEngineImpl::Init()
 {
-    m_xr = prev::xr::XrFactory{}.Create(m_config.xrMode);
+    m_xr = prev::xr::XrFactory{}.Create(m_config.xrMode, m_config.colorManaged);
 
     ResetTiming();
     ResetInstance();
     ResetWindow();
     ResetDevice();
-    ResetRenderPass();
 
     m_xr->CreateSession();
 
+    ResetRenderPass();
     ResetSwapchain();
 }
 
@@ -144,6 +146,13 @@ void XrEngineImpl::ResetRenderPass()
 {
     const auto colorFormat = m_xr->GetColorFormat();
     const auto depthFormat = m_xr->GetDepthFormat();
+
+    // Same reconciliation as the surface path: color management holds only if the actually-selected XR
+    // color format is sRGB. CreateSession ran first, so GetColorFormat() reflects any runtime fallback.
+    if (m_config.colorManaged && !prev::core::format::IsSrgb(colorFormat)) {
+        LOGW("colorManaged requested but the XR runtime provides no sRGB swapchain format; falling back to gamma passthrough");
+        m_config.colorManaged = false;
+    }
     // The render pass's view count is the number of views rendered in ONE pass (the multiview capability),
     // not the XR eye count. With multiview shaders (OpenXR) that is MAX_PER_PASS_VIEW_COUNT_VALUE (2); on WebGPU,
     // which has no multiview, MAX_PER_PASS_VIEW_COUNT_VALUE is 1 so the pass is mono and stereo is done per-eye.

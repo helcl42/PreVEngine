@@ -19,13 +19,16 @@ struct RenderContext {
 
     uint32_t viewCount{ 1 };
 
-    RenderContext(const GfxFramebuffer fb, const GfxCommandEncoder ce, const uint32_t frameIndex, const GfxScissorRect& r, const uint32_t viewOffsetArg = 0, const uint32_t viewCountArg = 1)
+    bool colorManaged{ false };
+
+    RenderContext(const GfxFramebuffer fb, const GfxCommandEncoder ce, const uint32_t frameIndex, const GfxScissorRect& r, const uint32_t viewOffsetArg = 0, const uint32_t viewCountArg = 1, const bool colorManagedArg = false)
         : frameBuffer{ fb }
         , commandEncoder{ ce }
         , frameInFlightIndex{ frameIndex }
         , rect{ r }
         , viewOffset{ viewOffsetArg }
         , viewCount{ viewCountArg }
+        , colorManaged{ colorManagedArg }
     {
     }
 

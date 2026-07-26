@@ -10,7 +10,7 @@
 namespace prev_test::scene::sky {
 class SkyBox final : public prev::scene::graph::SceneNode {
 public:
-    SkyBox(prev::core::device::Device& device);
+    SkyBox(prev::core::device::Device& device, bool colorManaged);
 
     ~SkyBox() = default;
 
@@ -23,6 +23,8 @@ public:
 
 private:
     prev::core::device::Device& m_device;
+
+    const bool m_colorManaged;
 
 private:
     std::shared_ptr<prev_test::component::transform::ITransformComponent> m_transformComponent;
