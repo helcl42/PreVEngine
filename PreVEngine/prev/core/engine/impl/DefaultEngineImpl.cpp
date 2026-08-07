@@ -104,6 +104,9 @@ void DefaultEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
         [](void*) {
             if (!s_frameTick()) {
                 emscripten_cancel_main_loop();
+                // The app closed itself (quit from its own UI): the PAGE owns what that means -
+                // announce it and let the embedding page react (reload, navigate, show a landing).
+                emscripten_run_script("if (window.onEngineShutdown) { window.onEngineShutdown(); }");
             }
         },
         nullptr, 0, 1);
