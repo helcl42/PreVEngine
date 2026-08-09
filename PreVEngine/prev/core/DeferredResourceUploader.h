@@ -27,9 +27,15 @@ public:
     DeferredResourceUploader& operator=(const DeferredResourceUploader&) = delete;
 
 public:
-    // Queues upload work, the resource's shared lifecycle state, its staging buffer (may be null), and the
-    // upload size in bytes (used to budget per-frame work). Thread-safe; replayed at the next Flush.
-    void Enqueue(std::function<void(GfxCommandEncoder)> record, std::shared_ptr<std::atomic<ResourceState>> state, GfxBuffer staging, uint64_t bytes);
+    // The staging side of an upload: what the uploader destroys, budgets, and (optionally) readies.
+    struct StagingData {
+        GfxBuffer buffer{}; // may be null; owned by the uploader once enqueued
+        uint64_t bytes{}; // what the flush budget counts
+        std::function<bool()> prepare{}; // empty = filled; else call to retry (false = map not landed yet)
+    };
+
+    // Queues upload work and the resource's shared lifecycle state. Thread-safe; replayed at the next Flush.
+    void Enqueue(std::function<void(GfxCommandEncoder)> record, std::shared_ptr<std::atomic<ResourceState>> state, StagingData staging);
 
     // Records a byte-budgeted batch of still-Creating uploads into `encoder` (flipping each Ready), leaving
     // the rest queued for later frames. Called at frame start, before rendering and outside a render pass.
@@ -45,8 +51,7 @@ private:
     struct Entry {
         std::function<void(GfxCommandEncoder)> record;
         std::shared_ptr<std::atomic<ResourceState>> state;
-        GfxBuffer staging{};
-        uint64_t bytes{};
+        StagingData staging;
     };
 
     DeferredResourceDestroyer& m_destroyer;

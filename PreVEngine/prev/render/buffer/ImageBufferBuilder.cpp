@@ -216,59 +216,56 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::BuildImpl(GfxCommandEncoder com
 
 std::unique_ptr<ImageBuffer> ImageBufferBuilder::BuildAsync() const
 {
-    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
-        // The async path stages via a blocking buffer map; build synchronously (queue write) instead.
+    const bool hasData{ !m_layersData.empty() && m_layerDataSize > 0 };
+    if (!hasData) {
+        // Nothing to stream; an async build with no data has no benefit, so build it ready immediately.
         return BuildImpl(nullptr);
-    } else {
-
-        const bool hasData{ !m_layersData.empty() && m_layerDataSize > 0 };
-        if (!hasData) {
-            // Nothing to stream; an async build with no data has no benefit, so build it ready immediately.
-            return BuildImpl(nullptr);
-        }
-
-        const uint64_t uploadBytes{ m_layerDataSize * std::min(m_layerCount, static_cast<uint32_t>(m_layersData.size())) };
-        if (!m_device.GetDeferredResourceUploader().CanQueue(uploadBytes)) {
-            // Too much staging already queued (e.g. a whole scene at load); build synchronously so this data's
-            // staging is freed immediately rather than held until flush, keeping peak memory bounded.
-            return BuildImpl(nullptr);
-        }
-
-        // Allocate now but leave it Creating; the uploader records the upload at frame start and flips it Ready.
-        // The shared state survives the resource being dropped before then (its destructor cancels the upload).
-        auto state{ std::make_shared<std::atomic<prev::core::ResourceState>>(prev::core::ResourceState::Creating) };
-
-        uint32_t mipLevels{};
-        auto imageBuffer{ CreateImage(mipLevels, state) };
-
-        const GfxTexture texture{ imageBuffer->GetTexture() };
-        const GfxBuffer staging{ CreateLayerStagingBuffer() };
-        auto copyRecorder{ MakeLayerCopyRecorder(staging, texture) };
-
-        const uint32_t layerCount{ m_layerCount };
-        const GfxTextureLayout finalLayout{ m_layout };
-
-        // Replays the synchronous creation work at flush: copy layers, generate mips, transition layout.
-        // Captures only GPU handles (never the ImageBuffer), so it stays safe even if the image is dropped first.
-        auto record{ [copyRecorder = std::move(copyRecorder), texture, mipLevels, layerCount, finalLayout](GfxCommandEncoder enc) {
-            copyRecorder(enc); // copies all layers, leaving the texture in SHADER_READ_ONLY
-            if (mipLevels > 1) {
-                gfxCommandEncoderGenerateMipmaps(enc, texture);
-            }
-            if (finalLayout != GFX_TEXTURE_LAYOUT_UNDEFINED && finalLayout != GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY) {
-                ImageBuffer::RecordLayoutTransition(enc, texture, mipLevels, layerCount, GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, finalLayout);
-            }
-        } };
-
-        m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, staging, uploadBytes);
-
-        return imageBuffer;
     }
+
+    const uint64_t uploadBytes{ m_layerDataSize * std::min(m_layerCount, static_cast<uint32_t>(m_layersData.size())) };
+    if (!m_device.GetDeferredResourceUploader().CanQueue(uploadBytes)) {
+        // Too much staging already queued (e.g. a whole scene at load); build synchronously so this data's
+        // staging is freed immediately rather than held until flush, keeping peak memory bounded.
+        return BuildImpl(nullptr);
+    }
+
+    // Allocate now but leave it Creating; the uploader records the upload at frame start and flips it Ready.
+    // The shared state survives the resource being dropped before then (its destructor cancels the upload).
+    auto state{ std::make_shared<std::atomic<prev::core::ResourceState>>(prev::core::ResourceState::Creating) };
+
+    uint32_t mipLevels{};
+    auto imageBuffer{ CreateImage(mipLevels, state) };
+
+    const GfxTexture texture{ imageBuffer->GetTexture() };
+    auto staged{ CreateLayerStagedData() };
+    auto copyRecorder{ MakeLayerCopyRecorder(staged.buffer, texture) };
+
+    const uint32_t layerCount{ m_layerCount };
+    const GfxTextureLayout finalLayout{ m_layout };
+
+    // Replays the synchronous creation work at flush: copy layers, generate mips, transition layout.
+    // Captures only GPU handles (never the ImageBuffer), so it stays safe even if the image is dropped first.
+    auto record{ [copyRecorder = std::move(copyRecorder), texture, mipLevels, layerCount, finalLayout](GfxCommandEncoder enc) {
+        copyRecorder(enc); // copies all layers, leaving the texture in SHADER_READ_ONLY
+        if (mipLevels > 1) {
+            gfxCommandEncoderGenerateMipmaps(enc, texture);
+        }
+        if (finalLayout != GFX_TEXTURE_LAYOUT_UNDEFINED && finalLayout != GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY) {
+            ImageBuffer::RecordLayoutTransition(enc, texture, mipLevels, layerCount, GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY, finalLayout);
+        }
+    } };
+
+    m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, std::move(staged));
+
+    return imageBuffer;
 }
 
 void ImageBufferBuilder::UploadLayerData(GfxTexture texture, GfxCommandEncoder commandEncoder) const
 {
-    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
+    auto staged{ CreateLayerStagedData() };
+    if (staged.prepare) {
+        // The platform could not map the staging synchronously; queue writes cover this path too.
+        gfxBufferDestroy(staged.buffer);
         const uint32_t layerCount{ std::min(m_layerCount, static_cast<uint32_t>(m_layersData.size())) };
         for (uint32_t layer = 0; layer < layerCount; ++layer) {
             GfxWriteTextureDescriptor desc{};
@@ -283,20 +280,16 @@ void ImageBufferBuilder::UploadLayerData(GfxTexture texture, GfxCommandEncoder c
             desc.finalLayout = GFX_TEXTURE_LAYOUT_SHADER_READ_ONLY;
             GFXERRCHECK(gfxQueueWriteTexture(static_cast<GfxQueue>(m_queue), &desc, m_layersData[layer], m_layerDataSize));
         }
+        return;
+    }
+
+    RecordCommands(MakeLayerCopyRecorder(staged.buffer, texture), commandEncoder);
+
+    // Immediate path already waited; the recorded path needs the staging to outlive the caller's submit.
+    if (commandEncoder) {
+        m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staged.buffer));
     } else {
-        const GfxBuffer staging{ CreateLayerStagingBuffer() };
-
-        // Record the buffer->texture copy. RecordCommands runs it immediately or into the caller's encoder;
-        // the lambda is invoked synchronously either way.
-        RecordCommands(MakeLayerCopyRecorder(staging, texture), commandEncoder);
-
-        // Immediate path already submitted + waited, so the staging buffer can be freed now; the recorded path
-        // runs when the caller submits its encoder, so defer-destroy it to outlive that submission.
-        if (commandEncoder) {
-            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staging));
-        } else {
-            gfxBufferDestroy(staging);
-        }
+        gfxBufferDestroy(staged.buffer);
     }
 }
 
@@ -307,7 +300,7 @@ uint32_t ImageBufferBuilder::ComputeBytesPerRow() const
     return prev::util::math::RoundUp(tightRowBytes, rowAlignment);
 }
 
-GfxBuffer ImageBufferBuilder::CreateLayerStagingBuffer() const
+prev::core::DeferredResourceUploader::StagingData ImageBufferBuilder::CreateLayerStagedData() const
 {
     const uint32_t layerCount{ std::min(m_layerCount, static_cast<uint32_t>(m_layersData.size())) };
     const uint32_t tightRowBytes{ static_cast<uint32_t>(m_layerDataSize / m_extent.height) };
@@ -321,28 +314,48 @@ GfxBuffer ImageBufferBuilder::CreateLayerStagingBuffer() const
     stagingDesc.usage = GFX_BUFFER_USAGE_MAP_WRITE | GFX_BUFFER_USAGE_COPY_SRC;
     stagingDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
 
-    GfxBuffer staging{};
-    if (gfxDeviceCreateBuffer(m_device, &stagingDesc, &staging) != GFX_RESULT_SUCCESS) {
+    prev::core::DeferredResourceUploader::StagingData staged{};
+    staged.bytes = stagingSize;
+    if (gfxDeviceCreateBuffer(m_device, &stagingDesc, &staged.buffer) != GFX_RESULT_SUCCESS) {
         throw std::runtime_error("Failed to create staging buffer for texture upload");
     }
 
-    void* mapped{ nullptr };
-    if (gfxBufferMap(staging, 0, stagingSize, &mapped) != GFX_RESULT_SUCCESS) {
-        gfxBufferDestroy(staging);
-        throw std::runtime_error("Failed to map staging buffer for texture upload");
+    void* pointer{ nullptr };
+    const GfxResult mapResult{ gfxBufferMapAsync(staged.buffer, 0, stagingSize, &pointer) };
+    if (mapResult != GFX_RESULT_NOT_READY) {
+        GFXERRCHECK(mapResult);
     }
-    // Copy row-by-row into the (possibly padded) row pitch. When bytesPerRow == tightRowBytes (Vulkan) this
-    // is a single contiguous copy per layer; on WebGPU the rows are spaced to the 256-aligned pitch.
-    auto* const dst{ static_cast<uint8_t*>(mapped) };
+
+    // When the map does not land inline (web), fill a row-padded copy instead and retry at flush.
+    std::vector<uint8_t> padded;
+    uint8_t* dst{ static_cast<uint8_t*>(pointer) };
+    if (!dst) {
+        padded.resize(stagingSize);
+        dst = padded.data();
+    }
+
+    // Copies the layers row-by-row into the 256-aligned row pitch WebGPU requires (valid on Vulkan too).
     for (uint32_t layer = 0; layer < layerCount; ++layer) {
         const uint8_t* const src{ m_layersData[layer] };
         for (uint32_t row = 0; row < m_extent.height; ++row) {
             memcpy(dst + layer * layerSize + row * bytesPerRow, src + row * tightRowBytes, tightRowBytes);
         }
     }
-    gfxBufferUnmap(staging);
 
-    return staging;
+    if (padded.empty()) {
+        gfxBufferUnmap(staged.buffer);
+        return staged;
+    }
+    staged.prepare = [staging = staged.buffer, padded = std::move(padded)]() {
+        void* pointer{ nullptr };
+        if (gfxBufferMapAsync(staging, 0, padded.size(), &pointer) != GFX_RESULT_SUCCESS) {
+            return false;
+        }
+        memcpy(pointer, padded.data(), padded.size());
+        gfxBufferUnmap(staging);
+        return true;
+    };
+    return staged;
 }
 
 std::function<void(GfxCommandEncoder)> ImageBufferBuilder::MakeLayerCopyRecorder(GfxBuffer staging, GfxTexture texture) const

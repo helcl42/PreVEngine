@@ -124,11 +124,6 @@ std::unique_ptr<Buffer> BufferBuilder::BuildImpl(GfxCommandEncoder commandEncode
 
 std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
 {
-    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
-        // The async path stages via a blocking buffer map; build synchronously (queue write) instead.
-        return BuildImpl(nullptr);
-    }
-
     if (!m_data || m_dataSize == 0) {
         // Nothing to stream; an async build with no data has no benefit, so build it ready immediately.
         return BuildImpl(nullptr);
@@ -149,35 +144,34 @@ std::unique_ptr<Buffer> BufferBuilder::BuildAsync() const
     auto buffer{ CreateBuffer(alignedSize, hostMapped, state) };
 
     const uint64_t size{ std::min(m_dataSize, alignedSize) };
-    const GfxBuffer staging{ CreateStagingBuffer(size) };
-    auto record{ MakeCopyRecorder(staging, *buffer, size) };
+    auto staged{ CreateStagedData(size) };
+    auto record{ MakeCopyRecorder(staged.buffer, *buffer, size) };
 
-    m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, staging, size);
+    m_device.GetDeferredResourceUploader().Enqueue(std::move(record), state, std::move(staged));
 
     return buffer;
 }
 
 void BufferBuilder::UploadData(GfxBuffer buffer, uint64_t size, GfxCommandEncoder commandEncoder) const
 {
-    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
-        gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, size);
-        return;
-    } else {
-        if (commandEncoder) {
-            // Record into the caller's encoder: stage the data and record a buffer->buffer copy. The copy runs
-            // when the caller submits the encoder; the staging buffer is defer-destroyed so it outlives it.
-            const GfxBuffer staging{ CreateStagingBuffer(size) };
-            MakeCopyRecorder(staging, buffer, size)(commandEncoder);
-            m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staging));
-        } else {
-            // Immediate: gfxQueueWriteBuffer handles host-visible (direct write) and device-local (internal
-            // staging) targets, so the buffer holds its data when Build() returns.
+    if (commandEncoder) {
+        // Stage + record a copy into the caller's encoder; defer-destroy the staging so it outlives the submit.
+        auto staged{ CreateStagedData(size) };
+        if (staged.prepare) {
+            // The platform could not map the staging synchronously; a queue write covers this path too.
+            gfxBufferDestroy(staged.buffer);
             gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, size);
+            return;
         }
+        MakeCopyRecorder(staged.buffer, buffer, size)(commandEncoder);
+        m_device.GetDeferredResourceDestroyer().Destroy(std::make_unique<prev::core::OwnedGfxBuffer>(staged.buffer));
+    } else {
+        // Immediate: gfxQueueWriteBuffer covers host-visible and device-local targets.
+        gfxQueueWriteBuffer(m_queue, buffer, 0, m_data, size);
     }
 }
 
-GfxBuffer BufferBuilder::CreateStagingBuffer(uint64_t size) const
+prev::core::DeferredResourceUploader::StagingData BufferBuilder::CreateStagedData(uint64_t size) const
 {
     GfxBufferDescriptor stagingDesc{};
     stagingDesc.sType = GFX_STRUCTURE_TYPE_BUFFER_DESCRIPTOR;
@@ -185,20 +179,30 @@ GfxBuffer BufferBuilder::CreateStagingBuffer(uint64_t size) const
     stagingDesc.usage = GFX_BUFFER_USAGE_MAP_WRITE | GFX_BUFFER_USAGE_COPY_SRC;
     stagingDesc.memoryProperties = GFX_MEMORY_PROPERTY_HOST_VISIBLE | GFX_MEMORY_PROPERTY_HOST_COHERENT;
 
-    GfxBuffer staging{};
-    if (gfxDeviceCreateBuffer(m_device, &stagingDesc, &staging) != GFX_RESULT_SUCCESS) {
+    prev::core::DeferredResourceUploader::StagingData staged{};
+    staged.bytes = size;
+    if (gfxDeviceCreateBuffer(m_device, &stagingDesc, &staged.buffer) != GFX_RESULT_SUCCESS) {
         throw std::runtime_error("Failed to create staging buffer for buffer upload");
     }
-
-    void* mapped{ nullptr };
-    if (gfxBufferMap(staging, 0, size, &mapped) != GFX_RESULT_SUCCESS) {
-        gfxBufferDestroy(staging);
-        throw std::runtime_error("Failed to map staging buffer for buffer upload");
+    // When the map does not land inline (web), the fill keeps its own copy and retries at flush.
+    void* pointer{ nullptr };
+    const GfxResult mapResult{ gfxBufferMapAsync(staged.buffer, 0, size, &pointer) };
+    if (mapResult != GFX_RESULT_NOT_READY) {
+        GFXERRCHECK(mapResult);
+        memcpy(pointer, m_data, size);
+        gfxBufferUnmap(staged.buffer);
+        return staged;
     }
-    memcpy(mapped, m_data, size);
-    gfxBufferUnmap(staging);
-
-    return staging;
+    staged.prepare = [staging = staged.buffer, data = std::vector<uint8_t>(static_cast<const uint8_t*>(m_data), static_cast<const uint8_t*>(m_data) + size)]() {
+        void* pointer{ nullptr };
+        if (gfxBufferMapAsync(staging, 0, data.size(), &pointer) != GFX_RESULT_SUCCESS) {
+            return false;
+        }
+        memcpy(pointer, data.data(), data.size());
+        gfxBufferUnmap(staging);
+        return true;
+    };
+    return staged;
 }
 
 std::function<void(GfxCommandEncoder)> BufferBuilder::MakeCopyRecorder(GfxBuffer staging, GfxBuffer destination, uint64_t size) const

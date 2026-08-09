@@ -24,11 +24,7 @@ GfxResult Queue::Submit(const GfxSubmitDescriptor* submitDesc) const
 
 GfxResult Queue::WaitIdle() const
 {
-    if constexpr (!SUPPORTS_BLOCKING_GPU_WAIT) {
-        return GFX_RESULT_SUCCESS;
-    } else {
-        std::scoped_lock lock{ mutex };
-        return gfxQueueWaitIdle(handle);
-    }
+    std::scoped_lock lock{ mutex };
+    return gfxQueueWaitIdle(handle);
 }
 } // namespace prev::core::device

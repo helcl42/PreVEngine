@@ -3,7 +3,6 @@
 #include "../../buffer/ImageBufferBuilder.h"
 #include "../../framebuffer/FramebufferBuilder.h"
 
-#include "../../../common/Common.h" // SUPPORTS_BLOCKING_GPU_WAIT
 
 #include "../../../common/Logger.h"
 
@@ -126,11 +125,9 @@ bool PresentableSwapchain::BeginFrame(FrameContext& outContext)
 
     auto& frameInFlight = m_framesInFlight[m_frameIndex];
 
-    if constexpr (SUPPORTS_BLOCKING_GPU_WAIT) {
-        frameInFlight.fence->Wait();
-        frameInFlight.fence->Reset();
-    }
-    
+    frameInFlight.fence->Wait();
+    frameInFlight.fence->Reset();
+
     uint32_t acquireIndex{};
     const GfxResult result = gfxSwapchainAcquireNextImage(m_swapchain, UINT64_MAX, *frameInFlight.acquireSemaphore, nullptr, &acquireIndex);
     if (result == GFX_RESULT_ERROR_OUT_OF_DATE || result == GFX_RESULT_ERROR_SURFACE_LOST) {
@@ -204,9 +201,7 @@ void PresentableSwapchain::EndFrame(const FrameSubmitSync& submitSync)
     submitDesc.signalSemaphores = signalSems.data();
     submitDesc.signalValues = signalValues.data();
     submitDesc.signalSemaphoreCount = static_cast<uint32_t>(signalSems.size());
-    if constexpr (SUPPORTS_BLOCKING_GPU_WAIT) {
-        submitDesc.signalFence = *frameInFlight.fence; // on the web a fence would block inside Submit
-    }
+    submitDesc.signalFence = *frameInFlight.fence;
     GFXERRCHECK(m_graphicsQueue.Submit(&submitDesc));
 
     GfxSemaphore presentWaitSems[] = { *swapchainBuffer.renderSemaphore };

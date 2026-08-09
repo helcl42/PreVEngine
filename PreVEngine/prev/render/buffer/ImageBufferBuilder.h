@@ -79,8 +79,8 @@ private:
 
     uint32_t ComputeBytesPerRow() const;
 
-    // Packs all layers into one host-visible staging buffer (created + filled now). Caller owns it.
-    GfxBuffer CreateLayerStagingBuffer() const;
+    // Packs all layers into one host-visible staging buffer. Caller owns it.
+    prev::core::DeferredResourceUploader::StagingData CreateLayerStagedData() const;
 
     // Builds the staging->texture copy recorder (UNDEFINED -> TRANSFER_DST -> SHADER_READ_ONLY).
     std::function<void(GfxCommandEncoder)> MakeLayerCopyRecorder(GfxBuffer staging, GfxTexture texture) const;

@@ -59,14 +59,6 @@ constexpr float MIN_DEPTH{ 0.0f };
 constexpr float MAX_DEPTH{ 1.0f };
 #endif // ENABLE_REVERSE_DEPTH
 
-// Emscripten WebGPU cannot block the browser main thread on GPU completion (no synchronous fence
-// wait / WaitIdle / buffer map); queue ordering is the synchronization primitive there.
-#ifdef __EMSCRIPTEN__
-constexpr bool SUPPORTS_BLOCKING_GPU_WAIT{ false };
-#else
-constexpr bool SUPPORTS_BLOCKING_GPU_WAIT{ true };
-#endif // __EMSCRIPTEN__
-
 constexpr uint32_t MAX_VIEW_COUNT{ MAX_VIEW_COUNT_VALUE }; // total XR eyes (camera / CameraEvent)
 constexpr uint32_t MAX_PER_PASS_VIEW_COUNT{ MAX_PER_PASS_VIEW_COUNT_VALUE }; // views rendered per pass (multiview width)
 

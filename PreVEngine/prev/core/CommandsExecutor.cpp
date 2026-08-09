@@ -32,20 +32,16 @@ void CommandsExecutor::ExecuteImmediate(const std::function<void(GfxCommandEncod
     const GfxCommandEncoder commandEncoder{ RecordCommands(func) };
     GfxCommandEncoder encoders[] = { commandEncoder };
 
-    const bool useFence{ SUPPORTS_BLOCKING_GPU_WAIT }; // without it, queue ordering covers the callers
-
     sync::Fence fence{ m_device, false, "ImmediateFence" };
 
     GfxSubmitDescriptor submitDesc{};
     submitDesc.sType = GFX_STRUCTURE_TYPE_SUBMIT_DESCRIPTOR;
     submitDesc.commandEncoders = encoders;
     submitDesc.commandEncoderCount = 1;
-    submitDesc.signalFence = useFence ? static_cast<GfxFence>(fence) : GfxFence{};
+    submitDesc.signalFence = fence;
     GFXERRCHECK(m_queue.Submit(&submitDesc));
 
-    if (useFence) {
-        fence.Wait(); // the wait is what makes destroying the encoder on return legal on Vulkan
-    }
+    fence.Wait(); // the wait is what makes destroying the encoder on return legal on Vulkan
     gfxCommandEncoderDestroy(commandEncoder);
 }
 

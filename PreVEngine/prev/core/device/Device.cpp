@@ -38,9 +38,7 @@ Device::~Device()
 
 void Device::WaitIdle() const
 {
-    if constexpr (SUPPORTS_BLOCKING_GPU_WAIT) {
-        gfxDeviceWaitIdle(m_handle);
-    }
+    gfxDeviceWaitIdle(m_handle);
 }
 
 bool Device::HasQueue(const QueueType queueType, const uint32_t index) const

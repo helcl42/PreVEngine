@@ -62,7 +62,7 @@ private:
     void UploadData(GfxBuffer buffer, uint64_t size, GfxCommandEncoder commandEncoder) const;
 
     // Creates a host-visible staging buffer filled with the builder's data. Caller owns it.
-    GfxBuffer CreateStagingBuffer(uint64_t size) const;
+    prev::core::DeferredResourceUploader::StagingData CreateStagedData(uint64_t size) const;
 
     // Builds the staging->buffer copy recorder.
     std::function<void(GfxCommandEncoder)> MakeCopyRecorder(GfxBuffer staging, GfxBuffer destination, uint64_t size) const;
