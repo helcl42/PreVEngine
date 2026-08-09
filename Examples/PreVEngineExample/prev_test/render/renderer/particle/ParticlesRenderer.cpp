@@ -140,7 +140,7 @@ void ParticlesRenderer::Render(const NormalRenderContext& renderContext, const s
     auto& uboFS = m_uniformsPoolFS->Next();
 
     UniformsFS uniformsFS{};
-    uniformsFS.color = renderContext.colorManaged ? prev::util::color::SrgbToLinear(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f)) : glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+    uniformsFS.color = renderContext.colorManaged ? glm::vec4(0.29f, 0.29f, 0.29f, 1.0f) : glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
     uboFS.Write(uniformsFS);
 
     m_shader->Bind("uboVS", uboVS);
