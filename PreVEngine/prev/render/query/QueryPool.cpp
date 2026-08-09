@@ -14,6 +14,7 @@ QueryPool::QueryPool(prev::core::device::Device& device, GfxQueryType queryType,
     m_querySets.resize(m_poolCount);
     m_resolveBuffers.resize(m_poolCount);
     m_resultBuffers.resize(m_poolCount);
+    m_mapOutstanding.assign(m_poolCount, false);
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         GfxOcclusionQueryDescriptor occlusionDesc{};
         occlusionDesc.sType = GFX_STRUCTURE_TYPE_OCCLUSION_QUERY_DESCRIPTOR;
@@ -47,11 +48,13 @@ QueryPool::~QueryPool()
 {
     m_device.WaitIdle();
 
-    // Unmap any pending async-mapped buffer before destroying
-    if (m_asyncMapPending && m_resultBuffers[m_asyncMapIndex]) {
-        gfxBufferUnmap(*m_resultBuffers[m_asyncMapIndex]);
-        m_asyncMapPending = false;
+    // Unmap every slot with an outstanding map before destroying
+    for (uint32_t i = 0; i < m_poolCount; ++i) {
+        if (m_mapOutstanding[i] && m_resultBuffers[i]) {
+            UnmapSlot(i);
+        }
     }
+    m_asyncMapSlot = -1;
 
     for (uint32_t i = 0; i < m_poolCount; ++i) {
         m_resultBuffers[i].reset();
@@ -90,19 +93,24 @@ void QueryPool::ResetAll(GfxCommandEncoder commandEncoder)
         gfxCommandEncoderResetQuerySet(commandEncoder, m_querySets[i], 0, m_queryCount);
     }
     m_readIndex = 0;
-    m_hasResolved = false;
     m_index.Reset();
+    m_asyncMapSlot = -1; // indices rewound: the async read restarts (outstanding maps stay marked)
 }
 
 void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
 {
     if (!m_queryRecorded) {
-        // Nothing was begun/written into this set this frame (e.g. the occluder wasn't drawn yet while its
-        // assets still load). Resolving now would copy an unavailable query ("query may return no data").
-        // Leave the set current; the caller resets it each frame (before the pass), so it stays ready.
+        // Nothing recorded into this set (e.g. the occluder was not drawn): resolving would copy an
+        // unavailable query. The set stays current - the caller resets it before each pass.
         return;
     }
     m_queryRecorded = false;
+
+    ReclaimOutstanding();
+    if (m_mapOutstanding[m_index]) {
+        ++m_index; // still mapped: a copy into it would be invalid, so skip the slot (sample dropped)
+        return;
+    }
 
     gfxCommandEncoderResolveQuerySet(commandEncoder, m_querySets[m_index], 0, m_queryCount, *m_resolveBuffers[m_index], 0);
     // Copy from resolve buffer to mappable staging buffer
@@ -114,8 +122,36 @@ void QueryPool::Resolve(GfxCommandEncoder commandEncoder)
     copyDesc.size = sizeof(uint64_t) * m_queryCount;
     gfxCommandEncoderCopyBufferToBuffer(commandEncoder, &copyDesc);
     m_readIndex = m_index; // remember which slot holds the latest result
-    m_hasResolved = true;
     ++m_index; // advance so the CPU can read this result while the next frame writes the next set
+}
+
+bool QueryPool::MapSlot(const uint32_t slot, const uint64_t offset, const uint64_t size, void*& outPointer)
+{
+    if (!m_resultBuffers[slot]) {
+        return false;
+    }
+    const GfxResult result{ gfxBufferMapAsync(*m_resultBuffers[slot], offset, size, &outPointer) };
+    m_mapOutstanding[slot] = (result == GFX_RESULT_SUCCESS || result == GFX_RESULT_NOT_READY);
+    return result == GFX_RESULT_SUCCESS && outPointer;
+}
+
+void QueryPool::UnmapSlot(const uint32_t slot)
+{
+    gfxBufferUnmap(*m_resultBuffers[slot]);
+    m_mapOutstanding[slot] = false;
+}
+
+void QueryPool::ReclaimOutstanding()
+{
+    for (uint32_t i = 0; i < m_poolCount; ++i) {
+        if (!m_mapOutstanding[i] || static_cast<int32_t>(i) == m_asyncMapSlot) {
+            continue; // the tracked async read is the consumer's to collect
+        }
+        void* pointer{ nullptr };
+        if (MapSlot(i, 0, sizeof(uint64_t) * m_queryCount, pointer)) {
+            UnmapSlot(i);
+        }
+    }
 }
 
 QueryPool::operator GfxQuerySet() const

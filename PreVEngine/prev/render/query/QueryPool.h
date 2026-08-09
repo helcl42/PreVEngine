@@ -37,82 +37,81 @@ public:
     template <typename ResultType>
     bool GetQueryResult(const uint32_t queryIndex, ResultType& outQueryResult)
     {
-        if (!m_resultBuffers[m_readIndex]) {
-            return false;
-        }
         void* mapped{};
-        if (gfxBufferMapAsync(*m_resultBuffers[m_readIndex], queryIndex * sizeof(ResultType), sizeof(ResultType), &mapped) != GFX_RESULT_SUCCESS || !mapped) {
+        if (!MapSlot(m_readIndex, queryIndex * sizeof(ResultType), sizeof(ResultType), mapped)) {
             return false;
         }
         memcpy(&outQueryResult, mapped, sizeof(ResultType));
-        gfxBufferUnmap(*m_resultBuffers[m_readIndex]);
+        UnmapSlot(m_readIndex);
         return true;
     }
 
     template <typename ResultType>
     bool GetQueryResults(std::vector<ResultType>& outQueryResults)
     {
-        if (!m_resultBuffers[m_readIndex]) {
+        void* mapped{};
+        if (!MapSlot(m_readIndex, 0, sizeof(ResultType) * m_queryCount, mapped)) {
             return false;
         }
         std::vector<ResultType> result(m_queryCount);
-        void* mapped{};
-        if (gfxBufferMapAsync(*m_resultBuffers[m_readIndex], 0, sizeof(ResultType) * m_queryCount, &mapped) != GFX_RESULT_SUCCESS || !mapped) {
-            return false;
-        }
         memcpy(result.data(), mapped, sizeof(ResultType) * m_queryCount);
-        gfxBufferUnmap(*m_resultBuffers[m_readIndex]);
+        UnmapSlot(m_readIndex);
         outQueryResults = result;
         return true;
     }
 
     void StartAsyncMapRead()
     {
-        if (m_asyncMapPending) {
-            return;
-        }
-        if (!m_hasResolved) {
-            return;
-        }
-        if (!m_resultBuffers[m_readIndex]) {
-            return;
+        if (m_asyncMapSlot >= 0) {
+            return; // one async read in flight at a time
         }
         if (m_readIndex == m_index) {
-            return;
+            return; // nothing resolved yet, or the write cursor sits on the newest result
         }
         void* pointer{ nullptr };
-        gfxBufferMapAsync(*m_resultBuffers[m_readIndex], 0, sizeof(uint64_t) * m_queryCount, &pointer); // kicks off the map
-        m_asyncMapPending = true;
-        m_asyncMapIndex = m_readIndex;
+        MapSlot(m_readIndex, 0, sizeof(uint64_t) * m_queryCount, pointer); // kicks off the map
+        m_asyncMapSlot = static_cast<int32_t>(m_readIndex);
     }
 
     bool IsAsyncResultReady()
     {
-        if (!m_asyncMapPending) {
+        if (m_asyncMapSlot < 0) {
             return false;
         }
         void* pointer{ nullptr };
-        return gfxBufferMapAsync(*m_resultBuffers[m_asyncMapIndex], 0, sizeof(uint64_t) * m_queryCount, &pointer) == GFX_RESULT_SUCCESS;
+        return MapSlot(static_cast<uint32_t>(m_asyncMapSlot), 0, sizeof(uint64_t) * m_queryCount, pointer);
     }
 
     template <typename ResultType>
     bool GetAsyncQueryResult(const uint32_t queryIndex, ResultType& outQueryResult)
     {
-        if (!m_asyncMapPending) {
+        if (m_asyncMapSlot < 0) {
             return false;
         }
+        const uint32_t slot{ static_cast<uint32_t>(m_asyncMapSlot) };
         void* pointer{ nullptr };
-        if (gfxBufferMapAsync(*m_resultBuffers[m_asyncMapIndex], 0, sizeof(uint64_t) * m_queryCount, &pointer) != GFX_RESULT_SUCCESS) {
+        if (!MapSlot(slot, 0, sizeof(uint64_t) * m_queryCount, pointer)) {
             return false;
         }
         memcpy(&outQueryResult, static_cast<uint8_t*>(pointer) + queryIndex * sizeof(ResultType), sizeof(ResultType));
-        gfxBufferUnmap(*m_resultBuffers[m_asyncMapIndex]);
-        m_asyncMapPending = false;
+        UnmapSlot(slot);
+        m_asyncMapSlot = -1;
         return true;
     }
 
 public:
     friend class QueryPoolBuilder;
+
+private:
+    // A started map (WebGPU: NOT_READY until its callback lands) blocks the buffer in submits until
+    // unmapped, so a slot stays outstanding from the first attempt and Resolve skips it.
+    bool MapSlot(const uint32_t slot, const uint64_t offset, const uint64_t size, void*& outPointer);
+
+    void UnmapSlot(const uint32_t slot);
+
+    // Release slots whose map landed but nobody collected (a sync reader that returned NOT_READY leaves
+    // one behind) - without this they stay outstanding forever and Resolve runs out of usable slots.
+    void ReclaimOutstanding();
 
 private:
     prev::core::device::Device& m_device;
@@ -133,11 +132,9 @@ private:
 
     std::vector<std::unique_ptr<prev::render::buffer::Buffer>> m_resultBuffers;
 
-    bool m_asyncMapPending{ false };
+    std::vector<bool> m_mapOutstanding; // per slot: a map was started and not yet unmapped (see MapSlot)
 
-    uint32_t m_asyncMapIndex{ 0 };
-
-    bool m_hasResolved{ false };
+    int32_t m_asyncMapSlot{ -1 }; // slot of the async read in flight; -1 = none
 
     bool m_queryRecorded{ false };
 };
