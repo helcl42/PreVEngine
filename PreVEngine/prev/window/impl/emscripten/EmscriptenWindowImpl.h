@@ -42,16 +42,12 @@ private:
     static EM_BOOL TouchCallback(int eventType, const EmscriptenTouchEvent* touchEvent, void* userData);
 
 private:
-    void ApplyCanvasSize();
+    void ApplyDisplaySize();
 
-    void AdoptFullscreenBox();
+    void GetInputScale(double& outX, double& outY) const;
 
 private:
     std::string m_canvasSelector{ "#canvas" };
-
-    uint32_t m_cssWidth{ 0 };
-    uint32_t m_cssHeight{ 0 };
-    double m_devicePixelRatio{ 1.0 };
 
     MultiTouch m_MTouch{};
 };

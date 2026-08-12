@@ -49,16 +49,11 @@ EmscriptenWindowImpl::EmscriptenWindowImpl(const WindowInfo& windowInfo)
     m_info = windowInfo;
     m_running = true;
 
-    m_cssWidth = m_info.size.width;
-    m_cssHeight = m_info.size.height;
     EmscriptenFullscreenChangeEvent fullscreenStatus{};
-    if (emscripten_get_fullscreen_status(&fullscreenStatus) == EMSCRIPTEN_RESULT_SUCCESS && fullscreenStatus.isFullscreen) {
-        m_info.fullScreen = true;
-        AdoptFullscreenBox();
-        emscripten_set_canvas_element_size(m_canvasSelector.c_str(), m_info.size.width, m_info.size.height);
-    } else {
-        ApplyCanvasSize();
+    if (emscripten_get_fullscreen_status(&fullscreenStatus) == EMSCRIPTEN_RESULT_SUCCESS) {
+        m_info.fullScreen = fullscreenStatus.isFullscreen;
     }
+    ApplyDisplaySize();
 
     SetTitle(windowInfo.title);
 
@@ -109,40 +104,32 @@ void EmscriptenWindowImpl::SetPosition(int32_t x, int32_t y)
 
 void EmscriptenWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
-    m_cssWidth = w;
-    m_cssHeight = h;
-    ApplyCanvasSize();
+    ApplyDisplaySize(); // the surface always tracks the display; layout only decides where it shows
 }
 
-void EmscriptenWindowImpl::AdoptFullscreenBox()
+// The render surface is ALWAYS the display's physical resolution (screen CSS size x devicePixelRatio):
+// page layout cannot inflate or shrink the render target, and a canvas still hidden at boot sizes
+// correctly. The element shows the surface wherever layout puts it; input maps by surface / element box.
+void EmscriptenWindowImpl::ApplyDisplaySize()
 {
-    EM_ASM({
-        var canvas = document.querySelector(UTF8ToString($0));
-        if (canvas) {
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-        }
-    }, m_canvasSelector.c_str());
-    m_devicePixelRatio = emscripten_get_device_pixel_ratio();
-    double boxWidth, boxHeight;
-    if (emscripten_get_element_css_size(m_canvasSelector.c_str(), &boxWidth, &boxHeight) != EMSCRIPTEN_RESULT_SUCCESS || boxWidth <= 0.0 || boxHeight <= 0.0) {
-        EmscriptenFullscreenChangeEvent status{};
-        emscripten_get_fullscreen_status(&status);
-        boxWidth = status.screenWidth;
-        boxHeight = status.screenHeight;
+    const double devicePixelRatio{ emscripten_get_device_pixel_ratio() };
+    EmscriptenFullscreenChangeEvent status{};
+    if (emscripten_get_fullscreen_status(&status) != EMSCRIPTEN_RESULT_SUCCESS || status.screenWidth <= 0 || status.screenHeight <= 0) {
+        return; // keep the current size; a resize event will retry
     }
-    m_info.size = { static_cast<uint32_t>(std::lround(boxWidth * m_devicePixelRatio)),
-        static_cast<uint32_t>(std::lround(boxHeight * m_devicePixelRatio)) };
+    m_info.size = { static_cast<uint32_t>(std::lround(status.screenWidth * devicePixelRatio)),
+        static_cast<uint32_t>(std::lround(status.screenHeight * devicePixelRatio)) };
+    emscripten_set_canvas_element_size(m_canvasSelector.c_str(), m_info.size.width, m_info.size.height);
 }
 
-void EmscriptenWindowImpl::ApplyCanvasSize()
+void EmscriptenWindowImpl::GetInputScale(double& outX, double& outY) const
 {
-    m_devicePixelRatio = emscripten_get_device_pixel_ratio();
-    const uint32_t physicalWidth{ static_cast<uint32_t>(std::lround(m_cssWidth * m_devicePixelRatio)) };
-    const uint32_t physicalHeight{ static_cast<uint32_t>(std::lround(m_cssHeight * m_devicePixelRatio)) };
-    m_info.size = { physicalWidth, physicalHeight };
-    emscripten_set_canvas_element_size(m_canvasSelector.c_str(), physicalWidth, physicalHeight);
-    emscripten_set_element_css_size(m_canvasSelector.c_str(), m_cssWidth, m_cssHeight);
+    outX = outY = 1.0;
+    double boxWidth, boxHeight;
+    if (emscripten_get_element_css_size(m_canvasSelector.c_str(), &boxWidth, &boxHeight) == EMSCRIPTEN_RESULT_SUCCESS && boxWidth > 0.0 && boxHeight > 0.0) {
+        outX = static_cast<double>(m_info.size.width) / boxWidth;
+        outY = static_cast<double>(m_info.size.height) / boxHeight;
+    }
 }
 
 void EmscriptenWindowImpl::SetMouseCursorVisible(bool visible)
@@ -166,14 +153,15 @@ EM_BOOL EmscriptenWindowImpl::MouseCallback(int eventType, const EmscriptenMouse
 
     const ButtonType btn = ToButtonType(mouseEvent->button);
 
-    const double scale{ self->m_devicePixelRatio };
+    double scaleX, scaleY;
+    self->GetInputScale(scaleX, scaleY);
     int32_t x, y;
     if (self->m_hasFocus && self->m_mouseLocked) {
-        x = static_cast<int32_t>(std::lround(mouseEvent->movementX * scale));
-        y = static_cast<int32_t>(std::lround(mouseEvent->movementY * scale));
+        x = static_cast<int32_t>(std::lround(mouseEvent->movementX * scaleX));
+        y = static_cast<int32_t>(std::lround(mouseEvent->movementY * scaleY));
     } else {
-        x = static_cast<int32_t>(std::lround(mouseEvent->targetX * scale));
-        y = static_cast<int32_t>(std::lround(mouseEvent->targetY * scale));
+        x = static_cast<int32_t>(std::lround(mouseEvent->targetX * scaleX));
+        y = static_cast<int32_t>(std::lround(mouseEvent->targetY * scaleY));
     }
 
     switch (eventType) {
@@ -216,18 +204,7 @@ EM_BOOL EmscriptenWindowImpl::ResizeCallback(int eventType, const EmscriptenUiEv
 {
     auto* self = static_cast<EmscriptenWindowImpl*>(userData);
     const auto previous{ self->m_info.size };
-    EmscriptenFullscreenChangeEvent fullscreen{};
-    emscripten_get_fullscreen_status(&fullscreen);
-    if (fullscreen.isFullscreen) {
-        self->AdoptFullscreenBox();
-    } else {
-        double cssWidth, cssHeight;
-        if (emscripten_get_element_css_size(self->m_canvasSelector.c_str(), &cssWidth, &cssHeight) == EMSCRIPTEN_RESULT_SUCCESS && cssWidth > 0.0 && cssHeight > 0.0) {
-            self->m_cssWidth = static_cast<uint32_t>(std::lround(cssWidth));
-            self->m_cssHeight = static_cast<uint32_t>(std::lround(cssHeight));
-        }
-        self->ApplyCanvasSize();
-    }
+    self->ApplyDisplaySize(); // rotation swaps the display dimensions
     if (self->m_info.size.width != previous.width || self->m_info.size.height != previous.height) {
         self->m_eventQueue.Push(self->OnResizeEvent(self->m_info.size.width, self->m_info.size.height));
     }
@@ -246,13 +223,10 @@ EM_BOOL EmscriptenWindowImpl::FullscreenChangeCallback(int eventType, const Emsc
 {
     auto* self = static_cast<EmscriptenWindowImpl*>(userData);
     self->m_info.fullScreen = fullscreenEvent->isFullscreen;
-    if (fullscreenEvent->isFullscreen) {
-        self->AdoptFullscreenBox();
-        self->m_eventQueue.Push(self->OnFocusEvent(true));
-        self->m_eventQueue.Push(self->OnResizeEvent(self->m_info.size.width, self->m_info.size.height));
-    } else {
-        self->ApplyCanvasSize();
-        self->m_eventQueue.Push(self->OnFocusEvent(true));
+    const auto previous{ self->m_info.size };
+    self->ApplyDisplaySize(); // same display either way; fullscreen only changes where the element shows
+    self->m_eventQueue.Push(self->OnFocusEvent(true));
+    if (self->m_info.size.width != previous.width || self->m_info.size.height != previous.height) {
         self->m_eventQueue.Push(self->OnResizeEvent(self->m_info.size.width, self->m_info.size.height));
     }
     return EM_TRUE;
@@ -264,13 +238,15 @@ EM_BOOL EmscriptenWindowImpl::TouchCallback(int eventType, const EmscriptenTouch
 
     const float w = static_cast<float>(self->m_info.size.width);
     const float h = static_cast<float>(self->m_info.size.height);
+    double scaleX, scaleY;
+    self->GetInputScale(scaleX, scaleY);
 
     switch (eventType) {
     case EMSCRIPTEN_EVENT_TOUCHSTART:
         for (int i = 0; i < touchEvent->numTouches; ++i) {
             const auto& touch = touchEvent->touches[i];
             if (touch.isChanged) {
-                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::DOWN, static_cast<float>(touch.targetX * self->m_devicePixelRatio), static_cast<float>(touch.targetY * self->m_devicePixelRatio), static_cast<uint32_t>(touch.identifier), w, h));
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::DOWN, static_cast<float>(touch.targetX * scaleX), static_cast<float>(touch.targetY * scaleY), static_cast<uint32_t>(touch.identifier), w, h));
             }
         }
         break;
@@ -278,7 +254,7 @@ EM_BOOL EmscriptenWindowImpl::TouchCallback(int eventType, const EmscriptenTouch
         for (int i = 0; i < touchEvent->numTouches; ++i) {
             const auto& touch = touchEvent->touches[i];
             if (touch.isChanged) {
-                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::MOVE, static_cast<float>(touch.targetX * self->m_devicePixelRatio), static_cast<float>(touch.targetY * self->m_devicePixelRatio), static_cast<uint32_t>(touch.identifier), w, h));
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::MOVE, static_cast<float>(touch.targetX * scaleX), static_cast<float>(touch.targetY * scaleY), static_cast<uint32_t>(touch.identifier), w, h));
             }
         }
         break;
@@ -286,7 +262,7 @@ EM_BOOL EmscriptenWindowImpl::TouchCallback(int eventType, const EmscriptenTouch
         for (int i = 0; i < touchEvent->numTouches; ++i) {
             const auto& touch = touchEvent->touches[i];
             if (touch.isChanged) {
-                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::UP, static_cast<float>(touch.targetX * self->m_devicePixelRatio), static_cast<float>(touch.targetY * self->m_devicePixelRatio), static_cast<uint32_t>(touch.identifier), w, h));
+                self->m_eventQueue.Push(self->m_MTouch.OnEvent(ActionType::UP, static_cast<float>(touch.targetX * scaleX), static_cast<float>(touch.targetY * scaleY), static_cast<uint32_t>(touch.identifier), w, h));
             }
         }
         break;
