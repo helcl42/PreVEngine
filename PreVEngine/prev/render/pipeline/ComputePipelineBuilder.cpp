@@ -33,10 +33,13 @@ GfxComputePipeline ComputePipelineBuilder::CreateComputePipeline() const
 
     GfxBindGroupLayout bindGroupLayout{ m_shader.GetBindGroupLayout() };
 
+    GfxComputeState computeState{};
+    computeState.module = gfxShader;
+    computeState.entryPoint = "computeMain";
+
     GfxComputePipelineDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_COMPUTE_PIPELINE_DESCRIPTOR;
-    desc.compute = gfxShader;
-    desc.entryPoint = "computeMain";
+    desc.compute = &computeState;
     desc.bindGroupLayouts = &bindGroupLayout;
     desc.bindGroupLayoutCount = 1;
 
