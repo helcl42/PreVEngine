@@ -122,6 +122,8 @@ GfxRenderPipeline GraphicsPipelineBuilder::CreateGraphicsPipeline() const
     vertexState.entryPoint = "vertexMain";
     vertexState.buffers = bufferLayouts.data();
     vertexState.bufferCount = static_cast<uint32_t>(bufferLayouts.size());
+    vertexState.constants = m_vertexConstants.empty() ? nullptr : m_vertexConstants.data();
+    vertexState.constantCount = static_cast<uint32_t>(m_vertexConstants.size());
 
     // --- Fragment state: color targets ---
     const auto gfxColorFormats{ m_renderPass.GetGfxColorFormats() };
@@ -150,6 +152,8 @@ GfxRenderPipeline GraphicsPipelineBuilder::CreateGraphicsPipeline() const
     fragmentState.entryPoint = "fragmentMain";
     fragmentState.targets = colorTargets.data();
     fragmentState.targetCount = static_cast<uint32_t>(colorTargets.size());
+    fragmentState.constants = m_fragmentConstants.empty() ? nullptr : m_fragmentConstants.data();
+    fragmentState.constantCount = static_cast<uint32_t>(m_fragmentConstants.size());
 
     // --- Primitive state ---
     GfxPrimitiveState primitiveState{};
@@ -202,5 +206,8 @@ void GraphicsPipelineBuilder::Validate() const
     if (!m_blendingEnabled && m_additiveBlendingEnabled) {
         throw std::runtime_error("Invalid pipeline configuration: Blending is disabled and additive blending enabled - additive blending will be ignored.");
     }
+
+    ValidateConstants(m_vertexConstants, "vertex");
+    ValidateConstants(m_fragmentConstants, "fragment");
 }
 } // namespace prev::render::pipeline

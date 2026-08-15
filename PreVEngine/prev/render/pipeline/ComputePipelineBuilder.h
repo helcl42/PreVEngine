@@ -11,6 +11,13 @@ public:
     ~ComputePipelineBuilder() = default;
 
 public:
+    template <typename T>
+    ComputePipelineBuilder& AddConstant(uint32_t id, T value)
+    {
+        m_constants.push_back(MakeConstantEntry(id, value));
+        return *this;
+    }
+
     std::unique_ptr<Pipeline> Build() const override;
 
 private:
@@ -18,6 +25,9 @@ private:
 
 private:
     GfxComputePipeline CreateComputePipeline() const;
+
+private:
+    std::vector<GfxConstantEntry> m_constants;
 };
 } // namespace prev::render::pipeline
 

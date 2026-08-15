@@ -24,6 +24,8 @@ void ComputePipelineBuilder::Validate() const
     if (m_shader.GetShaderModules().size() != 1) {
         throw std::runtime_error("Invalid pipeline configuration: Shader with shader stages count != 1 seems to be incompatible.");
     }
+
+    ValidateConstants(m_constants, "compute");
 }
 
 GfxComputePipeline ComputePipelineBuilder::CreateComputePipeline() const
@@ -36,6 +38,8 @@ GfxComputePipeline ComputePipelineBuilder::CreateComputePipeline() const
     GfxComputeState computeState{};
     computeState.module = gfxShader;
     computeState.entryPoint = "computeMain";
+    computeState.constants = m_constants.empty() ? nullptr : m_constants.data();
+    computeState.constantCount = static_cast<uint32_t>(m_constants.size());
 
     GfxComputePipelineDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_COMPUTE_PIPELINE_DESCRIPTOR;

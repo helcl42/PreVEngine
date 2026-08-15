@@ -29,6 +29,20 @@ public:
 
     GraphicsPipelineBuilder& SetFrontFace(GfxFrontFace frontFace);
 
+    template <typename T>
+    GraphicsPipelineBuilder& AddVertexConstant(uint32_t id, T value)
+    {
+        m_vertexConstants.push_back(MakeConstantEntry(id, value));
+        return *this;
+    }
+
+    template <typename T>
+    GraphicsPipelineBuilder& AddFragmentConstant(uint32_t id, T value)
+    {
+        m_fragmentConstants.push_back(MakeConstantEntry(id, value));
+        return *this;
+    }
+
     std::unique_ptr<Pipeline> Build() const override;
 
 private:
@@ -55,6 +69,10 @@ private:
     GfxCullMode m_cullingMode{ GFX_CULL_MODE_NONE };
 
     GfxFrontFace m_frontFace{ GFX_FRONT_FACE_COUNTER_CLOCKWISE };
+
+    std::vector<GfxConstantEntry> m_vertexConstants;
+
+    std::vector<GfxConstantEntry> m_fragmentConstants;
 };
 } // namespace prev::render::pipeline
 
