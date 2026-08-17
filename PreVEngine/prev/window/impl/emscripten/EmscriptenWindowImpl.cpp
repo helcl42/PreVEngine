@@ -107,7 +107,7 @@ void EmscriptenWindowImpl::SetSize(uint32_t w, uint32_t h)
     ApplyDisplaySize(); // the surface always tracks the display; layout only decides where it shows
 }
 
-// The render surface is ALWAYS the display's physical resolution (screen CSS size x devicePixelRatio):
+// Windowed, the render surface is the display's physical resolution (screen CSS size x devicePixelRatio):
 // page layout cannot inflate or shrink the render target, and a canvas still hidden at boot sizes
 // correctly. The element shows the surface wherever layout puts it; input maps by surface / element box.
 void EmscriptenWindowImpl::ApplyDisplaySize()
@@ -117,8 +117,23 @@ void EmscriptenWindowImpl::ApplyDisplaySize()
     if (emscripten_get_fullscreen_status(&status) != EMSCRIPTEN_RESULT_SUCCESS || status.screenWidth <= 0 || status.screenHeight <= 0) {
         return; // keep the current size; a resize event will retry
     }
-    m_info.size = { static_cast<uint32_t>(std::lround(status.screenWidth * devicePixelRatio)),
-        static_cast<uint32_t>(std::lround(status.screenHeight * devicePixelRatio)) };
+
+    double width{ static_cast<double>(status.screenWidth) };
+    double height{ static_cast<double>(status.screenHeight) };
+
+    // Fullscreen: measure the element - screen.* overshoots the area the page actually gets (a phone
+    // keeps its navigation strip), and the UA letterboxes the resulting aspect mismatch.
+    double boxWidth{};
+    double boxHeight{};
+    if (status.isFullscreen
+        && emscripten_get_element_css_size(m_canvasSelector.c_str(), &boxWidth, &boxHeight) == EMSCRIPTEN_RESULT_SUCCESS
+        && boxWidth > 0.0 && boxHeight > 0.0) {
+        width = boxWidth;
+        height = boxHeight;
+    }
+
+    m_info.size = { static_cast<uint32_t>(std::lround(width * devicePixelRatio)),
+        static_cast<uint32_t>(std::lround(height * devicePixelRatio)) };
     emscripten_set_canvas_element_size(m_canvasSelector.c_str(), m_info.size.width, m_info.size.height);
 }
 
