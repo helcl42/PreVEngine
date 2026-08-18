@@ -72,6 +72,8 @@ EmscriptenWindowImpl::EmscriptenWindowImpl(const WindowInfo& windowInfo)
     emscripten_set_touchend_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
     emscripten_set_touchcancel_callback(m_canvasSelector.c_str(), this, true, TouchCallback);
 
+    ObserveDevicePixelBox();
+
     // Push initial events
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
@@ -107,6 +109,45 @@ void EmscriptenWindowImpl::SetSize(uint32_t w, uint32_t h)
     ApplyDisplaySize(); // the surface always tracks the display; layout only decides where it shows
 }
 
+void EmscriptenWindowImpl::ObserveDevicePixelBox()
+{
+    // clang-format off
+    EM_ASM({
+        var canvas = document.querySelector(UTF8ToString($0));
+        if (!canvas || !window.ResizeObserver) {
+            return;
+        }
+        if (window.__canvasDevicePxObserver) {
+            window.__canvasDevicePxObserver.disconnect();
+        } else {
+            document.addEventListener('fullscreenchange', function() { window.__canvasDevicePx = null; });
+        }
+        try {
+            window.__canvasDevicePxObserver = new ResizeObserver(function(entries) {
+                for (var i = 0; i < entries.length; ++i) {
+                    var box = entries[i].devicePixelContentBoxSize;
+                    if (!box || !box[0]) {
+                        continue;
+                    }
+                    var w = box[0].inlineSize;
+                    var h = box[0].blockSize;
+                    var prev = window.__canvasDevicePx;
+                    if (prev && prev.w === w && prev.h === h) {
+                        continue;
+                    }
+                    window.__canvasDevicePx = { w: w, h: h };
+                    if (document.fullscreenElement) {
+                        window.dispatchEvent(new Event('resize')); // windowed this would feed back
+                    }
+                }
+            });
+            window.__canvasDevicePxObserver.observe(canvas, { box: 'device-pixel-content-box' });
+        } catch (e) {
+        }
+    }, m_canvasSelector.c_str());
+    // clang-format on
+}
+
 // Windowed, the render surface is the display's physical resolution (screen CSS size x devicePixelRatio):
 // page layout cannot inflate or shrink the render target, and a canvas still hidden at boot sizes
 // correctly. The element shows the surface wherever layout puts it; input maps by surface / element box.
@@ -132,8 +173,19 @@ void EmscriptenWindowImpl::ApplyDisplaySize()
         height = boxHeight;
     }
 
-    m_info.size = { static_cast<uint32_t>(std::lround(width * devicePixelRatio)),
-        static_cast<uint32_t>(std::lround(height * devicePixelRatio)) };
+    uint32_t surfaceWidth{ static_cast<uint32_t>(std::lround(width * devicePixelRatio)) };
+    uint32_t surfaceHeight{ static_cast<uint32_t>(std::lround(height * devicePixelRatio)) };
+
+    if (status.isFullscreen) {
+        const int exactWidth{ EM_ASM_INT({ return window.__canvasDevicePx ? window.__canvasDevicePx.w : 0; }) };
+        const int exactHeight{ EM_ASM_INT({ return window.__canvasDevicePx ? window.__canvasDevicePx.h : 0; }) };
+        if (exactWidth > 0 && exactHeight > 0) {
+            surfaceWidth = static_cast<uint32_t>(exactWidth);
+            surfaceHeight = static_cast<uint32_t>(exactHeight);
+        }
+    }
+
+    m_info.size = { surfaceWidth, surfaceHeight };
     emscripten_set_canvas_element_size(m_canvasSelector.c_str(), m_info.size.width, m_info.size.height);
 }
 

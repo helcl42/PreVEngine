@@ -21,7 +21,7 @@
         beacon('init', 'beacon active');
     })();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PreVEngine - WebGPU</title>
     <style>
         body {
@@ -214,6 +214,16 @@
                 document.body.style.overflow = 'hidden';
                 window.dispatchEvent(new Event('resize'));
             }
+        }
+
+        // Rotating reports the OLD box - re-announce once the viewport has settled.
+        var reannounceSize = function () {
+            setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 300);
+        };
+        if (window.screen && screen.orientation) {
+            screen.orientation.addEventListener('change', reannounceSize);
+        } else {
+            window.addEventListener('orientationchange', reannounceSize);
         }
 
         pointerLockCheckbox.addEventListener('change', function () {

@@ -44,6 +44,8 @@ private:
 private:
     void ApplyDisplaySize();
 
+    void ObserveDevicePixelBox();
+
     void GetInputScale(double& outX, double& outY) const;
 
 private:
