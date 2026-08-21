@@ -82,6 +82,30 @@ EmscriptenWindowImpl::EmscriptenWindowImpl(const WindowInfo& windowInfo)
 
 EmscriptenWindowImpl::~EmscriptenWindowImpl()
 {
+    const char* canvas{ m_canvasSelector.c_str() };
+    emscripten_set_mousemove_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_mousedown_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_mouseup_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, nullptr);
+    emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, nullptr);
+    emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, true, nullptr);
+    emscripten_set_blur_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_focus_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_fullscreenchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, nullptr);
+    emscripten_set_touchstart_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_touchmove_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_touchend_callback(canvas, nullptr, true, nullptr);
+    emscripten_set_touchcancel_callback(canvas, nullptr, true, nullptr);
+
+    // clang-format off
+    EM_ASM({
+        if (window.__canvasDevicePxObserver) {
+            window.__canvasDevicePxObserver.disconnect();
+            window.__canvasDevicePxObserver = null;
+        }
+        window.__canvasDevicePx = null;
+    });
+    // clang-format on
 }
 
 bool EmscriptenWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
