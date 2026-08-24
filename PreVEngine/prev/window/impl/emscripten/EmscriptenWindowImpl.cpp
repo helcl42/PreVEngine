@@ -172,9 +172,9 @@ void EmscriptenWindowImpl::ObserveDevicePixelBox()
     // clang-format on
 }
 
-// Windowed, the render surface is the display's physical resolution (screen CSS size x devicePixelRatio):
-// page layout cannot inflate or shrink the render target, and a canvas still hidden at boot sizes
-// correctly. The element shows the surface wherever layout puts it; input maps by surface / element box.
+// The surface follows the canvas ELEMENT, falling back to the display when it has no box yet - a canvas
+// still hidden at boot measures zero. Sizing to the display regardless is several times the pixels for a
+// window a fraction of its size.
 void EmscriptenWindowImpl::ApplyDisplaySize()
 {
     const double devicePixelRatio{ emscripten_get_device_pixel_ratio() };
@@ -186,12 +186,10 @@ void EmscriptenWindowImpl::ApplyDisplaySize()
     double width{ static_cast<double>(status.screenWidth) };
     double height{ static_cast<double>(status.screenHeight) };
 
-    // Fullscreen: measure the element - screen.* overshoots the area the page actually gets (a phone
-    // keeps its navigation strip), and the UA letterboxes the resulting aspect mismatch.
+    // screen.* also overshoots what a fullscreen page gets - a phone keeps its navigation strip.
     double boxWidth{};
     double boxHeight{};
-    if (status.isFullscreen
-        && emscripten_get_element_css_size(m_canvasSelector.c_str(), &boxWidth, &boxHeight) == EMSCRIPTEN_RESULT_SUCCESS
+    if (emscripten_get_element_css_size(m_canvasSelector.c_str(), &boxWidth, &boxHeight) == EMSCRIPTEN_RESULT_SUCCESS
         && boxWidth > 0.0 && boxHeight > 0.0) {
         width = boxWidth;
         height = boxHeight;
