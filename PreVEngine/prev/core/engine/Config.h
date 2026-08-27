@@ -36,6 +36,7 @@ struct Config {
     glm::ivec2 windowPosition{ 40, 40 };
 
     bool VSync{ true };
+    float fixedDeltaTime{ 0.0f }; // advance by this per frame instead of the wall clock (0 = wall clock);
 
     uint32_t swapchainFrameCount{ 3 };
 
