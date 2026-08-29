@@ -52,8 +52,7 @@ void Engine::RunOneFrame()
     auto& swapchain{ m_engineImpl->GetSwapchain() };
 
     const GfxExtent2D extent{ swapchain.GetExtent() };
-    const auto& config{ m_engineImpl->GetConfig() };
-    const auto deltaTime{ config.fixedDeltaTime > 0.0f ? config.fixedDeltaTime : m_engineImpl->GetCurrentDeltaTime() };
+    const auto deltaTime{ m_engineImpl->GetCurrentDeltaTime() };
 
     prev::event::EventChannel::Post(NewIterationEvent{ deltaTime, extent.width, extent.height });
 

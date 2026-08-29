@@ -17,8 +17,6 @@ public:
 public:
     uint32_t GetViewCount() const override;
 
-    float GetCurrentDeltaTime() const override;
-
     void Init() override;
 
     void ShutDown() override;
@@ -41,6 +39,8 @@ private:
     void ResetRenderPass() override;
 
     void ResetSwapchain() override;
+
+    std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const override;
 
 private:
     std::unique_ptr<prev::xr::IXr> m_xr{};

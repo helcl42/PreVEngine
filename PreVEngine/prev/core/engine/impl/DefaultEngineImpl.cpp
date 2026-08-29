@@ -9,6 +9,7 @@
 
 #include "../../../common/Logger.h"
 #include "../../../render/swapchain/SwapchainFactory.h"
+#include "../../../time/TimeProviderFactory.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -34,9 +35,9 @@ uint32_t DefaultEngineImpl::GetViewCount() const
     return 1;
 }
 
-float DefaultEngineImpl::GetCurrentDeltaTime() const
+std::unique_ptr<prev::time::ITimeProvider> DefaultEngineImpl::CreateTimeProvider() const
 {
-    return m_clock->GetDelta();
+    return prev::time::TimeProviderFactory{}.Create(m_config.fixedDeltaTime);
 }
 
 void DefaultEngineImpl::Init()
@@ -75,7 +76,7 @@ void DefaultEngineImpl::ShutDown()
 bool DefaultEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
-    m_clock->UpdateClock();
+    m_time->Update();
     return result;
 }
 

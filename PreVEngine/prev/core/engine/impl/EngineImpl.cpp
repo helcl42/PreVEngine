@@ -90,6 +90,11 @@ bool EngineImpl::IsFocused() const
     return m_window->HasFocus();
 }
 
+float EngineImpl::GetCurrentDeltaTime() const
+{
+    return m_time->GetDelta();
+}
+
 void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
     m_device->WaitIdle();
@@ -122,7 +127,7 @@ void EngineImpl::operator()(const prev::window::WindowSurfaceLostEvent& surfaceL
 
 void EngineImpl::ResetTiming()
 {
-    m_clock = std::make_unique<prev::util::Clock<float>>();
+    m_time = CreateTimeProvider();
     m_fpsCounter = std::make_unique<prev::util::FPSCounter>();
 }
 

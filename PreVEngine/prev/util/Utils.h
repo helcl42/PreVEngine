@@ -166,41 +166,6 @@ private:
     Type m_buffer[Size] = {};
 };
 
-template <class Type>
-class Clock final {
-public:
-    Clock()
-    {
-        Reset();
-    }
-
-    ~Clock() = default;
-
-public:
-    void Reset()
-    {
-        m_lastFrameTimestamp = std::chrono::steady_clock::now();
-        m_frameInterval = static_cast<Type>(0.0);
-    }
-
-    void UpdateClock()
-    {
-        const auto Now{ std::chrono::steady_clock::now() };
-        m_frameInterval = std::chrono::duration<Type>(Now - m_lastFrameTimestamp).count();
-        m_lastFrameTimestamp = Now;
-    }
-
-    Type GetDelta() const
-    {
-        return m_frameInterval;
-    }
-
-private:
-    std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimestamp;
-
-    Type m_frameInterval;
-};
-
 class IDGenerator final : public prev::common::pattern::Singleton<IDGenerator> {
 private:
     friend class prev::common::pattern::Singleton<IDGenerator>;

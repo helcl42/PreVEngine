@@ -1,5 +1,7 @@
 #include "XrEngineImpl.h"
 
+#include "../../../xr/XrTimeProvider.h"
+
 #ifdef ENABLE_XR
 
 #include "../../Formats.h"
@@ -29,9 +31,9 @@ uint32_t XrEngineImpl::GetViewCount() const
     return m_xr->GetViewCount();
 }
 
-float XrEngineImpl::GetCurrentDeltaTime() const
+std::unique_ptr<prev::time::ITimeProvider> XrEngineImpl::CreateTimeProvider() const
 {
-    return m_xr->GetCurrentDeltaTime();
+    return std::make_unique<prev::xr::XrTimeProvider>(*m_xr);
 }
 
 void XrEngineImpl::Init()
@@ -66,6 +68,8 @@ void XrEngineImpl::ShutDown()
 
     m_swapchain.reset(); // destroy swapchain before XR session (it references XR-owned textures)
 
+    m_time.reset();
+
     if (m_xr) {
         m_xr->DestroySession();
         m_xr.reset();
@@ -76,7 +80,7 @@ bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
     m_xr->PollEvents();
-    m_clock->UpdateClock();
+    m_time->Update();
     return result;
 }
 

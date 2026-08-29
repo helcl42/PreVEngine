@@ -15,6 +15,7 @@
 #include "../../../render/surface/Surface.h"
 #include "../../../render/swapchain/ISwapchain.h"
 #include "../../../scene/IScene.h"
+#include "../../../time/ITimeProvider.h"
 #include "../../../util/Utils.h"
 #include "../../../window/IWindow.h"
 #include "../../../window/WindowEvents.h"
@@ -61,8 +62,6 @@ public:
 
     virtual uint32_t GetViewCount() const = 0;
 
-    virtual float GetCurrentDeltaTime() const = 0;
-
     // Invokes tick until it returns false; each impl owns its loop mechanics (WebXR is asynchronous -
     // arms the session's rAF callback and returns immediately).
     virtual void RunFrameLoop(const std::function<bool()>& tick) = 0;
@@ -78,6 +77,8 @@ public:
 
     bool IsFocused() const;
 
+    float GetCurrentDeltaTime() const;
+
 public:
     void operator()(const prev::window::WindowChangeEvent& windowChangeEvent);
 
@@ -86,6 +87,8 @@ public:
     void operator()(const prev::window::WindowSurfaceLostEvent& surfaceLostEvent);
 
 protected:
+    virtual std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const = 0;
+
     void ResetTiming();
 
     void ResetWindow();
@@ -118,7 +121,7 @@ private:
 protected:
     Config m_config;
 
-    std::unique_ptr<prev::util::Clock<float>> m_clock{};
+    std::unique_ptr<prev::time::ITimeProvider> m_time{};
 
     std::unique_ptr<prev::util::FPSCounter> m_fpsCounter{};
 

@@ -41,6 +41,7 @@ file(GLOB SRC_LIST
     "prev/scene/*.h" "prev/scene/*.cpp"
     "prev/scene/component/*.h" "prev/scene/component/*.cpp"
     "prev/scene/graph/*.h" "prev/scene/graph/*.cpp"
+    "prev/time/*.h" "prev/time/*.cpp"
     "prev/util/*.h" "prev/util/*.cpp"
     "prev/util/intersection/*.h" "prev/util/intersection/*.cpp"
     "prev/window/*.h" "prev/window/*.cpp"

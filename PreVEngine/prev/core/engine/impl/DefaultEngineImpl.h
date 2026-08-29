@@ -13,8 +13,6 @@ public:
 public:
     uint32_t GetViewCount() const override;
 
-    float GetCurrentDeltaTime() const override;
-
     void Init() override;
 
     void ShutDown() override;
@@ -30,6 +28,8 @@ public:
     void RunFrameLoop(const std::function<bool()>& tick) override;
 
 private:
+    std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const override;
+
     void ResetInstance() override;
 
     void ResetDevice() override;
