@@ -103,11 +103,18 @@ void DefaultEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
     s_frameTick = tick;
     emscripten_set_main_loop_arg(
         [](void*) {
+            static bool announced{ false };
             if (!s_frameTick()) {
                 emscripten_cancel_main_loop();
                 // The app closed itself (quit from its own UI): the PAGE owns what that means -
                 // announce it and let the embedding page react (reload, navigate, show a landing).
                 emscripten_run_script("if (window.onEngineShutdown) { window.onEngineShutdown(); }");
+                return;
+            }
+            if (!announced) {
+                announced = true;
+                // A frame is UP, which the runtime being initialised does not mean.
+                emscripten_run_script("if (window.onEngineStarted) { window.onEngineStarted(); }");
             }
         },
         nullptr, 0, 1);
