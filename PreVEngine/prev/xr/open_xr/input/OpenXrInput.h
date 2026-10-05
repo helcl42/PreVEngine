@@ -81,9 +81,11 @@ private:
     XrAction m_squeezeAction{};
     XrAction m_triggerAction{};
     XrAction m_palmPoseAction{};
+    XrAction m_aimPoseAction{};
     XrAction m_quitAction{};
     XrAction m_vibrateAction{};
     std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
+    std::array<XrSpace, MAX_HAND_COUNT> m_handAimSpace{};
 
 private:
     prev::event::EventHandler<OpenXrInput, HapticFeedback> m_vibrationEventHandler{ *this };

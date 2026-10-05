@@ -100,6 +100,7 @@ struct HandControllerEvent {
     HandType type{};
     bool active{};
     prev::util::math::Pose pose{};
+    prev::util::math::Pose aimPose{};
     float squeeze{};
     prev::common::FlagSet<HandEventFlags> flags{};
 };

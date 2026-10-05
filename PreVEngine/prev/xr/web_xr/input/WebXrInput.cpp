@@ -83,7 +83,7 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
         return 0;
     }
     const base = out >> 2;
-    for (let k = 0; k < 10; ++k) {
+    for (let k = 0; k < 17; ++k) {
         HEAPF32[base + k] = 0;
     }
     const pose = state.frame.getPose(src.gripSpace, state.refSpace); // VERIFY
@@ -96,6 +96,17 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
         HEAPF32[base + 4] = q.y;
         HEAPF32[base + 5] = q.z;
         HEAPF32[base + 6] = q.w;
+    }
+    const aim = state.frame.getPose(src.targetRaySpace, state.refSpace);
+    if (aim) {
+        const p = aim.transform.position, q = aim.transform.orientation;
+        HEAPF32[base + 10] = p.x;
+        HEAPF32[base + 11] = p.y;
+        HEAPF32[base + 12] = p.z;
+        HEAPF32[base + 13] = q.x;
+        HEAPF32[base + 14] = q.y;
+        HEAPF32[base + 15] = q.z;
+        HEAPF32[base + 16] = q.w;
     }
     const gp = src.gamepad;
     const trigger = gp.buttons[0]; // standard xr-gamepad mapping: 0 = trigger, 1 = squeeze/grip
@@ -118,7 +129,7 @@ void WebXrInput::HandleControllerActions()
 {
     HandControllersEvent controllersEvent{};
     for (uint32_t h = 0; h < MAX_HAND_COUNT; ++h) {
-        float c[10] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger, [9] grip
+        float c[17] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger, [9] grip, [10..12] aim position, [13..16] aim orientation xyzw
         if (!prev_webxr_get_controller(static_cast<int>(h), c)) {
             continue;
         }
@@ -126,6 +137,7 @@ void WebXrInput::HandleControllerActions()
         ctrl.type = (h == 0) ? HandType::LEFT : HandType::RIGHT;
         ctrl.active = true;
         ctrl.pose = prev::util::math::Pose{ glm::quat{ c[6], c[3], c[4], c[5] }, glm::vec3{ c[0], c[1], c[2] } };
+        ctrl.aimPose = prev::util::math::Pose{ glm::quat{ c[16], c[13], c[14], c[15] }, glm::vec3{ c[10], c[11], c[12] } };
         ctrl.squeeze = c[7];
         ctrl.flags = {};
         ctrl.flags |= (c[8] != 0.0f) ? HandEventFlags::TRIGGER : HandEventFlags::NONE;

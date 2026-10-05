@@ -128,6 +128,7 @@ void OpenXrInput::CreateActionSet()
     m_squeezeAction = open_xr::input::util::CreateAction(m_actionSet, "squeeze", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_triggerAction = open_xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_palmPoseAction = open_xr::input::util::CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_aimPoseAction = open_xr::input::util::CreateAction(m_actionSet, "aim_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_quitAction = open_xr::input::util::CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_vibrateAction = open_xr::input::util::CreateAction(m_actionSet, "vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, { m_handPaths.begin(), m_handPaths.end() });
 
@@ -143,6 +144,7 @@ void OpenXrInput::DestroyActionSet()
 
     m_vibrateAction = {};
     m_quitAction = {};
+    m_aimPoseAction = {};
     m_palmPoseAction = {};
     m_triggerAction = {};
     m_squeezeAction = {};
@@ -162,6 +164,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
@@ -176,6 +180,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
@@ -187,6 +193,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
@@ -199,6 +207,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/b/click") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
@@ -211,6 +221,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
+        { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
         { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
@@ -227,6 +239,10 @@ void OpenXrInput::CreateActionSpaces()
     }
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
+        m_handAimSpace[i] = open_xr::input::util::CreateActionSpace(m_session, m_aimPoseAction, m_handPaths[i]);
+    }
+
+    for (size_t i = 0; i < m_handPaths.size(); ++i) {
         m_handSpace[i] = open_xr::input::util::CreateActionSpace(m_session, m_poseAction, m_handPaths[i]);
     }
 }
@@ -235,6 +251,10 @@ void OpenXrInput::DestroyActionSpaces()
 {
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         open_xr::input::util::DestroyActionSpace(m_handSpace[i]);
+    }
+
+    for (size_t i = 0; i < m_handPaths.size(); ++i) {
+        open_xr::input::util::DestroyActionSpace(m_handAimSpace[i]);
     }
 
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
@@ -306,6 +326,7 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
     HandControllersEvent handControllersEvent{};
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_palmPoseAction, m_handPaths[i], m_localSpace, m_handPoseSpace[i]) };
+        const auto aimPose{ open_xr::input::util::GetPoseState(m_session, time, m_aimPoseAction, m_handPaths[i], m_localSpace, m_handAimSpace[i]) };
         const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
         const auto trigger{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
 
@@ -313,6 +334,7 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
         handControllerEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
         handControllerEvent.active = handPose.has_value();
         handControllerEvent.pose = handPose ? *handPose : prev::util::math::Pose{};
+        handControllerEvent.aimPose = aimPose ? *aimPose : prev::util::math::Pose{};
         handControllerEvent.flags = {};
         handControllerEvent.flags |= squeeze ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
         handControllerEvent.flags |= trigger ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
