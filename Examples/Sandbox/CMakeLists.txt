@@ -17,7 +17,7 @@ file(GLOB SRC_LIST
     "sandbox/scene/camera/*.h" "sandbox/scene/camera/*.cpp"
     "sandbox/render/*.h" "sandbox/render/*.cpp"
 )
-# XrCamera.{h,cpp} guard themselves with #ifdef ENABLE_XR (they reference prev::xr::*), so they can
+# XrEyes.{h,cpp} guard themselves with #ifdef ENABLE_XR (they reference prev::xr::*), so they can
 # be globbed unconditionally: in mono builds they compile to an empty translation unit.
 
 # Options derived from PreVEngine

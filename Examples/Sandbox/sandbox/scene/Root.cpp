@@ -2,7 +2,7 @@
 
 #include "../render/ModelFactory.h"
 #include "Object.h"
-#include "camera/CameraFactory.h"
+#include "camera/Camera.h"
 
 #include <glm/glm.hpp>
 
@@ -18,7 +18,7 @@ Root::Root(prev::core::device::Device& device, uint32_t viewCount)
 
 void Root::Init()
 {
-    AddChild(camera::CameraFactory::Create(m_viewCount));
+    AddChild(std::make_shared<camera::Camera>(m_viewCount));
 
     // Build the sandbox geometry once and share it across every sandbox node (unique -> shared).
     const std::shared_ptr<sandbox::render::Model> sandboxModel{ sandbox::render::ModelFactory::CreateSandbox(m_device) };

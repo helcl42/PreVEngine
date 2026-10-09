@@ -27,6 +27,8 @@ public:
 
     void SetOrientation(const glm::quat& orientation) override;
 
+    void SetUseFixedUp(const bool useFixedUp) override;
+
     void AddPosition(const glm::vec3& positionDiff) override;
 
     void SetPosition(const glm::vec3& position) override;

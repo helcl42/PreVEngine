@@ -65,6 +65,13 @@ void CameraComponent::SetOrientation(const glm::quat& orientation)
     Update();
 }
 
+void CameraComponent::SetUseFixedUp(const bool useFixedUp)
+{
+    m_useFixedUp = useFixedUp;
+    m_orientationChanged = true;
+    Update();
+}
+
 void CameraComponent::AddPosition(const glm::vec3& positionDiff)
 {
     m_positionDelta = positionDiff;

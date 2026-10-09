@@ -82,7 +82,7 @@ void Root::Init()
     // }
 
 #ifdef ENABLE_XR
-    auto player = std::make_shared<Camera>(m_viewCount);
+    auto player = std::make_shared<Camera>(m_viewCount, glm::vec3(50.0f, 30.0f, 50.0f), glm::quat(glm::radians(glm::vec3(0.0f, 240.0f, 0.0f))));
     auto handTracking = std::make_shared<HandTracking>(m_device);
     AddChild(handTracking);
 #else

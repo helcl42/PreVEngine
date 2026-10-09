@@ -24,6 +24,8 @@ public:
 
     virtual void SetOrientation(const glm::quat& orientation) = 0;
 
+    virtual void SetUseFixedUp(const bool useFixedUp) = 0;
+
     virtual void AddPosition(const glm::vec3& positionDiff) = 0;
 
     virtual void SetPosition(const glm::vec3& position) = 0;

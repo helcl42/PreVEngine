@@ -8,16 +8,12 @@
 #include <prev/input/InputFacade.h>
 #include <prev/scene/graph/SceneNode.h>
 
-#ifdef ENABLE_XR
-#include <prev/xr/XrEvents.h>
-#endif
-
 #include <vector>
 
 namespace prev_test::scene {
 class Camera final : public prev::scene::graph::SceneNode {
 public:
-    Camera(uint32_t viewCount);
+    Camera(uint32_t viewCount, const glm::vec3& position, const glm::quat& orientation);
 
     ~Camera() = default;
 
@@ -35,14 +31,12 @@ public:
 
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
-#ifdef ENABLE_XR
-    void operator()(const prev::xr::CameraEvent& cameraEvent);
-#else
     void operator()(const prev::core::NewIterationEvent& newIterationEvent);
-#endif
 
 private:
     void Reset();
+
+    void AddLook(const glm::vec2& deltaDegrees);
 
 private:
     prev::event::EventHandler<Camera, prev::input::mouse::MouseEvent> m_mouseHandler{ *this };
@@ -51,14 +45,14 @@ private:
 
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
 
-#ifdef ENABLE_XR
-    prev::event::EventHandler<Camera, prev::xr::CameraEvent> m_xrCameraEventHandler{ *this };
-#else
     prev::event::EventHandler<Camera, prev::core::NewIterationEvent> m_newIterationEventHandler{ *this };
-#endif
 
 private:
     uint32_t m_viewCount{ 1 };
+
+    glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
+
+    glm::quat m_orientation{ 1.0f, 0.0f, 0.0f, 0.0f };
 
 private:
     const float m_sensitivity{ 0.03f };
@@ -74,15 +68,11 @@ private:
 
     std::vector<std::shared_ptr<prev_test::component::camera::ICameraComponent>> m_cameraComponents;
 
-#if defined(__ANDROID__)
     bool m_autoMoveForward{ false };
 
     bool m_autoMoveBackward{ false };
-#endif
 
-#ifndef ENABLE_XR
     glm::uvec2 m_viewPortSize{ 1920, 1080 };
-#endif
 };
 } // namespace prev_test::scene
 

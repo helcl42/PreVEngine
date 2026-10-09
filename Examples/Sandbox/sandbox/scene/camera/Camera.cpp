@@ -1,4 +1,10 @@
-#include "DefaultCamera.h"
+#include "Camera.h"
+
+#include "XrEyes.h"
+
+#include "../../Tags.h"
+
+#include <prev/scene/component/NodeComponentHelper.h>
 
 #include <prev/util/MathUtils.h>
 
@@ -7,18 +13,25 @@
 #include <cmath>
 
 namespace sandbox::scene::camera {
-DefaultCamera::DefaultCamera(uint32_t viewCount)
-    : Camera{ viewCount }
+Camera::Camera(uint32_t viewCount)
+    : SceneNode({ sandbox::TAG_MAIN_CAMERA })
+    , m_viewCount{ std::min(viewCount, static_cast<uint32_t>(MAX_VIEW_COUNT_VALUE)) }
 {
 }
 
-void DefaultCamera::Init()
+void Camera::Init()
 {
-    Camera::Init(); // creates and registers the CameraComponent
+    m_camera = std::make_shared<sandbox::component::CameraComponent>(m_viewCount);
+    prev::scene::component::NodeComponentHelper::AddComponent<sandbox::component::CameraComponent>(GetThis(), m_camera);
+#ifdef ENABLE_XR
+    AddChild(std::make_shared<XrEyes>(m_camera)); // while an immersive session runs, the headset places the eyes
+#endif
+
+    SceneNode::Init();
     UpdateView(); // seed view 0 so the very first frame already has a valid transform
 }
 
-void DefaultCamera::Update(float deltaTime)
+void Camera::Update(float deltaTime)
 {
     // Free-fly: WASD moves in the view plane, Q/E moves vertically (world up).
     const float distance{ m_moveSpeed * deltaTime };
@@ -59,7 +72,7 @@ void DefaultCamera::Update(float deltaTime)
     SceneNode::Update(deltaTime);
 }
 
-void DefaultCamera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
+void Camera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 {
     using prev::input::mouse::MouseActionType;
     using prev::input::mouse::MouseButtonType;
@@ -78,7 +91,7 @@ void DefaultCamera::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
     }
 }
 
-void DefaultCamera::operator()(const prev::input::touch::TouchEvent& touchEvent)
+void Camera::operator()(const prev::input::touch::TouchEvent& touchEvent)
 {
     using prev::input::touch::TouchActionType;
 
@@ -111,14 +124,14 @@ void DefaultCamera::operator()(const prev::input::touch::TouchEvent& touchEvent)
     }
 }
 
-void DefaultCamera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
+void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 {
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS && keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_R) {
         Reset();
     }
 }
 
-void DefaultCamera::Reset()
+void Camera::Reset()
 {
     m_position = INITIAL_POSITION;
     m_yaw = 0.0f;
@@ -131,14 +144,14 @@ void DefaultCamera::Reset()
     UpdateView();
 }
 
-void DefaultCamera::AddLook(const glm::vec2& deltaDegrees)
+void Camera::AddLook(const glm::vec2& deltaDegrees)
 {
     m_yaw += glm::radians(deltaDegrees.x);
     m_pitch += glm::radians(deltaDegrees.y);
     m_pitch = glm::clamp(m_pitch, glm::radians(-89.0f), glm::radians(89.0f));
 }
 
-glm::vec3 DefaultCamera::GetForwardDirection() const
+glm::vec3 Camera::GetForwardDirection() const
 {
     return glm::normalize(glm::vec3{
         std::sin(m_yaw) * std::cos(m_pitch),
@@ -146,19 +159,19 @@ glm::vec3 DefaultCamera::GetForwardDirection() const
         -std::cos(m_yaw) * std::cos(m_pitch) });
 }
 
-glm::vec3 DefaultCamera::GetRightDirection() const
+glm::vec3 Camera::GetRightDirection() const
 {
     return glm::normalize(glm::cross(GetForwardDirection(), glm::vec3{ 0.0f, 1.0f, 0.0f }));
 }
 
-void DefaultCamera::operator()(const prev::core::NewIterationEvent& iterationEvent)
+void Camera::operator()(const prev::core::NewIterationEvent& iterationEvent)
 {
     if (iterationEvent.windowHeight > 0) {
         m_aspect = static_cast<float>(iterationEvent.windowWidth) / static_cast<float>(iterationEvent.windowHeight);
     }
 }
 
-void DefaultCamera::UpdateView()
+void Camera::UpdateView()
 {
     m_camera->SetViewCount(m_viewCount);
     m_camera->SetPositions(0, m_position);
