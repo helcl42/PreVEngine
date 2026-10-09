@@ -36,6 +36,11 @@ public:
 
     virtual void DestroySession() = 0;
 
+    // WebXR: the user enters and leaves the session (Enter VR/AR), and the engine draws to the window in between.
+    virtual bool IsSessionOptional() const = 0;
+
+    virtual bool IsSessionRunning() const = 0;
+
     virtual void PollEvents() = 0;
 
     virtual void PollActions() = 0;

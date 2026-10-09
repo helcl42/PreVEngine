@@ -12,6 +12,9 @@
 #include "../../instance/InstanceFactory.h"
 
 #include "../../../common/Logger.h"
+#include "../../../event/EventChannel.h"
+#include "../../../time/TimeProviderFactory.h"
+#include "../../../xr/XrEvents.h"
 #include "../../../xr/XrFactory.h"
 #include "../../../xr/XrSwapchain.h"
 
@@ -31,9 +34,14 @@ uint32_t XrEngineImpl::GetViewCount() const
     return m_xr->GetViewCount();
 }
 
+prev::render::swapchain::ISwapchain& XrEngineImpl::GetSwapchain() const
+{
+    return IsDrawingToWindow() ? *m_windowSwapchain : *m_xrSwapchain;
+}
+
 std::unique_ptr<prev::time::ITimeProvider> XrEngineImpl::CreateTimeProvider() const
 {
-    return std::make_unique<prev::xr::XrTimeProvider>(*m_xr);
+    return std::make_unique<prev::xr::XrTimeProvider>(*m_xr, prev::time::TimeProviderFactory{}.Create(m_config.fixedDeltaTime));
 }
 
 void XrEngineImpl::Init()
@@ -43,6 +51,9 @@ void XrEngineImpl::Init()
     ResetTiming();
     ResetInstance();
     ResetWindow();
+    if (m_xr->IsSessionOptional()) {
+        ResetSurface();
+    }
     ResetDevice();
 
     m_xr->CreateSession();
@@ -66,7 +77,7 @@ void XrEngineImpl::ShutDown()
     m_rootRenderer.reset();
     m_scene.reset();
 
-    m_swapchain.reset(); // destroy swapchain before XR session (it references XR-owned textures)
+    ReleaseSwapchain(); // the swapchains go before the XR session: the XR one references its textures
 
     m_time.reset();
 
@@ -80,33 +91,50 @@ bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
     m_xr->PollEvents();
+    UpdateSessionState();
     m_time->Update();
     return result;
 }
 
 bool XrEngineImpl::BeginFrame()
 {
-    if (!m_swapchain) { // window surface lost (see EngineImpl's WindowSurfaceLostEvent): skip the frame
+    if (!m_xrSwapchain) { // window surface lost (see EngineImpl's WindowSurfaceLostEvent): skip the frame
         return false;
+    }
+    if (IsDrawingToWindow()) {
+        return true;
     }
     return m_xr->BeginFrame();
 }
 
 void XrEngineImpl::PollActions()
 {
-    m_xr->PollActions();
+    if (!IsDrawingToWindow()) {
+        m_xr->PollActions();
+    }
 }
 
 bool XrEngineImpl::EndFrame()
 {
-    bool result{ m_xr->EndFrame() };
+    bool result{ true };
+    if (!IsDrawingToWindow()) {
+        result = m_xr->EndFrame();
+    }
     UpdateFps();
     return result;
 }
 
 void XrEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
 {
-    m_xr->RunFrameLoop(tick);
+    m_xr->RunFrameLoop(tick); // OpenXR: runs every frame until the app quits; WebXR: only arms the session's frame callback
+    if (m_xr->IsSessionOptional()) {
+        RunWindowFrameLoop([this, tick]() { // the window ticks the game while no session runs
+            if (m_xr->IsSessionRunning()) {
+                return true;
+            }
+            return tick();
+        });
+    }
 }
 
 void XrEngineImpl::ResetInstance()
@@ -129,12 +157,17 @@ void XrEngineImpl::ResetDevice()
         };
         m_device = prev::core::device::DeviceFactory{}.Create(adapter, extensions, m_xr->GetRequiredDeviceExtensions());
     } else {
+        const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
         prev::core::device::Adapters adapters{ m_instance->GetHandle() };
-        const auto adapter{ adapters.Find(nullptr, m_config.gpuIndex) };
+        const auto adapter{ adapters.Find(surface, m_config.gpuIndex) };
         if (!adapter) {
             throw std::runtime_error("Could not find a suitable GPU adapter");
         }
-        m_device = prev::core::device::DeviceFactory{}.Create(*adapter, m_xr->GetRequiredDeviceExtensions());
+        std::vector<std::string> extensions{ m_xr->GetRequiredDeviceExtensions() };
+        if (surface) {
+            extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
+        }
+        m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions);
     }
 
     if (!m_device) {
@@ -157,13 +190,7 @@ void XrEngineImpl::ResetRenderPass()
         LOGW("colorManaged requested but the XR runtime provides no sRGB swapchain format; falling back to gamma passthrough");
         m_config.colorManaged = false;
     }
-    // The render pass's view count is the number of views rendered in ONE pass (the multiview capability),
-    // not the XR eye count. With multiview shaders (OpenXR) that is MAX_PER_PASS_VIEW_COUNT_VALUE (2); on WebGPU,
-    // which has no multiview, MAX_PER_PASS_VIEW_COUNT_VALUE is 1 so the pass is mono and stereo is done per-eye.
-    // Clamp to the runtime view count so we never exceed what the runtime provides.
-    const uint32_t maxViews = static_cast<uint32_t>(MAX_PER_PASS_VIEW_COUNT_VALUE);
-    const uint32_t xrViews = GetViewCount();
-    const uint32_t viewCount = (xrViews < maxViews) ? xrViews : maxViews;
+    const uint32_t viewCount = GetPassViewCount();
     const bool storeColor = true;
     const bool storeDepth = m_xr->HasDepthImages();
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
@@ -178,8 +205,43 @@ void XrEngineImpl::ResetRenderPass()
 void XrEngineImpl::ResetSwapchain()
 {
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
-    m_swapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount, m_config.maxFramesInFlight);
-    m_swapchain->Print();
+    m_xrSwapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount, m_config.maxFramesInFlight);
+    m_xrSwapchain->Print();
+    if (m_xr->IsSessionOptional() && m_surface) {
+        m_windowSwapchain = CreateWindowSwapchain(GetPassViewCount()); // shares the render pass: WebXR draws in the window's own format
+        m_windowSwapchain->Print();
+    }
+}
+
+void XrEngineImpl::ReleaseSwapchain()
+{
+    m_windowSwapchain.reset();
+    m_xrSwapchain.reset();
+}
+
+uint32_t XrEngineImpl::GetPassViewCount() const
+{
+    // The number of views rendered in ONE pass (the multiview capability), not the XR eye count. With multiview
+    // shaders (OpenXR) that is MAX_PER_PASS_VIEW_COUNT_VALUE (2); on WebGPU, which has no multiview,
+    // MAX_PER_PASS_VIEW_COUNT_VALUE is 1 so the pass is mono and stereo is done per-eye. Clamped to the runtime
+    // view count so we never exceed what the runtime provides.
+    const uint32_t maxViews = static_cast<uint32_t>(MAX_PER_PASS_VIEW_COUNT_VALUE);
+    const uint32_t xrViews = GetViewCount();
+    return (xrViews < maxViews) ? xrViews : maxViews;
+}
+
+bool XrEngineImpl::IsDrawingToWindow() const
+{
+    return !m_sessionRunning && m_windowSwapchain;
+}
+
+void XrEngineImpl::UpdateSessionState()
+{
+    const bool running{ m_xr->IsSessionRunning() };
+    if (running != m_sessionRunning) {
+        m_sessionRunning = running;
+        prev::event::EventChannel::Post(prev::xr::XrSessionChangedEvent{ running });
+    }
 }
 } // namespace prev::core::engine::impl
 

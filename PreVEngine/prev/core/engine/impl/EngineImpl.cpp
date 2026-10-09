@@ -2,8 +2,13 @@
 
 #include "../../../common/Logger.h"
 #include "../../../render/pass/RenderPassBuilder.h"
+#include "../../../render/swapchain/SwapchainFactory.h"
 #include "../../../util/MathUtils.h"
 #include "../../../window/Window.h"
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #include <stdexcept>
 #include <vector>
@@ -32,11 +37,6 @@ prev::scene::IScene& EngineImpl::GetScene() const
 prev::render::IRootRenderer& EngineImpl::GetRootRenderer() const
 {
     return *m_rootRenderer;
-}
-
-prev::render::swapchain::ISwapchain& EngineImpl::GetSwapchain() const
-{
-    return *m_swapchain;
 }
 
 prev::render::pass::RenderPass& EngineImpl::GetRenderPass() const
@@ -99,7 +99,7 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 {
     m_device->WaitIdle();
 
-    m_swapchain.reset();
+    ReleaseSwapchain();
     m_surface.reset();
     m_device->GetDeferredResourceDestroyer().RetireAll();
     ResetSurface();
@@ -109,7 +109,7 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
     m_device->WaitIdle();
-    m_swapchain.reset();
+    ReleaseSwapchain();
     m_device->GetDeferredResourceDestroyer().RetireAll();
     ResetSwapchain();
 }
@@ -120,7 +120,7 @@ void EngineImpl::operator()(const prev::window::WindowSurfaceLostEvent& surfaceL
         return; // surface lost mid-init (before the device exists): nothing to drop yet
     }
     m_device->WaitIdle();
-    m_swapchain.reset();
+    ReleaseSwapchain();
     m_surface.reset();
     m_device->GetDeferredResourceDestroyer().RetireAll();
 }
@@ -151,6 +151,58 @@ void EngineImpl::ResetSurface()
         return;
     }
     m_surface = std::make_unique<prev::render::surface::Surface>(*m_instance, m_window->GetNativeWindowHandle());
+}
+
+std::unique_ptr<prev::render::swapchain::ISwapchain> EngineImpl::CreateWindowSwapchain(uint32_t viewCount) const
+{
+    const auto size{ m_window->GetSize() };
+    const GfxExtent2D extent{ size.width, size.height };
+    const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
+
+    GfxPresentMode presentMode = GFX_PRESENT_MODE_FIFO;
+    if (m_surface) {
+        const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
+        presentMode = m_surface->GetPreferredPresentMode(m_device->GetAdapter(), preferred);
+    }
+
+    return prev::render::swapchain::SwapchainFactory{}.Create(
+        *m_device,
+        *m_renderPass,
+        surface,
+        extent,
+        presentMode,
+        m_config.swapchainFrameCount,
+        viewCount,
+        m_config.maxFramesInFlight);
+}
+
+void EngineImpl::RunWindowFrameLoop(const std::function<bool()>& tick)
+{
+#ifdef __EMSCRIPTEN__
+    // The tick outlives this call (fires after the unwind); one main loop per program, so a static fits.
+    static std::function<bool()> s_frameTick;
+    s_frameTick = tick;
+    emscripten_set_main_loop_arg(
+        [](void*) {
+            static bool announced{ false };
+            if (!s_frameTick()) {
+                emscripten_cancel_main_loop();
+                // The app closed itself (quit from its own UI): the PAGE owns what that means -
+                // announce it and let the embedding page react (reload, navigate, show a landing).
+                emscripten_run_script("if (window.onEngineShutdown) { window.onEngineShutdown(); }");
+                return;
+            }
+            if (!announced) {
+                announced = true;
+                // A frame is UP, which the runtime being initialised does not mean.
+                emscripten_run_script("if (window.onEngineStarted) { window.onEngineStarted(); }");
+            }
+        },
+        nullptr, 0, 1);
+#else
+    while (tick()) {
+    }
+#endif
 }
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth)

@@ -7,10 +7,13 @@
 
 #include "../time/ITimeProvider.h"
 
+#include <memory>
+
 namespace prev::xr {
+// The session's frame timing while it runs, the window's clock otherwise.
 class XrTimeProvider final : public prev::time::ITimeProvider {
 public:
-    explicit XrTimeProvider(const IXr& xr);
+    XrTimeProvider(const IXr& xr, std::unique_ptr<prev::time::ITimeProvider> windowTime);
 
 public:
     void Update() override;
@@ -19,6 +22,8 @@ public:
 
 private:
     const IXr& m_xr;
+
+    std::unique_ptr<prev::time::ITimeProvider> m_windowTime;
 };
 } // namespace prev::xr
 

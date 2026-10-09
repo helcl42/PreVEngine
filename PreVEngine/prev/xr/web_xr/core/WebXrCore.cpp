@@ -15,7 +15,7 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
     const buttons = [];
     const showButtons = function() {
         if (Module.__prevWebXr && Module.__prevWebXr.running) { return; }
-        buttons.forEach(function(b) { b.btn.style.display = b.supported ? 'block' : 'none'; });
+        buttons.forEach(function(b) { b.btn.style.display = b.supported ? 'inline-block' : 'none'; });
     };
     const hideButtons = function() {
         buttons.forEach(function(b) { b.btn.style.display = 'none'; });
@@ -68,18 +68,26 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
     };
 
     const MODES = [
-        { id: 'prev-enter-vr', label: 'Enter VR', mode: 'immersive-vr', dx: '-105%' },
-        { id: 'prev-enter-ar', label: 'Enter AR', mode: 'immersive-ar', dx: '5%' }
+        { id: 'prev-enter-vr', label: 'Enter VR', mode: 'immersive-vr' },
+        { id: 'prev-enter-ar', label: 'Enter AR', mode: 'immersive-ar' }
     ];
+    // One corner bar holds them, so neither button carries any positioning of its own and an
+    // unsupported mode (display:none) simply leaves the other with the corner.
+    let bar = document.getElementById('prev-xr-buttons');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'prev-xr-buttons';
+        bar.style.cssText = 'position:fixed;right:12px;top:12px;z-index:9999;white-space:nowrap;';
+        document.body.appendChild(bar);
+    }
     MODES.forEach(function(m) {
         let btn = document.getElementById(m.id);
         if (!btn) {
             btn = document.createElement('button');
             btn.id = m.id;
             btn.textContent = m.label;
-            btn.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(' + m.dx + ',-50%);' +
-                                'padding:16px 28px;font-size:20px;z-index:9999;cursor:pointer;display:none;';
-            document.body.appendChild(btn);
+            btn.style.cssText = 'display:none;margin-left:6px;padding:8px 16px;font-size:15px;cursor:pointer;';
+            bar.appendChild(btn);
         }
         const entry = { btn: btn, supported: false };
         buttons.push(entry);

@@ -35,6 +35,10 @@ public:
 
     void DestroySession() override;
 
+    bool IsSessionOptional() const override;
+
+    bool IsSessionRunning() const override;
+
     void PollEvents() override;
 
     void PollActions() override;

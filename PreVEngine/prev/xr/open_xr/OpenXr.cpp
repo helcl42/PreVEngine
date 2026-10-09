@@ -75,6 +75,16 @@ void OpenXr::DestroySession()
     m_core->DestroySession();
 }
 
+bool OpenXr::IsSessionOptional() const
+{
+    return false;
+}
+
+bool OpenXr::IsSessionRunning() const
+{
+    return m_core->IsSessionRunning();
+}
+
 bool OpenXr::GetFrameImages(XrFrameImages& outImages) const
 {
     if (m_render->GetImageCount() == 0) {

@@ -35,8 +35,6 @@ public:
 
     prev::render::IRootRenderer& GetRootRenderer() const;
 
-    prev::render::swapchain::ISwapchain& GetSwapchain() const;
-
     prev::render::pass::RenderPass& GetRenderPass() const;
 
     prev::core::device::Device& GetDevice() const;
@@ -61,6 +59,8 @@ public:
     virtual bool EndFrame() = 0;
 
     virtual uint32_t GetViewCount() const = 0;
+
+    virtual prev::render::swapchain::ISwapchain& GetSwapchain() const = 0;
 
     // Invokes tick until it returns false; each impl owns its loop mechanics (WebXR is asynchronous -
     // arms the session's rAF callback and returns immediately).
@@ -87,13 +87,15 @@ public:
     void operator()(const prev::window::WindowSurfaceLostEvent& surfaceLostEvent);
 
 protected:
-    virtual std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const = 0;
-
     void ResetTiming();
 
     void ResetWindow();
 
     void ResetSurface();
+
+    std::unique_ptr<prev::render::swapchain::ISwapchain> CreateWindowSwapchain(uint32_t viewCount) const;
+
+    void RunWindowFrameLoop(const std::function<bool()>& tick);
 
 protected:
     virtual void ResetInstance() = 0;
@@ -103,6 +105,10 @@ protected:
     virtual void ResetRenderPass() = 0;
 
     virtual void ResetSwapchain() = 0;
+
+    virtual void ReleaseSwapchain() = 0;
+
+    virtual std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const = 0;
 
 protected:
     std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth);
@@ -134,8 +140,6 @@ protected:
     std::unique_ptr<prev::core::device::Device> m_device{};
 
     std::unique_ptr<prev::render::pass::RenderPass> m_renderPass{};
-
-    std::unique_ptr<prev::render::swapchain::ISwapchain> m_swapchain{};
 
     std::unique_ptr<prev::scene::IScene> m_scene{};
 

@@ -8,12 +8,7 @@
 #include "../../instance/InstanceFactory.h"
 
 #include "../../../common/Logger.h"
-#include "../../../render/swapchain/SwapchainFactory.h"
 #include "../../../time/TimeProviderFactory.h"
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
 
 #include <algorithm>
 #include <stdexcept>
@@ -28,11 +23,6 @@ DefaultEngineImpl::DefaultEngineImpl(const Config& config)
 DefaultEngineImpl::~DefaultEngineImpl()
 {
     ShutDown();
-}
-
-uint32_t DefaultEngineImpl::GetViewCount() const
-{
-    return 1;
 }
 
 std::unique_ptr<prev::time::ITimeProvider> DefaultEngineImpl::CreateTimeProvider() const
@@ -95,33 +85,19 @@ bool DefaultEngineImpl::EndFrame()
     return true;
 }
 
+prev::render::swapchain::ISwapchain& DefaultEngineImpl::GetSwapchain() const
+{
+    return *m_swapchain;
+}
+
+uint32_t DefaultEngineImpl::GetViewCount() const
+{
+    return 1;
+}
+
 void DefaultEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
 {
-#ifdef __EMSCRIPTEN__
-    // The tick outlives this call (fires after the unwind); one main loop per program, so a static fits.
-    static std::function<bool()> s_frameTick;
-    s_frameTick = tick;
-    emscripten_set_main_loop_arg(
-        [](void*) {
-            static bool announced{ false };
-            if (!s_frameTick()) {
-                emscripten_cancel_main_loop();
-                // The app closed itself (quit from its own UI): the PAGE owns what that means -
-                // announce it and let the embedding page react (reload, navigate, show a landing).
-                emscripten_run_script("if (window.onEngineShutdown) { window.onEngineShutdown(); }");
-                return;
-            }
-            if (!announced) {
-                announced = true;
-                // A frame is UP, which the runtime being initialised does not mean.
-                emscripten_run_script("if (window.onEngineStarted) { window.onEngineStarted(); }");
-            }
-        },
-        nullptr, 0, 1);
-#else
-    while (tick()) {
-    }
-#endif
+    RunWindowFrameLoop(tick);
 }
 
 void DefaultEngineImpl::ResetInstance()
@@ -200,25 +176,12 @@ void DefaultEngineImpl::ResetRenderPass()
 
 void DefaultEngineImpl::ResetSwapchain()
 {
-    const auto size{ m_window->GetSize() };
-    const GfxExtent2D extent{ size.width, size.height };
-    const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
-
-    GfxPresentMode presentMode = GFX_PRESENT_MODE_FIFO;
-    if (surface) {
-        const GfxPresentMode preferred = m_config.VSync ? GFX_PRESENT_MODE_FIFO : GFX_PRESENT_MODE_IMMEDIATE;
-        presentMode = m_surface->GetPreferredPresentMode(m_device->GetAdapter(), preferred);
-    }
-
-    m_swapchain = prev::render::swapchain::SwapchainFactory{}.Create(
-        *m_device,
-        *m_renderPass,
-        surface,
-        extent,
-        presentMode,
-        m_config.swapchainFrameCount,
-        GetViewCount(),
-        m_config.maxFramesInFlight);
+    m_swapchain = CreateWindowSwapchain(GetViewCount());
     m_swapchain->Print();
+}
+
+void DefaultEngineImpl::ReleaseSwapchain()
+{
+    m_swapchain.reset();
 }
 } // namespace prev::core::engine::impl

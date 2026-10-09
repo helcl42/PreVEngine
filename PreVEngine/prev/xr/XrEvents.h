@@ -35,6 +35,11 @@ struct XrPassthroughChangedEvent {
     bool enabled{};
 };
 
+// Engine -> clients: an immersive session started or ended (WebXR: Enter VR/AR, or leaving it).
+struct XrSessionChangedEvent {
+    bool running{};
+};
+
 enum class HandEventFlags : uint32_t {
     NONE = 0,
     SQUEEZE = 1,

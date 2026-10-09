@@ -15,8 +15,6 @@ public:
     ~XrEngineImpl();
 
 public:
-    uint32_t GetViewCount() const override;
-
     void Init() override;
 
     void ShutDown() override;
@@ -31,6 +29,10 @@ public:
 
     void RunFrameLoop(const std::function<bool()>& tick) override;
 
+    uint32_t GetViewCount() const override;
+
+    prev::render::swapchain::ISwapchain& GetSwapchain() const override;
+
 private:
     void ResetInstance() override;
 
@@ -40,10 +42,24 @@ private:
 
     void ResetSwapchain() override;
 
+    void ReleaseSwapchain() override;
+
     std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const override;
+
+    uint32_t GetPassViewCount() const;
+
+    bool IsDrawingToWindow() const;
+
+    void UpdateSessionState();
 
 private:
     std::unique_ptr<prev::xr::IXr> m_xr{};
+
+    std::unique_ptr<prev::render::swapchain::ISwapchain> m_xrSwapchain{};
+
+    std::unique_ptr<prev::render::swapchain::ISwapchain> m_windowSwapchain{}; // where the session is optional: drawn to while none runs
+
+    bool m_sessionRunning{ false };
 };
 } // namespace prev::core::engine::impl
 

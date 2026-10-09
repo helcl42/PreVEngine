@@ -42,6 +42,16 @@ void WebXr::DestroySession()
     m_core->DestroySession();
 }
 
+bool WebXr::IsSessionOptional() const
+{
+    return true;
+}
+
+bool WebXr::IsSessionRunning() const
+{
+    return m_core->IsSessionRunning();
+}
+
 void WebXr::PollEvents()
 {
 }
