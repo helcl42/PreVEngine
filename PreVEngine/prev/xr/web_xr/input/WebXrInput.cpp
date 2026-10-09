@@ -83,7 +83,7 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
         return 0;
     }
     const base = out >> 2;
-    for (let k = 0; k < 17; ++k) {
+    for (let k = 0; k < 18; ++k) {
         HEAPF32[base + k] = 0;
     }
     const pose = state.frame.getPose(src.gripSpace, state.refSpace); // VERIFY
@@ -114,6 +114,7 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
     HEAPF32[base + 7] = squeeze ? squeeze.value : 0;
     HEAPF32[base + 8] = (trigger && trigger.pressed) ? 1 : 0;
     HEAPF32[base + 9] = (squeeze && squeeze.pressed) ? 1 : 0;
+    HEAPF32[base + 17] = trigger ? trigger.value : 0;
     return 1;
 });
 // clang-format on
@@ -129,7 +130,7 @@ void WebXrInput::HandleControllerActions()
 {
     HandControllersEvent controllersEvent{};
     for (uint32_t h = 0; h < MAX_HAND_COUNT; ++h) {
-        float c[17] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger, [9] grip, [10..12] aim position, [13..16] aim orientation xyzw
+        float c[18] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger pressed, [9] grip, [10..12] aim position, [13..16] aim orientation xyzw, [17] trigger
         if (!prev_webxr_get_controller(static_cast<int>(h), c)) {
             continue;
         }
@@ -139,6 +140,7 @@ void WebXrInput::HandleControllerActions()
         ctrl.pose = prev::util::math::Pose{ glm::quat{ c[6], c[3], c[4], c[5] }, glm::vec3{ c[0], c[1], c[2] } };
         ctrl.aimPose = prev::util::math::Pose{ glm::quat{ c[16], c[13], c[14], c[15] }, glm::vec3{ c[10], c[11], c[12] } };
         ctrl.squeeze = c[7];
+        ctrl.trigger = c[17];
         ctrl.flags = {};
         ctrl.flags |= (c[8] != 0.0f) ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
         ctrl.flags |= (c[9] != 0.0f) ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;

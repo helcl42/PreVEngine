@@ -95,7 +95,6 @@ private:
     // HandTracking
     std::array<XrHandTrackerEXT, MAX_HAND_COUNT> m_hands{};
     XrAction m_poseAction{};
-    XrAction m_grabAction{};
 
     std::array<XrSpace, MAX_HAND_COUNT> m_handSpace{};
 };

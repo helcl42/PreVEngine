@@ -93,7 +93,6 @@ struct HandEvent {
     HandType type{};
     bool active{};
     HandJoint joints[MAX_HAND_TRACKING_JOINT_COUNT]{};
-    float squeeze{};
     prev::util::math::Pose pose{};
 };
 
@@ -107,6 +106,7 @@ struct HandControllerEvent {
     prev::util::math::Pose pose{};
     prev::util::math::Pose aimPose{};
     float squeeze{};
+    float trigger{};
     prev::common::FlagSet<HandEventFlags> flags{};
 };
 

@@ -13,6 +13,8 @@
 
 namespace prev::xr::open_xr::input {
 namespace {
+    constexpr float PRESS_THRESHOLD{ 0.5f }; // a trigger or grip counts as held past half way
+
     PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT{};
     PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT{};
     PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT{};
@@ -126,7 +128,7 @@ void OpenXrInput::CreateActionSet()
 
     // Controllers
     m_squeezeAction = open_xr::input::util::CreateAction(m_actionSet, "squeeze", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_triggerAction = open_xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_triggerAction = open_xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_palmPoseAction = open_xr::input::util::CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_aimPoseAction = open_xr::input::util::CreateAction(m_actionSet, "aim_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_quitAction = open_xr::input::util::CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
@@ -134,12 +136,10 @@ void OpenXrInput::CreateActionSet()
 
     // HandsTracking
     m_poseAction = open_xr::input::util::CreateAction(m_actionSet, "hand_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_grabAction = open_xr::input::util::CreateAction(m_actionSet, "hand_grab", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
 }
 
 void OpenXrInput::DestroyActionSet()
 {
-    m_grabAction = {};
     m_poseAction = {};
 
     m_vibrateAction = {};
@@ -161,7 +161,7 @@ bool OpenXrInput::SuggestControllerBindings()
     // clang-format off
     anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/khr/simple_controller", {
         { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/select/click") },
-        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/select/click") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
@@ -189,8 +189,10 @@ bool OpenXrInput::SuggestControllerBindings()
     // clang-format on
     // clang-format off
     anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/htc/vive_controller", {
-        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
-        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/click") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/click") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
@@ -205,6 +207,8 @@ bool OpenXrInput::SuggestControllerBindings()
     anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/valve/index_controller", {
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/value") },
         { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
@@ -217,8 +221,10 @@ bool OpenXrInput::SuggestControllerBindings()
     // clang-format on
     // clang-format off
     anyOk |= open_xr::input::util::SuggestProfileBindings(m_instance, "/interaction_profiles/microsoft/motion_controller", {
-        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
-        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/squeeze/click") },
+        { m_squeezeAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/squeeze/click") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trigger/value") },
+        { m_triggerAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trigger/value") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/grip/pose") },
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
@@ -327,8 +333,8 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
     for (size_t i = 0; i < m_handPaths.size(); ++i) {
         const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_palmPoseAction, m_handPaths[i], m_localSpace, m_handPoseSpace[i]) };
         const auto aimPose{ open_xr::input::util::GetPoseState(m_session, time, m_aimPoseAction, m_handPaths[i], m_localSpace, m_handAimSpace[i]) };
-        const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
-        const auto trigger{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]) };
+        const float squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]).value_or(0.0f) };
+        const float trigger{ open_xr::input::util::GetFloatState(m_session, m_triggerAction, m_handPaths[i]).value_or(0.0f) };
 
         auto& handControllerEvent{ handControllersEvent.handControllers[i] };
         handControllerEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
@@ -336,9 +342,10 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
         handControllerEvent.pose = handPose ? *handPose : prev::util::math::Pose{};
         handControllerEvent.aimPose = aimPose ? *aimPose : prev::util::math::Pose{};
         handControllerEvent.flags = {};
-        handControllerEvent.flags |= squeeze ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
-        handControllerEvent.flags |= trigger ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
-        handControllerEvent.squeeze = squeeze ? *squeeze : 1.0f;
+        handControllerEvent.flags |= squeeze > PRESS_THRESHOLD ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
+        handControllerEvent.flags |= trigger > PRESS_THRESHOLD ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
+        handControllerEvent.squeeze = squeeze;
+        handControllerEvent.trigger = trigger;
     }
     prev::event::EventChannel::Post(handControllersEvent);
 
@@ -376,7 +383,6 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         const auto& hand{ m_hands[i] };
 
         const auto handPose{ open_xr::input::util::GetPoseState(m_session, time, m_poseAction, m_handPaths[i], m_localSpace, m_handSpace[i]) };
-        const auto squeeze{ open_xr::input::util::GetFloatState(m_session, m_grabAction, m_handPaths[i]) };
 
         XrHandJointsMotionRangeInfoEXT motionRangeInfo{ open_xr::util::CreateStruct<XrHandJointsMotionRangeInfoEXT>(XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT) };
         motionRangeInfo.handJointsMotionRange = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT; // XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT
@@ -396,7 +402,6 @@ void OpenXrInput::HandleHandTrackingActions(const XrTime time)
         handEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
         handEvent.active = locations.isActive;
         handEvent.pose = handPose ? *handPose : prev::util::math::Pose{};
-        handEvent.squeeze = squeeze ? *squeeze : 1.0f;
         for (uint32_t j = 0; j < locations.jointCount; ++j) {
             const auto& jointLocation{ locations.jointLocations[j] };
             auto& handJoint{ handEvent.joints[j] };
