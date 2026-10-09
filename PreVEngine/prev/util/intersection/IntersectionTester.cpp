@@ -453,7 +453,7 @@ bool Intersects(const Ray& ray, const Plane& plane, RayCastResult& result)
     const float denom{ glm::dot(ray.direction, plane.normal) };
     if (std::abs(denom) > EPSILON) {
         const float pn{ glm::dot(ray.origin, plane.normal) };
-        const float t{ (plane.distance + pn) / denom };
+        const float t{ (plane.distance - pn) / denom };
         if (t >= EPSILON) {
             result.t = t;
             result.hit = true;

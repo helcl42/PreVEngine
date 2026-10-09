@@ -292,6 +292,26 @@ TEST(IntersectionTesterTests, RayPlaneIntersection_Negative)
     EXPECT_FALSE(Intersects(ray, plane, result));
 }
 
+TEST(IntersectionTesterTests, RayPlaneIntersection_FromAbove)
+{
+    Ray ray{ glm::vec3(0.0f, 5.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 10.0f };
+    Plane plane{ glm::vec3(0.0f, 1.0f, 0.0f), 0.0f };
+    RayCastResult result;
+
+    EXPECT_TRUE(Intersects(ray, plane, result));
+    EXPECT_NEAR(result.t, 5.0f, 1e-4f);
+}
+
+TEST(IntersectionTesterTests, RayPlaneIntersection_OffsetOrigin)
+{
+    Ray ray{ glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 10.0f };
+    Plane plane{ glm::vec3(0.0f, 1.0f, 0.0f), 5.0f };
+    RayCastResult result;
+
+    EXPECT_TRUE(Intersects(ray, plane, result));
+    EXPECT_NEAR(result.t, 2.0f, 1e-4f);
+}
+
 TEST(IntersectionTesterTests, RayOBBIntersection_Positive)
 {
     Ray ray{ glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 1.0f };
