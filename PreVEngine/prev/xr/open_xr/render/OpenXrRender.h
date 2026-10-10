@@ -94,6 +94,14 @@ private:
 
     void EndEmptyFrame();
 
+    bool LocateViews(std::vector<XrView>& views) const;
+
+    void PostCameraEvent(const std::vector<XrView>& views) const;
+
+    uint32_t AcquireSwapchainImages();
+
+    void ReleaseSwapchainImages();
+
 private:
     XrInstance m_instance{ XR_NULL_HANDLE };
     XrSystemId m_systemId{ XR_NULL_SYSTEM_ID };

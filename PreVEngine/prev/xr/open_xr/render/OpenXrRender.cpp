@@ -118,66 +118,27 @@ bool OpenXrRender::BeginFrame()
         return false;
     }
 
-    // Locate the views from the view configuration within the (reference) space at the display time.
-    XrViewState viewState{ prev::xr::open_xr::util::CreateStruct<XrViewState>(XR_TYPE_VIEW_STATE) }; // Will contain information on whether the position and/or orientation is valid and/or tracked.
-    XrViewLocateInfo viewLocateInfo{ prev::xr::open_xr::util::CreateStruct<XrViewLocateInfo>(XR_TYPE_VIEW_LOCATE_INFO) };
-    viewLocateInfo.viewConfigurationType = m_viewConfiguration;
-    viewLocateInfo.displayTime = frameState.predictedDisplayTime;
-    viewLocateInfo.space = m_localSpace;
-
-    std::vector<XrView> views(static_cast<uint32_t>(m_viewConfigurationViews.size()), prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
-
-    uint32_t viewCount{ 0 };
-    if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(m_viewConfigurationViews.size()), &viewCount, views.data()))) {
-        LOGE("Failed to query view count.");
+    std::vector<XrView> views;
+    if (!LocateViews(views)) {
         EndEmptyFrame();
         return false;
     }
 
-    if (viewCount != static_cast<uint32_t>(m_viewConfigurationViews.size())) {
-        views.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
-        if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCount, &viewCount, views.data()))) {
-            LOGE("Failed to locate Views.");
-            EndEmptyFrame();
-            return false;
-        }
-    }
+    PostCameraEvent(views);
 
-    CameraEvent event{};
-    const uint32_t maxEyes{ static_cast<uint32_t>(MAX_VIEW_COUNT_VALUE) };
-    const uint32_t cameraViewCount{ viewCount < maxEyes ? viewCount : maxEyes };
-    if (viewCount > maxEyes) {
-        LOGW("OpenXR reported %u views but MAX_VIEW_COUNT is %u; truncating the camera event.", viewCount, maxEyes);
-    }
-    for (uint32_t i = 0; i < cameraViewCount; ++i) {
-        const auto& view{ views[i] };
-        event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
-        event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
-    }
-    event.count = cameraViewCount;
-    prev::event::EventChannel::Post(event);
+    m_currentSwapchainIndex = AcquireSwapchainImages();
+
+    const uint32_t viewCount{ static_cast<uint32_t>(views.size()) };
 
     m_renderLayerInfo.predictedDisplayTime = frameState.predictedDisplayTime;
     m_renderLayerInfo.layerProjection = prev::xr::open_xr::util::CreateStruct<XrCompositionLayerProjection>(XR_TYPE_COMPOSITION_LAYER_PROJECTION);
     m_renderLayerInfo.layerProjectionViews.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrCompositionLayerProjectionView>(XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW));
     m_renderLayerInfo.layerDepthInfos.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrCompositionLayerDepthInfoKHR>(XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR));
+    m_renderLayerInfo.layerProjection.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+    m_renderLayerInfo.layerProjection.space = m_localSpace;
+    m_renderLayerInfo.layerProjection.viewCount = static_cast<uint32_t>(m_renderLayerInfo.layerProjectionViews.size());
+    m_renderLayerInfo.layerProjection.views = m_renderLayerInfo.layerProjectionViews.data();
 
-    // Acquire and wait for an image from the swapchains.
-    // Get the image index of an image in the swapchains.
-    // The timeout is infinite.
-    uint32_t colorImageIndex{ 0 };
-    uint32_t depthImageIndex{ 0 };
-    XrSwapchainImageAcquireInfo acquireInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageAcquireInfo>(XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO) };
-    OPENXR_CHECK(xrAcquireSwapchainImage(m_colorSwapchainInfo.swapchain, &acquireInfo, &colorImageIndex), "Failed to acquire Image from the Color Swapchian");
-    if (m_depthSwapchainInfo.swapchain) {
-        OPENXR_CHECK(xrAcquireSwapchainImage(m_depthSwapchainInfo.swapchain, &acquireInfo, &depthImageIndex), "Failed to acquire Image from the Depth Swapchian");
-    }
-    XrSwapchainImageWaitInfo waitInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageWaitInfo>(XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO) };
-    waitInfo.timeout = XR_INFINITE_DURATION;
-    OPENXR_CHECK(xrWaitSwapchainImage(m_colorSwapchainInfo.swapchain, &waitInfo), "Failed to wait for Image from the Color Swapchain");
-    if (m_depthSwapchainInfo.swapchain) {
-        OPENXR_CHECK(xrWaitSwapchainImage(m_depthSwapchainInfo.swapchain, &waitInfo), "Failed to wait for Image from the Depth Swapchain");
-    }
     // Get the width and height and construct the viewport and scissors.
     const int32_t width{ static_cast<int32_t>(m_viewConfigurationViews[0].recommendedImageRectWidth) };
     const int32_t height{ static_cast<int32_t>(m_viewConfigurationViews[0].recommendedImageRectHeight) };
@@ -187,57 +148,45 @@ bool OpenXrRender::BeginFrame()
     // Per view in the view configuration:
     for (uint32_t i = 0; i < viewCount; ++i) {
         // projection color layer
-        m_renderLayerInfo.layerProjectionViews[i] = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerProjectionView>(XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW) };
-        m_renderLayerInfo.layerProjectionViews[i].pose = views[i].pose;
-        m_renderLayerInfo.layerProjectionViews[i].fov = views[i].fov;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.swapchain = m_colorSwapchainInfo.swapchain;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.offset.x = 0;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.offset.y = 0;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.width = width;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageRect.extent.height = height;
-        m_renderLayerInfo.layerProjectionViews[i].subImage.imageArrayIndex = i; // Useful for multiview rendering.
+        auto& projectionView{ m_renderLayerInfo.layerProjectionViews[i] };
+        projectionView = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerProjectionView>(XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW) };
+        projectionView.pose = views[i].pose;
+        projectionView.fov = views[i].fov;
+        projectionView.subImage.swapchain = m_colorSwapchainInfo.swapchain;
+        projectionView.subImage.imageRect.offset.x = 0;
+        projectionView.subImage.imageRect.offset.y = 0;
+        projectionView.subImage.imageRect.extent.width = width;
+        projectionView.subImage.imageRect.extent.height = height;
+        projectionView.subImage.imageArrayIndex = i; // Useful for multiview rendering.
 
         // depth layer
         if (m_depthSwapchainInfo.swapchain) {
-            m_renderLayerInfo.layerDepthInfos[i] = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerDepthInfoKHR>(XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR) };
-            m_renderLayerInfo.layerDepthInfos[i].subImage.swapchain = m_depthSwapchainInfo.swapchain;
-            m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.offset.x = 0;
-            m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.offset.y = 0;
-            m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.width = width;
-            m_renderLayerInfo.layerDepthInfos[i].subImage.imageRect.extent.height = height;
-            m_renderLayerInfo.layerDepthInfos[i].minDepth = m_minDepth;
-            m_renderLayerInfo.layerDepthInfos[i].maxDepth = m_maxDepth;
-            m_renderLayerInfo.layerDepthInfos[i].nearZ = m_nearClippingPlane;
-            m_renderLayerInfo.layerDepthInfos[i].farZ = m_farClippingPlane;
+            auto& depthInfo{ m_renderLayerInfo.layerDepthInfos[i] };
+            depthInfo = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerDepthInfoKHR>(XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR) };
+            depthInfo.subImage.swapchain = m_depthSwapchainInfo.swapchain;
+            depthInfo.subImage.imageRect.offset.x = 0;
+            depthInfo.subImage.imageRect.offset.y = 0;
+            depthInfo.subImage.imageRect.extent.width = width;
+            depthInfo.subImage.imageRect.extent.height = height;
+            depthInfo.minDepth = m_minDepth;
+            depthInfo.maxDepth = m_maxDepth;
+            depthInfo.nearZ = m_nearClippingPlane;
+            depthInfo.farZ = m_farClippingPlane;
 
-            m_renderLayerInfo.layerProjectionViews[i].next = &m_renderLayerInfo.layerDepthInfos[i];
+            projectionView.next = &depthInfo;
         }
     }
-
-    m_currentSwapchainIndex = colorImageIndex;
 
     return true;
 }
 
 bool OpenXrRender::EndFrame()
 {
-    // Give the swapchain image back to OpenXR, allowing the compositor to use the image.
-    XrSwapchainImageReleaseInfo releaseInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageReleaseInfo>(XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO) };
-    OPENXR_CHECK(xrReleaseSwapchainImage(m_colorSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Color Swapchain");
-    if (m_depthSwapchainInfo.swapchain) {
-        OPENXR_CHECK(xrReleaseSwapchainImage(m_depthSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Depth Swapchain");
-    }
-    m_renderLayerInfo.layerProjection.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
-    m_renderLayerInfo.layerProjection.space = m_localSpace;
-    m_renderLayerInfo.layerProjection.viewCount = static_cast<uint32_t>(m_renderLayerInfo.layerProjectionViews.size());
-    m_renderLayerInfo.layerProjection.views = m_renderLayerInfo.layerProjectionViews.data();
+    ReleaseSwapchainImages();
 
     m_renderLayerInfo.layers.clear();
     if (m_passthroughEnabled && m_passthroughLayer != XR_NULL_HANDLE) {
         // Passthrough composites beneath the projection layer; the projection's SOURCE_ALPHA flag lets it through.
-        m_passthroughCompositionLayer = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerPassthroughFB>(XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB) };
-        m_passthroughCompositionLayer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-        m_passthroughCompositionLayer.layerHandle = m_passthroughLayer;
         m_renderLayerInfo.layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&m_passthroughCompositionLayer));
     }
     m_renderLayerInfo.layers.push_back(reinterpret_cast<XrCompositionLayerBaseHeader*>(&m_renderLayerInfo.layerProjection));
@@ -567,6 +516,10 @@ void OpenXrRender::CreatePassthrough()
     }
     OPENXR_CHECK(xrCreatePassthroughLayerFB(m_session, &layerCreateInfo, &m_passthroughLayer), "Failed to create Passthrough Layer.");
 
+    m_passthroughCompositionLayer = { prev::xr::open_xr::util::CreateStruct<XrCompositionLayerPassthroughFB>(XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB) };
+    m_passthroughCompositionLayer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+    m_passthroughCompositionLayer.layerHandle = m_passthroughLayer;
+
     LOGI("OpenXR passthrough created (%s)", m_passthroughEnabled ? "AR" : "VR");
 }
 
@@ -622,6 +575,89 @@ void OpenXrRender::EndEmptyFrame()
     frameEndInfo.layers = nullptr;
     OPENXR_CHECK(xrEndFrame(m_session, &frameEndInfo), "Failed to end the XR Frame.");
 }
+
+bool OpenXrRender::LocateViews(std::vector<XrView>& views) const
+{
+    // Locate the views from the view configuration within the (reference) space at the display time.
+    XrViewState viewState{ prev::xr::open_xr::util::CreateStruct<XrViewState>(XR_TYPE_VIEW_STATE) }; // Will contain information on whether the position and/or orientation is valid and/or tracked.
+    XrViewLocateInfo viewLocateInfo{ prev::xr::open_xr::util::CreateStruct<XrViewLocateInfo>(XR_TYPE_VIEW_LOCATE_INFO) };
+    viewLocateInfo.viewConfigurationType = m_viewConfiguration;
+    viewLocateInfo.displayTime = m_frameState.predictedDisplayTime;
+    viewLocateInfo.space = m_localSpace;
+
+    views.assign(static_cast<uint32_t>(m_viewConfigurationViews.size()), prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
+
+    uint32_t viewCount{ 0 };
+    if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(m_viewConfigurationViews.size()), &viewCount, views.data()))) {
+        LOGE("Failed to query view count.");
+        return false;
+    }
+
+    if (viewCount != static_cast<uint32_t>(m_viewConfigurationViews.size())) {
+        views.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
+        if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCount, &viewCount, views.data()))) {
+            LOGE("Failed to locate Views.");
+            return false;
+        }
+    }
+    views.resize(viewCount);
+
+    return true;
+}
+
+void OpenXrRender::PostCameraEvent(const std::vector<XrView>& views) const
+{
+    const uint32_t viewCount{ static_cast<uint32_t>(views.size()) };
+    CameraEvent event{};
+    const uint32_t maxEyes{ static_cast<uint32_t>(MAX_VIEW_COUNT_VALUE) };
+    const uint32_t cameraViewCount{ viewCount < maxEyes ? viewCount : maxEyes };
+    if (viewCount > maxEyes) {
+        LOGW("OpenXR reported %u views but MAX_VIEW_COUNT is %u; truncating the camera event.", viewCount, maxEyes);
+    }
+    for (uint32_t i = 0; i < cameraViewCount; ++i) {
+        const auto& view{ views[i] };
+        event.poses[i] = prev::util::math::Pose{ { view.pose.orientation.w, view.pose.orientation.x, view.pose.orientation.y, view.pose.orientation.z }, { view.pose.position.x, view.pose.position.y, view.pose.position.z } };
+        event.fovs[i] = prev::util::math::Fov{ view.fov.angleLeft, view.fov.angleRight, view.fov.angleUp, view.fov.angleDown };
+    }
+    event.count = cameraViewCount;
+    prev::event::EventChannel::Post(event);
+}
+
+uint32_t OpenXrRender::AcquireSwapchainImages()
+{
+    // Acquire and wait for an image from the swapchains.
+    // Get the image index of an image in the swapchains.
+    // The timeout is infinite.
+    uint32_t colorImageIndex{ 0 };
+    uint32_t depthImageIndex{ 0 };
+    XrSwapchainImageAcquireInfo acquireInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageAcquireInfo>(XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO) };
+    OPENXR_CHECK(xrAcquireSwapchainImage(m_colorSwapchainInfo.swapchain, &acquireInfo, &colorImageIndex), "Failed to acquire Image from the Color Swapchian");
+    if (m_depthSwapchainInfo.swapchain) {
+        OPENXR_CHECK(xrAcquireSwapchainImage(m_depthSwapchainInfo.swapchain, &acquireInfo, &depthImageIndex), "Failed to acquire Image from the Depth Swapchian");
+        if (depthImageIndex != colorImageIndex) {
+            LOGW("OpenXR color and depth swapchains returned different images (%u vs %u).", colorImageIndex, depthImageIndex);
+        }
+    }
+    XrSwapchainImageWaitInfo waitInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageWaitInfo>(XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO) };
+    waitInfo.timeout = XR_INFINITE_DURATION;
+    OPENXR_CHECK(xrWaitSwapchainImage(m_colorSwapchainInfo.swapchain, &waitInfo), "Failed to wait for Image from the Color Swapchain");
+    if (m_depthSwapchainInfo.swapchain) {
+        OPENXR_CHECK(xrWaitSwapchainImage(m_depthSwapchainInfo.swapchain, &waitInfo), "Failed to wait for Image from the Depth Swapchain");
+    }
+
+    return colorImageIndex;
+}
+
+void OpenXrRender::ReleaseSwapchainImages()
+{
+    // Give the swapchain image back to OpenXR, allowing the compositor to use the image.
+    XrSwapchainImageReleaseInfo releaseInfo{ prev::xr::open_xr::util::CreateStruct<XrSwapchainImageReleaseInfo>(XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO) };
+    OPENXR_CHECK(xrReleaseSwapchainImage(m_colorSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Color Swapchain");
+    if (m_depthSwapchainInfo.swapchain) {
+        OPENXR_CHECK(xrReleaseSwapchainImage(m_depthSwapchainInfo.swapchain, &releaseInfo), "Failed to release Image back to the Depth Swapchain");
+    }
+}
+
 } // namespace prev::xr::open_xr::render
 
 #endif
