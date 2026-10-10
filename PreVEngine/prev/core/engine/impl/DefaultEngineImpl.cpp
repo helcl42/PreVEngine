@@ -100,6 +100,11 @@ void DefaultEngineImpl::RunFrameLoop(const std::function<bool()>& tick)
     RunWindowFrameLoop(tick);
 }
 
+bool DefaultEngineImpl::UsesWindowSurface() const
+{
+    return true;
+}
+
 void DefaultEngineImpl::ResetInstance()
 {
     m_instance = prev::core::instance::InstanceFactory{}.Create(m_config.appName, m_config.validation, m_config.renderBackend);

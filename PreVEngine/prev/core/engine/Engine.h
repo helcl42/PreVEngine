@@ -50,6 +50,8 @@ private:
 
 private:
     std::unique_ptr<prev::core::engine::impl::EngineImpl> m_engineImpl{};
+
+    bool m_quit{ false };
 };
 } // namespace prev::core::engine
 

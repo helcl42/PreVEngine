@@ -55,9 +55,9 @@ namespace {
 OpenXrRender::OpenXrRender(XrInstance instance, XrSystemId systemId, bool passthroughSupported, bool passthroughEnabled, bool colorManaged)
     : m_instance{ instance }
     , m_systemId{ systemId }
+    , m_colorFormat{ colorManaged ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM }
     , m_passthroughSupported{ passthroughSupported }
     , m_passthroughEnabled{ passthroughSupported && passthroughEnabled }
-    , m_colorFormat{ colorManaged ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM }
 {
     CreateViewConfigurationViews();
     CreateEnvironmentBlendModes();
@@ -114,13 +114,7 @@ bool OpenXrRender::BeginFrame()
     m_frameState = frameState;
 
     if (!frameState.shouldRender) {
-        // Submit empty frame to keep the session alive (e.g., when Oculus overlay is active)
-        XrFrameEndInfo frameEndInfo{ prev::xr::open_xr::util::CreateStruct<XrFrameEndInfo>(XR_TYPE_FRAME_END_INFO) };
-        frameEndInfo.displayTime = frameState.predictedDisplayTime;
-        frameEndInfo.environmentBlendMode = m_environmentBlendMode;
-        frameEndInfo.layerCount = 0;
-        frameEndInfo.layers = nullptr;
-        OPENXR_CHECK(xrEndFrame(m_session, &frameEndInfo), "Failed to end the XR Frame.");
+        EndEmptyFrame(); // keeps the session alive (e.g. while the Oculus overlay is active)
         return false;
     }
 
@@ -136,6 +130,7 @@ bool OpenXrRender::BeginFrame()
     uint32_t viewCount{ 0 };
     if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, static_cast<uint32_t>(m_viewConfigurationViews.size()), &viewCount, views.data()))) {
         LOGE("Failed to query view count.");
+        EndEmptyFrame();
         return false;
     }
 
@@ -143,6 +138,7 @@ bool OpenXrRender::BeginFrame()
         views.resize(viewCount, prev::xr::open_xr::util::CreateStruct<XrView>(XR_TYPE_VIEW));
         if (XR_FAILED(xrLocateViews(m_session, &viewLocateInfo, &viewState, viewCount, &viewCount, views.data()))) {
             LOGE("Failed to locate Views.");
+            EndEmptyFrame();
             return false;
         }
     }
@@ -345,6 +341,18 @@ const XrGraphicsBindingVulkanKHR& OpenXrRender::GetGraphicsBinding() const
 
 void OpenXrRender::OnEvent(const XrEventDataBuffer& evt)
 {
+    switch (evt.type) {
+    case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+        const XrEventDataSessionStateChanged* sessionStateChanged = reinterpret_cast<const XrEventDataSessionStateChanged*>(&evt);
+        if (sessionStateChanged->session == m_session && sessionStateChanged->state == XR_SESSION_STATE_READY) {
+            m_frameState = {}; // the (re)started session's first frame: delta 0, not the time it was stopped
+        }
+        break;
+    }
+    default: {
+        break;
+    }
+    }
 }
 
 void OpenXrRender::operator()(const CameraFeedbackEvent& event)
@@ -593,6 +601,9 @@ void OpenXrRender::SetPassthroughEnabled(bool enabled)
 
 void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
 {
+    if (swapchainInfo.swapchain == XR_NULL_HANDLE) {
+        return; // the depth swapchain is optional
+    }
     for (auto& texture : swapchainInfo.textures) {
         if (texture) {
             gfxTextureDestroy(texture);
@@ -600,6 +611,16 @@ void OpenXrRender::DestroySwapchain(SwapchainInfo& swapchainInfo)
     }
     OPENXR_CHECK(xrDestroySwapchain(swapchainInfo.swapchain), "Failed to destroy Swapchain");
     swapchainInfo = {};
+}
+
+void OpenXrRender::EndEmptyFrame()
+{
+    XrFrameEndInfo frameEndInfo{ prev::xr::open_xr::util::CreateStruct<XrFrameEndInfo>(XR_TYPE_FRAME_END_INFO) };
+    frameEndInfo.displayTime = m_frameState.predictedDisplayTime;
+    frameEndInfo.environmentBlendMode = m_environmentBlendMode;
+    frameEndInfo.layerCount = 0;
+    frameEndInfo.layers = nullptr;
+    OPENXR_CHECK(xrEndFrame(m_session, &frameEndInfo), "Failed to end the XR Frame.");
 }
 } // namespace prev::xr::open_xr::render
 

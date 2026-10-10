@@ -51,7 +51,7 @@ void XrEngineImpl::Init()
     ResetTiming();
     ResetInstance();
     ResetWindow();
-    if (m_xr->IsSessionOptional()) {
+    if (UsesWindowSurface()) {
         ResetSurface();
     }
     ResetDevice();
@@ -59,6 +59,7 @@ void XrEngineImpl::Init()
     m_xr->CreateSession();
 
     ResetRenderPass();
+    ResetXrSwapchain();
     ResetSwapchain();
 }
 
@@ -77,7 +78,8 @@ void XrEngineImpl::ShutDown()
     m_rootRenderer.reset();
     m_scene.reset();
 
-    ReleaseSwapchain(); // the swapchains go before the XR session: the XR one references its textures
+    ReleaseSwapchain();
+    ReleaseXrSwapchain(); // before the XR session: it references the session's textures
 
     m_time.reset();
 
@@ -91,6 +93,9 @@ bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
     m_xr->PollEvents();
+    if (m_xr->IsExitRequested()) {
+        m_window->Close(); // the same door as the game's Quit: on Android the activity finishes first
+    }
     UpdateSessionState();
     m_time->Update();
     return result;
@@ -98,9 +103,6 @@ bool XrEngineImpl::Update()
 
 bool XrEngineImpl::BeginFrame()
 {
-    if (!m_xrSwapchain) { // window surface lost (see EngineImpl's WindowSurfaceLostEvent): skip the frame
-        return false;
-    }
     if (IsDrawingToWindow()) {
         return true;
     }
@@ -204,10 +206,7 @@ void XrEngineImpl::ResetRenderPass()
 
 void XrEngineImpl::ResetSwapchain()
 {
-    const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
-    m_xrSwapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, sampleCount, m_config.maxFramesInFlight);
-    m_xrSwapchain->Print();
-    if (m_xr->IsSessionOptional() && m_surface) {
+    if (m_surface) {
         m_windowSwapchain = CreateWindowSwapchain(GetPassViewCount()); // shares the render pass: WebXR draws in the window's own format
         m_windowSwapchain->Print();
     }
@@ -216,6 +215,21 @@ void XrEngineImpl::ResetSwapchain()
 void XrEngineImpl::ReleaseSwapchain()
 {
     m_windowSwapchain.reset();
+}
+
+bool XrEngineImpl::UsesWindowSurface() const
+{
+    return m_xr->IsSessionOptional(); // WebXR: the page between sessions; OpenXR shows nothing in the window
+}
+
+void XrEngineImpl::ResetXrSwapchain()
+{
+    m_xrSwapchain = std::make_unique<prev::xr::XrSwapchain>(*m_device, *m_renderPass, *m_xr, static_cast<GfxSampleCount>(m_config.samplesCount), m_config.maxFramesInFlight);
+    m_xrSwapchain->Print();
+}
+
+void XrEngineImpl::ReleaseXrSwapchain()
+{
     m_xrSwapchain.reset();
 }
 
@@ -241,6 +255,12 @@ void XrEngineImpl::UpdateSessionState()
     if (running != m_sessionRunning) {
         m_sessionRunning = running;
         prev::event::EventChannel::Post(prev::xr::XrSessionChangedEvent{ running });
+    }
+
+    const bool focused{ m_xr->IsSessionFocused() };
+    if (focused != m_sessionFocused) {
+        m_sessionFocused = focused;
+        prev::event::EventChannel::Post(prev::xr::XrSessionFocusChangedEvent{ focused });
     }
 }
 } // namespace prev::core::engine::impl

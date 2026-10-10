@@ -41,6 +41,12 @@ public:
 
     virtual bool IsSessionRunning() const = 0;
 
+    // The session takes input (OpenXR FOCUSED; WebXR visibilityState 'visible'): not while e.g. the system menu is over it.
+    virtual bool IsSessionFocused() const = 0;
+
+    // OpenXR: the runtime wants the app to quit (e.g. Quit in the system menu); a browser never asks.
+    virtual bool IsExitRequested() const = 0;
+
     virtual void PollEvents() = 0;
 
     virtual void PollActions() = 0;

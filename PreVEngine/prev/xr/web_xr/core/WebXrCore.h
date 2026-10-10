@@ -22,6 +22,8 @@ public:
 
     bool IsSessionRunning() const;
 
+    bool IsSessionFocused() const;
+
     float GetCurrentDeltaTime() const;
 
     void RunFrameLoop(const std::function<bool()>& tick);

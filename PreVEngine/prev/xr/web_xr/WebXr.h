@@ -39,6 +39,10 @@ public:
 
     bool IsSessionRunning() const override;
 
+    bool IsSessionFocused() const override;
+
+    bool IsExitRequested() const override;
+
     void PollEvents() override;
 
     void PollActions() override;

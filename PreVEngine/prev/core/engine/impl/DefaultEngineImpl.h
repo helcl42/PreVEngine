@@ -42,6 +42,8 @@ private:
 
     void ReleaseSwapchain() override;
 
+    bool UsesWindowSurface() const override;
+
 private:
     std::unique_ptr<prev::render::swapchain::ISwapchain> m_swapchain{};
 };

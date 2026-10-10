@@ -95,8 +95,13 @@ void Engine::RunOneFrame()
 
 bool Engine::Tick()
 {
+    if (m_quit) {
+        return false; // a second frame loop - the web page's, after an XR session's - stops on the same quit
+    }
     if (!m_engineImpl->Update()) {
-        return false; // quit requested
+        m_quit = true; // quit requested
+        m_engineImpl->EndMainLoop();
+        return false;
     }
     RunOneFrame();
     return true;
@@ -107,11 +112,7 @@ void Engine::MainLoop()
     m_engineImpl->BeginMainLoop();
 
     m_engineImpl->RunFrameLoop([this]() {
-        if (!Tick()) {
-            m_engineImpl->EndMainLoop();
-            return false;
-        }
-        return true;
+        return Tick();
     });
 
 #ifdef __EMSCRIPTEN__

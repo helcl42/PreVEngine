@@ -46,6 +46,13 @@ private:
 
     std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const override;
 
+    bool UsesWindowSurface() const override;
+
+private:
+    void ResetXrSwapchain();
+
+    void ReleaseXrSwapchain();
+
     uint32_t GetPassViewCount() const;
 
     bool IsDrawingToWindow() const;
@@ -60,6 +67,8 @@ private:
     std::unique_ptr<prev::render::swapchain::ISwapchain> m_windowSwapchain{}; // where the session is optional: drawn to while none runs
 
     bool m_sessionRunning{ false };
+
+    bool m_sessionFocused{ false };
 };
 } // namespace prev::core::engine::impl
 

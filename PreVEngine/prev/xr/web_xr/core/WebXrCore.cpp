@@ -28,7 +28,7 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
             try { refSpace = await session.requestReferenceSpace('local-floor'); }
             catch (e) { refSpace = await session.requestReferenceSpace('local'); }
 
-            const state = { session: session, refSpace: refSpace, frame: null, running: true, visible: true,
+            const state = { session: session, refSpace: refSpace, frame: null, running: true, visibility: session.visibilityState,
                             binding: null, layer: null, blendMode: session.environmentBlendMode,
                             colorTexturePtr: 0, devicePtr: devicePtr, extentW: 0, extentH: 0, deltaTime: 0.0 };
             Module.__prevWebXr = state;
@@ -37,7 +37,7 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
                 showButtons(); // allow re-entering (either mode)
             });
             session.addEventListener('visibilitychange', function() {
-                state.visible = (session.visibilityState === 'visible');
+                state.visibility = session.visibilityState;
             });
 
             const device = WebGPU.Internals.jsObjects[devicePtr];
@@ -54,7 +54,11 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
 
             const onXrFrame = function(time, frame) {
                 if (!state.running) { return; }
-                if (state.visible === false) { session.requestAnimationFrame(onXrFrame); return; } // keep rAF alive while hidden
+                if (state.visibility === 'hidden') { // keep rAF alive; visible-blurred (the browser's UI over the session) still shows frames
+                    state.prevTime = undefined; // the first frame back: no delta across the hidden time
+                    session.requestAnimationFrame(onXrFrame);
+                    return;
+                }
                 if (state.prevTime !== undefined) { state.deltaTime = (time - state.prevTime) / 1000.0; }
                 state.prevTime = time;
                 state.frame = frame;
@@ -107,15 +111,14 @@ EM_JS(void, prev_webxr_end_session, (), {
     Module.__prevWebXr = null;
 });
 
-EM_JS(void, prev_webxr_stop_frame_loop, (), {
-    if (Module.__prevWebXr) {
-        Module.__prevWebXr.running = false;
-    }
-});
-
 EM_JS(int, prev_webxr_is_running, (), {
     const state = Module.__prevWebXr;
     return (state && state.running) ? 1 : 0;
+});
+
+EM_JS(int, prev_webxr_is_focused, (), {
+    const state = Module.__prevWebXr;
+    return (state && state.running && state.visibility === 'visible') ? 1 : 0;
 });
 
 EM_JS(double, prev_webxr_delta_time, (), {
@@ -159,6 +162,11 @@ bool WebXrCore::IsSessionRunning() const
     return prev_webxr_is_running() != 0;
 }
 
+bool WebXrCore::IsSessionFocused() const
+{
+    return prev_webxr_is_focused() != 0;
+}
+
 float WebXrCore::GetCurrentDeltaTime() const
 {
     return static_cast<float>(prev_webxr_delta_time());
@@ -174,7 +182,7 @@ void WebXrCore::DispatchFrame()
 {
     // Do NOT reassign m_frameCallback from in here - it is the callable currently executing.
     if (m_frameCallback && !m_frameCallback()) {
-        prev_webxr_stop_frame_loop();
+        prev_webxr_end_session(); // the app quit: out of the headset too
     }
 }
 } // namespace prev::xr::web_xr::core

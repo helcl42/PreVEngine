@@ -39,6 +39,10 @@ public:
 
     bool IsSessionRunning() const;
 
+    bool IsSessionFocused() const;
+
+    bool IsExitRequested() const;
+
     XrSession GetSession() const;
 
     XrSpace GetReferenceSpace() const;
@@ -81,8 +85,7 @@ private:
 
     XrSpace m_localSpace;
 
-    bool m_applicationRunning;
-    bool m_sessionRunning;
+    bool m_instanceLossPending;
 
     bool m_passthroughSupported{ false };
 

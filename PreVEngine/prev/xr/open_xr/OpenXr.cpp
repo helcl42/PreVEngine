@@ -4,6 +4,9 @@
 
 #include "OpenXrLoader.h"
 
+#include <chrono>
+#include <thread>
+
 namespace prev::xr::open_xr {
 OpenXr::OpenXr(prev::core::engine::XrMode xrMode, bool colorManaged)
     : m_loaded{ OpenXrLoader::Instance().IsLoaded() }
@@ -85,6 +88,16 @@ bool OpenXr::IsSessionRunning() const
     return m_core->IsSessionRunning();
 }
 
+bool OpenXr::IsSessionFocused() const
+{
+    return m_core->IsSessionFocused();
+}
+
+bool OpenXr::IsExitRequested() const
+{
+    return m_core->IsExitRequested();
+}
+
 bool OpenXr::GetFrameImages(XrFrameImages& outImages) const
 {
     if (m_render->GetImageCount() == 0) {
@@ -135,8 +148,11 @@ float OpenXr::GetCurrentDeltaTime() const
 
 void OpenXr::RunFrameLoop(const std::function<bool()>& tick)
 {
-    // Frame pacing comes from the runtime (xrWaitFrame in BeginFrame).
+    // Frame pacing comes from the runtime (xrWaitFrame in BeginFrame) - only while a session runs.
     while (tick()) {
+        if (!m_core->IsSessionRunning()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds{ 10 }); // idle (e.g. headset off): poll, don't spin
+        }
     }
 }
 

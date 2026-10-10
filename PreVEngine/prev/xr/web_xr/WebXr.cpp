@@ -52,6 +52,16 @@ bool WebXr::IsSessionRunning() const
     return m_core->IsSessionRunning();
 }
 
+bool WebXr::IsSessionFocused() const
+{
+    return m_core->IsSessionFocused();
+}
+
+bool WebXr::IsExitRequested() const
+{
+    return false;
+}
+
 void WebXr::PollEvents()
 {
 }

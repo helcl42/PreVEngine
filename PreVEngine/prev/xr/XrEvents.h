@@ -40,6 +40,11 @@ struct XrSessionChangedEvent {
     bool running{};
 };
 
+// Engine -> clients: the running session gained or lost input focus (e.g. the system menu opened over it).
+struct XrSessionFocusChangedEvent {
+    bool focused{};
+};
+
 enum class HandEventFlags : uint32_t {
     NONE = 0,
     SQUEEZE = 1,

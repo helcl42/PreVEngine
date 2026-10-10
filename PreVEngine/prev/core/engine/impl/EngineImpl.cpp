@@ -97,6 +97,9 @@ float EngineImpl::GetCurrentDeltaTime() const
 
 void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeEvent)
 {
+    if (!UsesWindowSurface()) {
+        return;
+    }
     m_device->WaitIdle();
 
     ReleaseSwapchain();
@@ -108,6 +111,9 @@ void EngineImpl::operator()(const prev::window::WindowChangeEvent& windowChangeE
 
 void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 {
+    if (!UsesWindowSurface()) {
+        return;
+    }
     m_device->WaitIdle();
     ReleaseSwapchain();
     m_device->GetDeferredResourceDestroyer().RetireAll();
@@ -116,6 +122,9 @@ void EngineImpl::operator()(const prev::window::WindowResizeEvent& resizeEvent)
 
 void EngineImpl::operator()(const prev::window::WindowSurfaceLostEvent& surfaceLostEvent)
 {
+    if (!UsesWindowSurface()) {
+        return;
+    }
     if (!m_device) {
         return; // surface lost mid-init (before the device exists): nothing to drop yet
     }

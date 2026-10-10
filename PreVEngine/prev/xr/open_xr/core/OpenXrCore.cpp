@@ -116,8 +116,7 @@ OpenXrCore::OpenXrCore()
     , m_session{ XR_NULL_HANDLE }
     , m_sessionState{ XR_SESSION_STATE_UNKNOWN }
     , m_localSpace{ XR_NULL_HANDLE }
-    , m_applicationRunning{ true }
-    , m_sessionRunning{ false }
+    , m_instanceLossPending{ false }
     , m_eventObserver{}
     , m_debugMessenger{}
 {
@@ -237,9 +236,8 @@ void OpenXrCore::PollEvents()
         }
         case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
             XrEventDataInstanceLossPending* instanceLossPending = reinterpret_cast<XrEventDataInstanceLossPending*>(&eventData);
-            LOGI("OPENXR: Instance Loss Pending at: %lld", instanceLossPending->lossTime);
-            m_sessionRunning = false;
-            m_applicationRunning = false;
+            LOGI("OPENXR: Instance Loss Pending at: %lld", static_cast<long long>(instanceLossPending->lossTime));
+            m_instanceLossPending = true;
             break;
         }
         case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
@@ -271,23 +269,10 @@ void OpenXrCore::PollEvents()
                 XrSessionBeginInfo sessionBeginInfo{ open_xr::util::CreateStruct<XrSessionBeginInfo>(XR_TYPE_SESSION_BEGIN_INFO) };
                 sessionBeginInfo.primaryViewConfigurationType = m_viewConfiguration;
                 OPENXR_CHECK(xrBeginSession(m_session, &sessionBeginInfo), "Failed to begin Session.");
-                m_sessionRunning = true;
             }
             if (sessionStateChanged->state == XR_SESSION_STATE_STOPPING) {
                 OPENXR_CHECK(xrEndSession(m_session), "Failed to end Session.");
-                m_sessionRunning = false;
             }
-            if (sessionStateChanged->state == XR_SESSION_STATE_EXITING) {
-                m_sessionRunning = false;
-                m_applicationRunning = false;
-            }
-            if (sessionStateChanged->state == XR_SESSION_STATE_LOSS_PENDING) {
-                // SessionState is loss pending. Exit the application.
-                // It's possible to try a reestablish an XrInstance and XrSession, but we will simply exit here.
-                m_sessionRunning = false;
-                m_applicationRunning = false;
-            }
-            // Store state for reference across the application.
             m_sessionState = sessionStateChanged->state;
             break;
         }
@@ -304,7 +289,18 @@ void OpenXrCore::PollEvents()
 
 bool OpenXrCore::IsSessionRunning() const
 {
-    return m_sessionRunning;
+    // PollEvents begins the session on READY and ends it on STOPPING
+    return m_sessionState == XR_SESSION_STATE_READY || m_sessionState == XR_SESSION_STATE_SYNCHRONIZED || m_sessionState == XR_SESSION_STATE_VISIBLE || m_sessionState == XR_SESSION_STATE_FOCUSED;
+}
+
+bool OpenXrCore::IsSessionFocused() const
+{
+    return m_sessionState == XR_SESSION_STATE_FOCUSED;
+}
+
+bool OpenXrCore::IsExitRequested() const
+{
+    return m_instanceLossPending || m_sessionState == XR_SESSION_STATE_EXITING || m_sessionState == XR_SESSION_STATE_LOSS_PENDING;
 }
 
 XrSession OpenXrCore::GetSession() const

@@ -110,6 +110,8 @@ protected:
 
     virtual std::unique_ptr<prev::time::ITimeProvider> CreateTimeProvider() const = 0;
 
+    virtual bool UsesWindowSurface() const = 0;
+
 protected:
     std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth);
 
