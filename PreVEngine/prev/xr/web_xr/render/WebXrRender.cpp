@@ -31,7 +31,13 @@ EM_JS(int, prev_webxr_acquire_views, (), {
         return 0;
     }
     state.pose = pose;
-    const sub = state.binding.getViewSubImage(state.layer, pose.views[0]);
+    let sub;
+    try {
+        sub = state.binding.getViewSubImage(state.layer, pose.views[0]);
+    } catch (e) {
+        state.attachLayer(); // the headset slept and the layer lost its textures for good: a new one from the next frame
+        return 0;
+    }
     state.colorTexturePtr = WebGPU.importJsTexture(sub.colorTexture, state.devicePtr || 0);
     state.extentW = sub.viewport.width;
     state.extentH = sub.viewport.height;

@@ -42,28 +42,27 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
 
             const device = WebGPU.Internals.jsObjects[devicePtr];
             const fmt = navigator.gpu.getPreferredCanvasFormat();
-            const binding = new XRGPUBinding(session, device); // VERIFY: experimental API
-            const layer = binding.createProjectionLayer({ colorFormat: fmt, textureType: 'texture-array' });
-            session.updateRenderState({ layers: [layer] });
-            state.binding = binding;
-            state.layer = layer;
-            state.colorFormat = fmt;
-            state.extentW = layer.textureWidth | 0;   // undefined -> 0
-            state.extentH = layer.textureHeight | 0;
+            state.binding = new XRGPUBinding(session, device); // VERIFY: experimental API
+            state.attachLayer = function() { // also when a headset that slept has left the layer without textures
+                state.layer = state.binding.createProjectionLayer({ colorFormat: fmt, textureType: 'texture-array' });
+                session.updateRenderState({ layers: [state.layer] });
+            };
+            state.attachLayer();
+            state.extentW = state.layer.textureWidth | 0;   // undefined -> 0
+            state.extentH = state.layer.textureHeight | 0;
             hideButtons();
 
             const onXrFrame = function(time, frame) {
                 if (!state.running) { return; }
-                if (state.visibility === 'hidden') { // keep rAF alive; visible-blurred (the browser's UI over the session) still shows frames
+                session.requestAnimationFrame(onXrFrame); // first: a frame that throws must not end the loop
+                if (state.visibility === 'hidden') { // visible-blurred (the browser's UI over the session) still shows frames
                     state.prevTime = undefined; // the first frame back: no delta across the hidden time
-                    session.requestAnimationFrame(onXrFrame);
                     return;
                 }
                 if (state.prevTime !== undefined) { state.deltaTime = (time - state.prevTime) / 1000.0; }
                 state.prevTime = time;
                 state.frame = frame;
                 _prev_webxr_dispatch_frame(self);
-                session.requestAnimationFrame(onXrFrame);
             };
             session.requestAnimationFrame(onXrFrame);
         } catch (e) {
