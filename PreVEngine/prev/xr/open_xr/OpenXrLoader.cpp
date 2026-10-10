@@ -5,8 +5,6 @@
 #include "common/OpenXrCommon.h"
 #include "util/OpenXrUtils.h"
 
-#include "../../common/Logger.h"
-
 #ifdef TARGET_PLATFORM_ANDROID
 #include <android_native.h>
 #endif
@@ -38,11 +36,6 @@ OpenXrLoader::OpenXrLoader()
         throw std::runtime_error("Failed to initialize Loader for Android.");
     }
 #endif
-}
-
-bool OpenXrLoader::IsLoaded() const
-{
-    return true;
 }
 } // namespace prev::xr::open_xr
 

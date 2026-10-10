@@ -3,6 +3,8 @@
 
 #ifdef ENABLE_OPENXR
 
+#include "OpenXrLoader.h"
+
 #include "common/OpenXrCommon.h"
 
 #include "core/OpenXrCore.h"
@@ -72,7 +74,7 @@ public:
     void RunFrameLoop(const std::function<bool()>& tick) override;
 
 private:
-    bool m_loaded{ false };
+    OpenXrLoader m_loader{};
 
     std::unique_ptr<core::OpenXrCore> m_core{};
 
