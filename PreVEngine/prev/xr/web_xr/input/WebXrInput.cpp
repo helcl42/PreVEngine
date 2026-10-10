@@ -83,7 +83,7 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
         return 0;
     }
     const base = out >> 2;
-    for (let k = 0; k < 18; ++k) {
+    for (let k = 0; k < 23; ++k) {
         HEAPF32[base + k] = 0;
     }
     const pose = state.frame.getPose(src.gripSpace, state.refSpace); // VERIFY
@@ -115,6 +115,13 @@ EM_JS(int, prev_webxr_get_controller, (int handIndex, float* out), {
     HEAPF32[base + 8] = (trigger && trigger.pressed) ? 1 : 0;
     HEAPF32[base + 9] = (squeeze && squeeze.pressed) ? 1 : 0;
     HEAPF32[base + 17] = trigger ? trigger.value : 0;
+    const stick = gp.axes.length >= 4 ? 2 : 0; // xr-standard: axes 0-1 the touchpad, 2-3 the thumbstick
+    HEAPF32[base + 18] = gp.axes[stick] || 0;
+    HEAPF32[base + 19] = -(gp.axes[stick + 1] || 0); // the gamepad's y points back
+    const pressed = function(i) { return (gp.buttons[i] && gp.buttons[i].pressed) ? 1 : 0; };
+    HEAPF32[base + 20] = pressed(3); // the thumbstick
+    HEAPF32[base + 21] = pressed(4); // A / X
+    HEAPF32[base + 22] = pressed(5); // B / Y
     return 1;
 });
 // clang-format on
@@ -130,7 +137,7 @@ void WebXrInput::HandleControllerActions()
 {
     HandControllersEvent controllersEvent{};
     for (uint32_t h = 0; h < MAX_HAND_COUNT; ++h) {
-        float c[18] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger pressed, [9] grip, [10..12] aim position, [13..16] aim orientation xyzw, [17] trigger
+        float c[23] = {}; // [0..2] position, [3..6] orientation xyzw, [7] squeeze, [8] trigger pressed, [9] grip, [10..12] aim position, [13..16] aim orientation xyzw, [17] trigger, [18..19] thumbstick, [20] thumbstick pressed, [21] primary, [22] secondary
         if (!prev_webxr_get_controller(static_cast<int>(h), c)) {
             continue;
         }
@@ -141,9 +148,13 @@ void WebXrInput::HandleControllerActions()
         ctrl.aimPose = prev::util::math::Pose{ glm::quat{ c[16], c[13], c[14], c[15] }, glm::vec3{ c[10], c[11], c[12] } };
         ctrl.squeeze = c[7];
         ctrl.trigger = c[17];
+        ctrl.thumbstick = glm::vec2{ c[18], c[19] };
         ctrl.flags = {};
         ctrl.flags |= (c[8] != 0.0f) ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
         ctrl.flags |= (c[9] != 0.0f) ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
+        ctrl.flags |= (c[20] != 0.0f) ? HandEventFlags::THUMBSTICK_CLICK : HandEventFlags::NONE;
+        ctrl.flags |= (c[21] != 0.0f) ? HandEventFlags::PRIMARY : HandEventFlags::NONE;
+        ctrl.flags |= (c[22] != 0.0f) ? HandEventFlags::SECONDARY : HandEventFlags::NONE;
     }
     prev::event::EventChannel::Post(controllersEvent);
 }

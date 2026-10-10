@@ -49,6 +49,10 @@ enum class HandEventFlags : uint32_t {
     NONE = 0,
     SQUEEZE = 1,
     TRIGGER = 2,
+    PRIMARY = 3, // the lower face button (A, or X on a left Touch controller)
+    SECONDARY = 4, // the upper face button (B, or Y on a left Touch controller)
+    THUMBSTICK_CLICK = 5, // the stick pressed in
+    MENU = 6,
     // add new flags
     _
 };
@@ -112,6 +116,7 @@ struct HandControllerEvent {
     prev::util::math::Pose aimPose{};
     float squeeze{};
     float trigger{};
+    glm::vec2 thumbstick{}; // [-1, 1]: x to the right, y forward
     prev::common::FlagSet<HandEventFlags> flags{};
 };
 

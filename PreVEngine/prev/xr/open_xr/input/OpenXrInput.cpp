@@ -131,7 +131,11 @@ void OpenXrInput::CreateActionSet()
     m_triggerAction = open_xr::input::util::CreateAction(m_actionSet, "trigger", XR_ACTION_TYPE_FLOAT_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_palmPoseAction = open_xr::input::util::CreateAction(m_actionSet, "pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_aimPoseAction = open_xr::input::util::CreateAction(m_actionSet, "aim_pose", XR_ACTION_TYPE_POSE_INPUT, { m_handPaths.begin(), m_handPaths.end() });
-    m_quitAction = open_xr::input::util::CreateAction(m_actionSet, "quit", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_thumbstickAction = open_xr::input::util::CreateAction(m_actionSet, "thumbstick", XR_ACTION_TYPE_VECTOR2F_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_thumbstickClickAction = open_xr::input::util::CreateAction(m_actionSet, "thumbstick_click", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_primaryAction = open_xr::input::util::CreateAction(m_actionSet, "primary", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_secondaryAction = open_xr::input::util::CreateAction(m_actionSet, "secondary", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
+    m_menuAction = open_xr::input::util::CreateAction(m_actionSet, "menu", XR_ACTION_TYPE_BOOLEAN_INPUT, { m_handPaths.begin(), m_handPaths.end() });
     m_vibrateAction = open_xr::input::util::CreateAction(m_actionSet, "vibrate", XR_ACTION_TYPE_VIBRATION_OUTPUT, { m_handPaths.begin(), m_handPaths.end() });
 
     // HandsTracking
@@ -143,7 +147,11 @@ void OpenXrInput::DestroyActionSet()
     m_poseAction = {};
 
     m_vibrateAction = {};
-    m_quitAction = {};
+    m_menuAction = {};
+    m_secondaryAction = {};
+    m_primaryAction = {};
+    m_thumbstickClickAction = {};
+    m_thumbstickAction = {};
     m_aimPoseAction = {};
     m_palmPoseAction = {};
     m_triggerAction = {};
@@ -166,8 +174,8 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
@@ -182,7 +190,15 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick/click") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick/click") },
+        { m_primaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/x/click") },
+        { m_primaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/a/click") },
+        { m_secondaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/y/click") },
+        { m_secondaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
@@ -197,8 +213,12 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trackpad") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trackpad") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/trackpad/click") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/trackpad/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
@@ -213,8 +233,14 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/b/click") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick/click") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick/click") },
+        { m_primaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/a/click") },
+        { m_primaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/a/click") },
+        { m_secondaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/b/click") },
+        { m_secondaryAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/b/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
@@ -229,8 +255,12 @@ bool OpenXrInput::SuggestControllerBindings()
         { m_palmPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/grip/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/aim/pose") },
         { m_aimPoseAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/aim/pose") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
-        { m_quitAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick") },
+        { m_thumbstickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/thumbstick/click") },
+        { m_thumbstickClickAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/thumbstick/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/input/menu/click") },
+        { m_menuAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/input/menu/click") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/left/output/haptic") },
         { m_vibrateAction, open_xr::input::util::ConvertStringToXrPath(m_instance, "/user/hand/right/output/haptic") },
     });
@@ -335,6 +365,11 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
         const auto aimPose{ open_xr::input::util::GetPoseState(m_session, time, m_aimPoseAction, m_handPaths[i], m_localSpace, m_handAimSpace[i]) };
         const float squeeze{ open_xr::input::util::GetFloatState(m_session, m_squeezeAction, m_handPaths[i]).value_or(0.0f) };
         const float trigger{ open_xr::input::util::GetFloatState(m_session, m_triggerAction, m_handPaths[i]).value_or(0.0f) };
+        const XrVector2f thumbstick{ open_xr::input::util::GetVector2State(m_session, m_thumbstickAction, m_handPaths[i]).value_or(XrVector2f{}) };
+        const bool thumbstickClick{ open_xr::input::util::GetBoolState(m_session, m_thumbstickClickAction, m_handPaths[i]).value_or(false) };
+        const bool primary{ open_xr::input::util::GetBoolState(m_session, m_primaryAction, m_handPaths[i]).value_or(false) };
+        const bool secondary{ open_xr::input::util::GetBoolState(m_session, m_secondaryAction, m_handPaths[i]).value_or(false) };
+        const bool menu{ open_xr::input::util::GetBoolState(m_session, m_menuAction, m_handPaths[i]).value_or(false) };
 
         auto& handControllerEvent{ handControllersEvent.handControllers[i] };
         handControllerEvent.type = open_xr::input::util::ConvertIndexToHandType(i);
@@ -344,16 +379,15 @@ void OpenXrInput::HandleControllerActions(const XrTime time)
         handControllerEvent.flags = {};
         handControllerEvent.flags |= squeeze > PRESS_THRESHOLD ? HandEventFlags::SQUEEZE : HandEventFlags::NONE;
         handControllerEvent.flags |= trigger > PRESS_THRESHOLD ? HandEventFlags::TRIGGER : HandEventFlags::NONE;
+        handControllerEvent.flags |= primary ? HandEventFlags::PRIMARY : HandEventFlags::NONE;
+        handControllerEvent.flags |= secondary ? HandEventFlags::SECONDARY : HandEventFlags::NONE;
+        handControllerEvent.flags |= thumbstickClick ? HandEventFlags::THUMBSTICK_CLICK : HandEventFlags::NONE;
+        handControllerEvent.flags |= menu ? HandEventFlags::MENU : HandEventFlags::NONE;
         handControllerEvent.squeeze = squeeze;
         handControllerEvent.trigger = trigger;
+        handControllerEvent.thumbstick = glm::vec2{ thumbstick.x, thumbstick.y };
     }
     prev::event::EventChannel::Post(handControllersEvent);
-
-    const auto quit{ open_xr::input::util::GetBoolState(m_session, m_quitAction, true, XR_NULL_PATH) };
-    if (quit) {
-        // TODO - should we just generate quit event or request exit session direcly?
-        xrRequestExitSession(m_session);
-    }
 
     // output events
     for (size_t i = 0; i < m_handPaths.size(); ++i) {

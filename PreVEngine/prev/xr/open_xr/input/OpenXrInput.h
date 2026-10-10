@@ -82,7 +82,11 @@ private:
     XrAction m_triggerAction{};
     XrAction m_palmPoseAction{};
     XrAction m_aimPoseAction{};
-    XrAction m_quitAction{};
+    XrAction m_thumbstickAction{};
+    XrAction m_thumbstickClickAction{};
+    XrAction m_primaryAction{};
+    XrAction m_secondaryAction{};
+    XrAction m_menuAction{};
     XrAction m_vibrateAction{};
     std::array<XrSpace, MAX_HAND_COUNT> m_handPoseSpace{};
     std::array<XrSpace, MAX_HAND_COUNT> m_handAimSpace{};

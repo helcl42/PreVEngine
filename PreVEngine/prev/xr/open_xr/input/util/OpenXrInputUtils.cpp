@@ -128,15 +128,15 @@ std::optional<XrVector2f> GetVector2State(const XrSession& session, const XrActi
     return {};
 }
 
-std::optional<bool> GetBoolState(const XrSession& session, const XrAction& action, const bool invert, const XrPath& subActionPath)
+std::optional<bool> GetBoolState(const XrSession& session, const XrAction& action, const XrPath& subActionPath)
 {
     XrActionStateBoolean boolState{ open_xr::util::CreateStruct<XrActionStateBoolean>(XR_TYPE_ACTION_STATE_BOOLEAN) };
     XrActionStateGetInfo boolActionStateGetInfo{ open_xr::util::CreateStruct<XrActionStateGetInfo>(XR_TYPE_ACTION_STATE_GET_INFO) };
     boolActionStateGetInfo.action = action;
     boolActionStateGetInfo.subactionPath = subActionPath;
     OPENXR_CHECK(xrGetActionStateBoolean(session, &boolActionStateGetInfo, &boolState), "Failed to get Boolean state.");
-    if (boolState.isActive && boolState.currentState == !invert && boolState.changedSinceLastSync == XR_TRUE) {
-        return { true };
+    if (boolState.isActive) {
+        return { boolState.currentState == XR_TRUE };
     }
     return {};
 }
