@@ -220,6 +220,7 @@ if(ENABLE_OPENXR)
     include(FetchContent)
     set(DYNAMIC_LOADER OFF CACHE BOOL "Build OpenXR loader as static library" FORCE)
     set(BUILD_API_LAYERS OFF CACHE BOOL "" FORCE)
+    set(BUILD_WITH_SYSTEM_JSONCPP OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
         openxr_sdk
         GIT_REPOSITORY https://github.com/KhronosGroup/OpenXR-SDK.git
