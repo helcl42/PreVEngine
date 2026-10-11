@@ -83,6 +83,10 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
         bar.style.cssText = 'position:fixed;right:12px;top:12px;z-index:9999;white-space:nowrap;';
         document.body.appendChild(bar);
     }
+    const canRender = typeof XRGPUBinding !== 'undefined'; // a session draws through WebGPU's XR binding
+    if (!canRender) {
+        console.warn('WebXR: this browser has no XRGPUBinding, so Enter VR / Enter AR stay hidden');
+    }
     MODES.forEach(function(m) {
         let btn = document.getElementById(m.id);
         if (!btn) {
@@ -95,7 +99,7 @@ EM_JS(void, prev_webxr_install_enter_buttons, (void* self, void* devicePtr), {
         const entry = { btn: btn, supported: false };
         buttons.push(entry);
         btn.onclick = function() { startSession(m.mode); };
-        if (navigator.xr && navigator.xr.isSessionSupported) {
+        if (canRender && navigator.xr && navigator.xr.isSessionSupported) {
             navigator.xr.isSessionSupported(m.mode).then(function(ok) { entry.supported = ok; showButtons(); });
         }
     });
