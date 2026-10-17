@@ -39,6 +39,8 @@ private:
     void ProcessXEvent(xcb_generic_event_t* xEvent); // Convert x_event to Window event
 
 private:
+    bool m_useXlibSurface{}; // the surface is made from the Xlib display, not the XCB connection
+
     Display* m_display{}; // for XLib
 
     xcb_connection_t* m_xcbConnection{}; // for XCB

@@ -4,8 +4,24 @@
 #include <string>
 
 namespace prev::window {
+// The window the engine opens. Auto opens the platform's own - on Linux X11 first, which runs everywhere through
+// XWayland too, then Wayland - and Headless opens none. Xcb and Xlib open the same X11 window and differ only in
+// the handle the surface is made from.
+enum class WindowSystem {
+    Auto,
+    Headless,
+    Win32,
+    MacOS,
+    IOS,
+    Android,
+    Emscripten,
+    Wayland,
+    Xcb,
+    Xlib
+};
+
 struct WindowCreateInfo {
-    bool headless{};
+    WindowSystem windowSystem{ WindowSystem::Auto };
 
     std::string title{};
 

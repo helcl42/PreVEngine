@@ -136,7 +136,7 @@ void DefaultEngineImpl::ResetDevice()
     // Build extension list based on what's actually supported by the adapter
     std::vector<std::string> extensions;
 
-    if (!m_config.headless) {
+    if (m_config.windowSystem != prev::window::WindowSystem::Headless) {
         extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
     }
 
@@ -168,13 +168,14 @@ void DefaultEngineImpl::ResetRenderPass()
         m_config.colorManaged = false;
     }
 
+    const GfxTextureLayout colorLayout = m_config.windowSystem == prev::window::WindowSystem::Headless ? GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT : GFX_TEXTURE_LAYOUT_PRESENT_SRC;
     const GfxFormat depthFormat = GFX_FORMAT_DEPTH32_FLOAT;
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, sampleCount, GetViewCount(), true, false);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, colorLayout, depthFormat, sampleCount, GetViewCount(), true, false);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, GetViewCount(), true, false);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, colorLayout, depthFormat, GetViewCount(), true, false);
     }
     LOGI("GFX render pass created");
 }

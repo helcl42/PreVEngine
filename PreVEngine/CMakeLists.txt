@@ -81,6 +81,8 @@ option(ENABLE_WEBXR "Enable WebXR (browser VR/AR over WebGPU) - experimental spi
 option(BUILD_VULKAN_BACKEND "Build Vulkan backend" ON)
 option(BUILD_WEBGPU_BACKEND "Build WebGPU backend (requires Dawn)" ON)
 option(BUILD_HEADLESS "Build without windowing system support (no surface creation)" OFF)
+option(ENABLE_XCB "Linux: build the X11 window (XCB, with an Xlib handle on request)" ON)
+option(ENABLE_WAYLAND "Linux: build the Wayland window" ON)
 option(ENABLE_ASAN  "Enable Address Sanitizer"            OFF)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
 option(ENABLE_TSAN  "Enable Thread Sanitizer"             OFF)
@@ -198,14 +200,11 @@ set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(BUILD_CPP_WRAPPER OFF CACHE BOOL "" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-# Propagate windowing system selection to gfx
+# gfx makes surfaces for exactly the Linux windows built here (the X11 window hands it an Xlib or XCB handle)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
-    if(ENABLE_WAYLAND AND NOT ENABLE_XCB)
-        set(GFX_ENABLE_X11 OFF CACHE BOOL "" FORCE)
-        set(GFX_ENABLE_XCB OFF CACHE BOOL "" FORCE)
-    elseif(ENABLE_XCB AND NOT ENABLE_WAYLAND)
-        set(GFX_ENABLE_WAYLAND OFF CACHE BOOL "" FORCE)
-    endif()
+    set(GFX_ENABLE_X11 ${ENABLE_XCB} CACHE BOOL "" FORCE)
+    set(GFX_ENABLE_XCB ${ENABLE_XCB} CACHE BOOL "" FORCE)
+    set(GFX_ENABLE_WAYLAND ${ENABLE_WAYLAND} CACHE BOOL "" FORCE)
 endif()
 
 add_subdirectory(external/gfx)
@@ -298,74 +297,55 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
     add_definitions(-DTARGET_PLATFORM_LINUX)
 
-    option(ENABLE_XCB "Enable XCB support" OFF)
-    option(ENABLE_WAYLAND "Enable Wayland support" OFF)
-    option(ENABLE_XLIB "Enable Xlib support" ON)
-    
+    add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
+    target_link_libraries(${PROJECT_NAME} gfx pthread)
+
     if(BUILD_HEADLESS)
         message("${PROJECT_NAME} - Linux headless (no X11/XCB/Wayland)")
-
-        add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
-        target_link_libraries(${PROJECT_NAME} gfx pthread)
-    elseif (ENABLE_XCB)
-        add_definitions(-DTARGET_PLATFORM_XCB)
-
-        add_library(${PROJECT_NAME} STATIC ${SRC_LIST})
-
-        target_link_libraries(${PROJECT_NAME} gfx pthread)
-
-        #---XCB---  (window)
-        find_package(XCB REQUIRED)
-        include_directories(${XCB_INCLUDE_DIRS})                 # /usr/include
-        target_link_libraries(${PROJECT_NAME} ${XCB_LIBRARIES})  # /usr/lib/x86_64-linux-gnu/libxcb.so
-        #---XKB--- (keyboard)
-        # find_package(XKB REQUIRED)
-        find_library(XKB "xkbcommon" DOC "XKB Keyboard library") # xkb keyboard support
-        target_link_libraries(${PROJECT_NAME} ${XKB})            # /usr/lib/x86_64-linux-gnu/libxkbcommon.so
-        #---X11---
-        find_package(X11 REQUIRED)
-        include_directories(${X11_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES})
-        #---X11-XCB---
-        find_package(X11_XCB REQUIRED)
-        include_directories(${X11_XCB_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} ${X11_XCB_LIBRARIES})
-        #---Xlib native handle---
-        if (ENABLE_XLIB)
-            add_definitions(-DENABLE_XLIB_HANDLE)
-        endif()
-        #---XInput--- (MultiTouch)
-        if (ENABLE_MULTITOUCH)               #adds 8.5KB to exe size
-            target_link_libraries(${PROJECT_NAME} ${X11_Xinput_LIB})
-            add_definitions(-DENABLE_MULTITOUCH)
-        endif()
-    elseif(ENABLE_WAYLAND)
-        add_definitions(-DTARGET_PLATFORM_WAYLAND)
-
-        include_directories("platform/wayland")
-
-        file(GLOB WAYLAND_SRC_LIST 
-            "platform/wayland/*.h" "platform/wayland/*.c"
-        )
-    
-        add_library(${PROJECT_NAME} STATIC 
-            ${SRC_LIST}
-            ${WAYLAND_SRC_LIST}
-        )
-
-        target_link_libraries(${PROJECT_NAME} gfx)
-
-        find_package(Wayland REQUIRED)
-        include_directories(${WAYLAND_CLIENT_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
     else()
-        message(FATAL_ERROR "Unsupported Linux Window System.")
+        # Every window whose libraries are present is built in; Config::windowSystem picks one at run time.
+        set(LINUX_WINDOWS "")
+        if(ENABLE_XCB)
+            find_package(XCB)
+            find_package(X11)
+            find_package(X11_XCB)
+            find_library(XKB "xkbcommon" DOC "XKB Keyboard library")
+            if(XCB_FOUND AND X11_FOUND AND X11_XCB_FOUND AND XKB)
+                add_definitions(-DTARGET_PLATFORM_XCB)
+                include_directories(${XCB_INCLUDE_DIRS} ${X11_INCLUDE_DIR} ${X11_XCB_INCLUDE_DIR})
+                target_link_libraries(${PROJECT_NAME} ${XCB_LIBRARIES} ${XKB} ${X11_LIBRARIES} ${X11_XCB_LIBRARIES})
+                if (ENABLE_MULTITOUCH)               #adds 8.5KB to exe size
+                    target_link_libraries(${PROJECT_NAME} ${X11_Xinput_LIB})
+                    add_definitions(-DENABLE_MULTITOUCH)
+                endif()
+                list(APPEND LINUX_WINDOWS "X11")
+            else()
+                message(WARNING "${PROJECT_NAME} - X11/XCB/xkbcommon libraries not found: no X11 window")
+            endif()
+        endif()
+        if(ENABLE_WAYLAND)
+            find_package(Wayland)
+            if(WAYLAND_CLIENT_FOUND)
+                add_definitions(-DTARGET_PLATFORM_WAYLAND)
+                include_directories("platform/wayland" ${WAYLAND_CLIENT_INCLUDE_DIR})
+                file(GLOB WAYLAND_SRC_LIST "platform/wayland/*.h" "platform/wayland/*.c")
+                target_sources(${PROJECT_NAME} PRIVATE ${WAYLAND_SRC_LIST})
+                target_link_libraries(${PROJECT_NAME} ${WAYLAND_CLIENT_LIBRARIES})
+                list(APPEND LINUX_WINDOWS "Wayland")
+            else()
+                message(WARNING "${PROJECT_NAME} - wayland-client not found: no Wayland window")
+            endif()
+        endif()
+        if(NOT LINUX_WINDOWS)
+            message(FATAL_ERROR "No Linux window system: enable ENABLE_XCB or ENABLE_WAYLAND with its libraries installed.")
+        endif()
+        message("${PROJECT_NAME} - Linux windows: ${LINUX_WINDOWS}")
     endif()
 
-    # gfx auto-detects Wayland and publicly defines GFX_HAS_WAYLAND independently of PreVEngine's
-    # window-system selection. WaylandWindowImpl.cpp is globbed into every Linux build and self-guards
-    # on that macro, so it needs platform/wayland on the include path exactly when gfx defined it
-    # (e.g. an XCB build that also has Wayland) - and never in a headless build, where gfx defines nothing.
+    # gfx detects Wayland itself and publicly defines GFX_HAS_WAYLAND. WaylandWindowImpl.cpp is globbed
+    # into every Linux build and self-guards on that macro, so it needs platform/wayland on the include path
+    # exactly when gfx defined it (e.g. gfx found Wayland where FindWayland above did not) - and never in a
+    # headless build, where gfx defines nothing.
     # gfx's GFX_HAS_WAYLAND is a directory-scoped variable not visible here, so read the actual gfx
     # target definition instead - the same condition that gates the WaylandWindowImpl source.
     get_target_property(_gfx_compile_defs gfx INTERFACE_COMPILE_DEFINITIONS)

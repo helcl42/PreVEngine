@@ -18,10 +18,10 @@ EngineImpl::EngineImpl(const Config& config)
     : m_config{ config }
 {
 #if defined(GFX_HEADLESS_BUILD)
-    if (!m_config.headless) {
+    if (m_config.windowSystem != prev::window::WindowSystem::Headless) {
         LOGW("BUILD_HEADLESS: no windowing system compiled in - forcing headless mode (windowed rendering unavailable)");
     }
-    m_config.headless = true;
+    m_config.windowSystem = prev::window::WindowSystem::Headless;
 #endif
 }
 
@@ -143,7 +143,7 @@ void EngineImpl::ResetTiming()
 void EngineImpl::ResetWindow()
 {
     prev::window::WindowCreateInfo windowCreateInfo{};
-    windowCreateInfo.headless = m_config.headless;
+    windowCreateInfo.windowSystem = m_config.windowSystem;
     windowCreateInfo.title = m_config.appName;
     windowCreateInfo.fullScreen = m_config.fullScreen;
     windowCreateInfo.left = m_config.windowPosition.x;
@@ -156,7 +156,7 @@ void EngineImpl::ResetWindow()
 
 void EngineImpl::ResetSurface()
 {
-    if (m_config.headless) {
+    if (m_config.windowSystem == prev::window::WindowSystem::Headless) {
         return;
     }
     m_surface = std::make_unique<prev::render::surface::Surface>(*m_instance, m_window->GetNativeWindowHandle());
@@ -214,21 +214,21 @@ void EngineImpl::RunWindowFrameLoop(const std::function<bool()>& tick)
 #endif
 }
 
-std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth)
+std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth)
 {
     return prev::render::pass::RenderPassBuilder(device)
         .AddColorAttachment(colorFormat, sampleCount, {}, GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
-        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, GFX_TEXTURE_LAYOUT_PRESENT_SRC, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
+        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, colorLayout, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
         .AddDepthAttachment(depthFormat, sampleCount, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
         .AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
         .SetViewCount(viewCount)
         .Build();
 }
 
-std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth)
+std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth)
 {
     return prev::render::pass::RenderPassBuilder(device)
-        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, GFX_TEXTURE_LAYOUT_PRESENT_SRC, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE)
+        .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, colorLayout, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE)
         .AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE)
         .SetViewCount(viewCount)
         .Build();

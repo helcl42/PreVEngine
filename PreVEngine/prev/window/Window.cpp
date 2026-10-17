@@ -4,7 +4,7 @@
 
 namespace prev::window {
 Window::Window(const WindowCreateInfo& createInfo)
-    : m_windowImpl{ impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.headless, createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
+    : m_windowImpl{ impl::WindowImplFactory{}.Create(impl::WindowInfo{ createInfo.windowSystem, createInfo.title, { createInfo.left, createInfo.top }, { createInfo.width, createInfo.height }, createInfo.fullScreen }) }
 {
     m_windowImpl->SetSurfaceObserver(this);
 }

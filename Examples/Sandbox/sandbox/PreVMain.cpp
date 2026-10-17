@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <utility>
 
 namespace {
 prev::core::engine::Config GetDefaultConfig()
@@ -27,11 +28,50 @@ prev::core::engine::Config GetDefaultConfig()
     return config;
 }
 
+bool ParseRenderBackend(const std::string& name, prev::core::engine::RenderBackend& outRenderBackend)
+{
+    const std::pair<const char*, prev::core::engine::RenderBackend> renderBackends[]{
+        { "vulkan", prev::core::engine::RenderBackend::Vulkan },
+        { "webgpu", prev::core::engine::RenderBackend::WebGPU }
+    };
+    for (const auto& [backendName, renderBackend] : renderBackends) {
+        if (name == backendName) {
+            outRenderBackend = renderBackend;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ParseWindowSystem(const std::string& name, prev::window::WindowSystem& outWindowSystem)
+{
+    const std::pair<const char*, prev::window::WindowSystem> windowSystems[]{
+        { "auto", prev::window::WindowSystem::Auto },
+        { "headless", prev::window::WindowSystem::Headless },
+        { "win32", prev::window::WindowSystem::Win32 },
+        { "macos", prev::window::WindowSystem::MacOS },
+        { "ios", prev::window::WindowSystem::IOS },
+        { "android", prev::window::WindowSystem::Android },
+        { "emscripten", prev::window::WindowSystem::Emscripten },
+        { "wayland", prev::window::WindowSystem::Wayland },
+        { "xcb", prev::window::WindowSystem::Xcb },
+        { "xlib", prev::window::WindowSystem::Xlib }
+    };
+    for (const auto& [systemName, windowSystem] : windowSystems) {
+        if (name == systemName) {
+            outWindowSystem = windowSystem;
+            return true;
+        }
+    }
+    return false;
+}
+
 void PrintUsage(const char* programName)
 {
     std::printf("Usage: %s [options]\n", programName);
     std::printf("Options:\n");
     std::printf("  --backend <string>     Render backend: vulkan, webgpu (default: platform)\n");
+    std::printf("  --window-system <string>  Window system: auto, headless, win32, macos, ios, android, emscripten, wayland, xcb, xlib (default: auto)\n");
     std::printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
     std::printf("  --vsync <0|1>          Enable VSync (default: 1)\n");
     std::printf("  --color-managed <0|1>  Linear rendering + sRGB present (default: 1)\n");
@@ -46,12 +86,15 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "--backend") == 0 && i + 1 < argc) {
             const std::string backend{ argv[++i] };
-            if (backend == "vulkan") {
-                config.renderBackend = prev::core::engine::RenderBackend::Vulkan;
-            } else if (backend == "webgpu") {
-                config.renderBackend = prev::core::engine::RenderBackend::WebGPU;
-            } else {
+            if (!ParseRenderBackend(backend, config.renderBackend)) {
                 std::printf("Unknown backend: %s\n", backend.c_str());
+                PrintUsage(argv[0]);
+                return false;
+            }
+        } else if (std::strcmp(argv[i], "--window-system") == 0 && i + 1 < argc) {
+            const std::string windowSystem{ argv[++i] };
+            if (!ParseWindowSystem(windowSystem, config.windowSystem)) {
+                std::printf("Unknown window system: %s\n", windowSystem.c_str());
                 PrintUsage(argv[0]);
                 return false;
             }

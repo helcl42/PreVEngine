@@ -113,9 +113,9 @@ protected:
     virtual bool UsesWindowSurface() const = 0;
 
 protected:
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth);
 
-    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth);
+    std::unique_ptr<prev::render::pass::RenderPass> CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth);
 
     void UpdateFps();
 

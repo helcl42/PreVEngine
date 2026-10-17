@@ -192,15 +192,16 @@ void XrEngineImpl::ResetRenderPass()
         LOGW("colorManaged requested but the XR runtime provides no sRGB swapchain format; falling back to gamma passthrough");
         m_config.colorManaged = false;
     }
+    const GfxTextureLayout colorLayout = m_config.windowSystem == prev::window::WindowSystem::Headless ? GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT : GFX_TEXTURE_LAYOUT_PRESENT_SRC;
     const uint32_t viewCount = GetPassViewCount();
     const bool storeColor = true;
     const bool storeDepth = m_xr->HasDepthImages();
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
     if (m_config.samplesCount > 1) {
-        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, depthFormat, sampleCount, viewCount, storeColor, storeDepth);
+        m_renderPass = CreateDefaultMultisampledRenderPass(*m_device, colorFormat, colorLayout, depthFormat, sampleCount, viewCount, storeColor, storeDepth);
     } else {
-        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, depthFormat, viewCount, storeColor, storeDepth);
+        m_renderPass = CreateDefaultRenderPass(*m_device, colorFormat, colorLayout, depthFormat, viewCount, storeColor, storeDepth);
     }
 }
 

@@ -6,6 +6,7 @@
 #include <string>
 
 #include "../../input/keyboard/KeyCodes.h"
+#include "../WindowCommon.h"
 
 namespace prev::window::impl {
 struct Position {
@@ -41,7 +42,7 @@ inline bool operator!=(const Size& a, const Size& b)
 }
 
 struct WindowInfo {
-    bool headless{};
+    prev::window::WindowSystem windowSystem{};
 
     std::string title;
 

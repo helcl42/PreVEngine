@@ -8,6 +8,7 @@
 #include <X11/extensions/XInput2.h> // MultiTouch
 #endif
 
+#include <stdexcept>
 #include <string.h>
 
 namespace prev::window::impl::xcb {
@@ -71,16 +72,22 @@ namespace {
 
 XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
     : WindowImpl()
+    , m_useXlibSurface{ windowInfo.windowSystem != prev::window::WindowSystem::Xcb }
 {
     LOGI("Creating XCB-Window...");
 
     XInitThreads(); // Required by Vulkan, when using XLib. (Vulkan spec section: 30.2.6 Xlib Platform)
 
     m_display = XOpenDisplay(nullptr);
-    assert(m_display && "Failed to open Display"); // for XLIB functions
+    if (!m_display) {
+        throw std::runtime_error("Could not open the X display.");
+    }
 
     m_xcbConnection = XGetXCBConnection(m_display);
-    assert(m_display && "Failed to open XCB connection"); // for XCB functions
+    if (!m_xcbConnection) {
+        XCloseDisplay(m_display);
+        throw std::runtime_error("Could not get the XCB connection.");
+    }
 
     const xcb_setup_t* setup = xcb_get_setup(m_xcbConnection);
     m_xcbScreen = (xcb_setup_roots_iterator(setup)).data;
@@ -233,11 +240,10 @@ void XcbWindowImpl::SetMouseCursorVisible(bool visible)
 
 GfxPlatformWindowHandle XcbWindowImpl::GetNativeWindowHandle() const
 {
-#ifdef ENABLE_XLIB_HANDLE
-    return gfxPlatformWindowHandleFromXlib(m_display, static_cast<unsigned long>(m_xcbWindow));
-#else
+    if (m_useXlibSurface) {
+        return gfxPlatformWindowHandleFromXlib(m_display, static_cast<unsigned long>(m_xcbWindow));
+    }
     return gfxPlatformWindowHandleFromXCB(m_xcbConnection, static_cast<uint32_t>(m_xcbWindow));
-#endif
 }
 
 //---------------------------------------------------------------------------

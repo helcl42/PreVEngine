@@ -3,8 +3,47 @@
 
 #include <cstring>
 #include <string>
+#include <utility>
 
 namespace {
+bool ParseRenderBackend(const std::string& name, prev::core::engine::RenderBackend& outRenderBackend)
+{
+    const std::pair<const char*, prev::core::engine::RenderBackend> renderBackends[]{
+        { "vulkan", prev::core::engine::RenderBackend::Vulkan },
+        { "webgpu", prev::core::engine::RenderBackend::WebGPU }
+    };
+    for (const auto& [backendName, renderBackend] : renderBackends) {
+        if (name == backendName) {
+            outRenderBackend = renderBackend;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ParseWindowSystem(const std::string& name, prev::window::WindowSystem& outWindowSystem)
+{
+    const std::pair<const char*, prev::window::WindowSystem> windowSystems[]{
+        { "auto", prev::window::WindowSystem::Auto },
+        { "headless", prev::window::WindowSystem::Headless },
+        { "win32", prev::window::WindowSystem::Win32 },
+        { "macos", prev::window::WindowSystem::MacOS },
+        { "ios", prev::window::WindowSystem::IOS },
+        { "android", prev::window::WindowSystem::Android },
+        { "emscripten", prev::window::WindowSystem::Emscripten },
+        { "wayland", prev::window::WindowSystem::Wayland },
+        { "xcb", prev::window::WindowSystem::Xcb },
+        { "xlib", prev::window::WindowSystem::Xlib }
+    };
+    for (const auto& [systemName, windowSystem] : windowSystems) {
+        if (name == systemName) {
+            outWindowSystem = windowSystem;
+            return true;
+        }
+    }
+    return false;
+}
+
 void PrintUsage(const char* programName)
 {
     printf("Usage: %s [options]\n", programName);
@@ -17,7 +56,7 @@ void PrintUsage(const char* programName)
     printf("  --vsync <0|1>          Enable VSync (default: 1)\n");
     printf("  --color-managed <0|1>  Linear rendering + sRGB present (default: 1)\n");
     printf("  --validation <0|1>     Enable validation layers (default: 1)\n");
-    printf("  --headless <0|1>       Run in headless mode (default: 0)\n");
+    printf("  --window-system <string>  Window system: auto, headless, win32, macos, ios, android, emscripten, wayland, xcb, xlib (default: auto)\n");
     printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
     printf("  --swapchain-images <int>  Swapchain image count (default: 3)\n");
     printf("  --frames-in-flight <int>  Max frames in flight (default: 2)\n");
@@ -67,8 +106,13 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
             config.colorManaged = std::stoi(argv[++i]) != 0;
         } else if (strcmp(argv[i], "--validation") == 0 && i + 1 < argc) {
             config.validation = std::stoi(argv[++i]) != 0;
-        } else if (strcmp(argv[i], "--headless") == 0 && i + 1 < argc) {
-            config.headless = std::stoi(argv[++i]) != 0;
+        } else if (strcmp(argv[i], "--window-system") == 0 && i + 1 < argc) {
+            const std::string windowSystem{ argv[++i] };
+            if (!ParseWindowSystem(windowSystem, config.windowSystem)) {
+                printf("Unknown window system: %s\n", windowSystem.c_str());
+                PrintUsage(argv[0]);
+                return false;
+            }
         } else if (strcmp(argv[i], "--sample-count") == 0 && i + 1 < argc) {
             config.samplesCount = static_cast<uint32_t>(std::stoi(argv[++i]));
         } else if (strcmp(argv[i], "--swapchain-images") == 0 && i + 1 < argc) {
@@ -79,11 +123,7 @@ bool ParseArgs(int argc, char** argv, prev::core::engine::Config& config)
             config.gpuIndex = std::stoi(argv[++i]);
         } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc) {
             const std::string backend{ argv[++i] };
-            if (backend == "vulkan") {
-                config.renderBackend = prev::core::engine::RenderBackend::Vulkan;
-            } else if (backend == "webgpu") {
-                config.renderBackend = prev::core::engine::RenderBackend::WebGPU;
-            } else {
+            if (!ParseRenderBackend(backend, config.renderBackend)) {
                 printf("Unknown backend: %s\n", backend.c_str());
                 PrintUsage(argv[0]);
                 return false;

@@ -236,9 +236,12 @@ python Scripts/compile_shaders.py --list
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `ENABLE_XCB` | ON | XCB windowing (default on Linux) |
-| `ENABLE_WAYLAND` | OFF | Wayland windowing |
-| `ENABLE_XLIB` | OFF | Xlib windowing |
+| `ENABLE_XCB` | ON | the X11 window (its surface from an Xlib or XCB handle) |
+| `ENABLE_WAYLAND` | ON | the Wayland window |
+
+Every window whose libraries are found is built in, and `Config::windowSystem` picks one at run time:
+`Auto` tries X11 first (XWayland included), then Wayland; an explicit `Wayland`, `Xcb` or `Xlib` is tried first
+and falls back the same way when it cannot open. On any platform, `Headless` opens no window.
 
 ## Example Application
 
@@ -262,7 +265,7 @@ The example app supports command-line configuration:
 | `--frames-in-flight` | 2 | Max frames in flight (0 = match swapchain image count) |
 | `--validation` | 1 | Enable validation layers |
 | `--gpu-index` | -1 | GPU adapter index (-1 = auto) |
-| `--headless` | 0 | Headless rendering |
+| `--window-system` | auto | `auto`, `headless`, `win32`, `macos`, `ios`, `android`, `emscripten`, `wayland`, `xcb`, `xlib` |
 
 ## 3rd Party Dependencies
 

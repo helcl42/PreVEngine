@@ -2,6 +2,7 @@
 #define __ENGINE_CONFIG_H__
 
 #include "../../common/Common.h"
+#include "../../window/WindowCommon.h"
 
 namespace prev::core::engine {
 enum class RenderBackend {
@@ -25,7 +26,7 @@ struct Config {
 
     std::string appName{ "PreVEngine - Demo" };
 
-    bool headless{ false };
+    prev::window::WindowSystem windowSystem{ prev::window::WindowSystem::Auto }; // Headless opens no window
 
     bool colorManaged{ false };
 
