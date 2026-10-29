@@ -21,9 +21,13 @@ public:
 
     std::vector<GfxQueueFamilyProperties> GetQueueFamilies() const;
 
+    std::vector<const char*> GetSupportedExtensions() const;
+
     // Returns the index of a queue family matching flags, or -1 if not found.
     // Pass a valid surface to require present support.
     int32_t FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlags = 0, GfxSurface surface = nullptr) const;
+
+    bool IsExtensionSupported(const std::string& extension) const;
 
     void Print() const;
 

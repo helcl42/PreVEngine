@@ -2,6 +2,7 @@
 
 #include "../../common/Logger.h"
 
+#include <cstring>
 #include <stdexcept>
 
 namespace prev::core::instance {
@@ -33,6 +34,25 @@ namespace {
             return GFX_BACKEND_VULKAN;
         }
     }
+
+    std::vector<const char*> GetSupportedExtensions(GfxBackend backend)
+    {
+        uint32_t count{ 0 };
+        gfxEnumerateInstanceExtensions(backend, &count, nullptr);
+        std::vector<const char*> extensions(count);
+        gfxEnumerateInstanceExtensions(backend, &count, extensions.data());
+        return extensions;
+    }
+
+    bool isExtensionSupported(const std::vector<const char*>& supportedExtensions, const char* extension)
+    {
+        for (const char* supportedExtension : supportedExtensions) {
+            if (std::strcmp(supportedExtension, extension) == 0) {
+                return true;
+            }
+        }
+        return false;
+    }
 } // namespace
 
 std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bool enableValidation, prev::core::engine::RenderBackend renderBackend, const std::vector<std::string>& nativeExtensions) const
@@ -59,13 +79,22 @@ std::unique_ptr<Instance> InstanceFactory::Create(const std::string& appName, bo
     nativeExtsDesc.nativeExtensions = nativeExtPtrs.empty() ? nullptr : nativeExtPtrs.data();
     nativeExtsDesc.nativeExtensionCount = static_cast<uint32_t>(nativeExtPtrs.size());
 
-    std::vector<const char*> extensions{ GFX_INSTANCE_EXTENSION_SURFACE };
+    std::vector<const char*> requestedExtensions{ GFX_INSTANCE_EXTENSION_SURFACE };
     if (enableValidation) {
-        extensions.push_back(GFX_INSTANCE_EXTENSION_DEBUG);
+        requestedExtensions.push_back(GFX_INSTANCE_EXTENSION_DEBUG);
     }
 #ifdef ENABLE_XR
-    extensions.push_back(GFX_INSTANCE_EXTENSION_XR_COMPATIBLE);
+    requestedExtensions.push_back(GFX_INSTANCE_EXTENSION_XR_COMPATIBLE);
 #endif
+
+    const std::vector<const char*> supportedExtensions{ GetSupportedExtensions(backend) };
+
+    std::vector<const char*> extensions;
+    for (const char* extension : requestedExtensions) {
+        if (isExtensionSupported(supportedExtensions, extension)) {
+            extensions.push_back(extension);
+        }
+    }
 
     GfxInstanceDescriptor desc{};
     desc.sType = GFX_STRUCTURE_TYPE_INSTANCE_DESCRIPTOR;

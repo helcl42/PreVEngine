@@ -66,16 +66,14 @@ namespace {
         const bool srgb{ isColor && colorManaged };
 
         GfxTextureViewType viewType{ GFX_TEXTURE_VIEW_TYPE_2D };
-        GfxTextureType texType{ GFX_TEXTURE_TYPE_2D };
         if (imageViewType == ImageBufferViewType::CUBE_MAP) {
             viewType = GFX_TEXTURE_VIEW_TYPE_CUBE;
-            texType = GFX_TEXTURE_TYPE_CUBE;
         }
 
         auto builder = prev::render::buffer::ImageBufferBuilder{ device, device.GetQueue(prev::core::device::QueueType::GRAPHICS) }
                            .SetExtent({ images[0]->GetWidth(), images[0]->GetHeight(), 1 })
                            .SetFormat(prev::util::gfx::ToImageFormat(images[0]->GetChannels(), images[0]->GetBitDepth(), images[0]->IsFloatingPoint(), srgb))
-                           .SetType(texType)
+                           .SetType(GFX_TEXTURE_TYPE_2D)
                            .SetMipMapEnabled(generateMipMaps)
                            .SetUsageFlags(GFX_TEXTURE_USAGE_COPY_SRC | GFX_TEXTURE_USAGE_COPY_DST | GFX_TEXTURE_USAGE_TEXTURE_BINDING)
                            .SetLayerData(layersData, static_cast<uint64_t>(images[0]->GetSize()) * images[0]->GetPixelSize())

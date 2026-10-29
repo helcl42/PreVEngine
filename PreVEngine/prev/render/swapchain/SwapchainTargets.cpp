@@ -41,10 +41,12 @@ std::unique_ptr<framebuffer::Framebuffer> SwapchainTargets::CreateFramebuffer(Gf
     GfxTextureView fbColor{};
     GfxTextureView fbColorResolve{};
     GfxTextureView fbDepth{};
+    GfxTextureView fbDepthResolve{};
     if (m_sampleCount > GFX_SAMPLE_COUNT_1) {
         fbColor = m_msaaColor->GetTextureView();
         fbColorResolve = colorView; // resolve the multisampled color into the per-image image
         fbDepth = m_msaaDepth->GetTextureView();
+        fbDepthResolve = depthView; // the caller's depth (e.g. XR runtime depth) receives the resolved depth
     } else {
         // Non-MSAA: use the caller's depth view, or the shared depth. One must exist - a swapchain built
         // without a shared depth (e.g. XR using runtime depth) must pass its own depth view here.
@@ -56,7 +58,7 @@ std::unique_ptr<framebuffer::Framebuffer> SwapchainTargets::CreateFramebuffer(Gf
     return framebuffer::FramebufferBuilder{ m_device, m_renderPass }
         .SetExtent(m_extent)
         .AddColorAttachment(fbColor, fbColorResolve)
-        .SetDepthStencilAttachment(fbDepth)
+        .SetDepthStencilAttachment(fbDepth, fbDepthResolve)
         .Build();
 }
 

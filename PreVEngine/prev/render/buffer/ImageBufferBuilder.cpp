@@ -131,6 +131,7 @@ std::unique_ptr<ImageBuffer> ImageBufferBuilder::CreateImage(uint32_t& outMipLev
     if (mipLevels > 1) {
         usageFlags |= GFX_TEXTURE_USAGE_COPY_SRC;
         usageFlags |= GFX_TEXTURE_USAGE_COPY_DST;
+        usageFlags |= GFX_TEXTURE_USAGE_TEXTURE_BINDING;
         usageFlags |= GFX_TEXTURE_USAGE_RENDER_ATTACHMENT; // WebGPU backend generates mipmaps via render passes
     }
 

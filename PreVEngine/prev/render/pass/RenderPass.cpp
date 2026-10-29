@@ -22,7 +22,7 @@ RenderPass::~RenderPass()
     LOGI("Renderpass destroyed");
 }
 
-void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder, bool bundleExecution)
+void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder)
 {
     std::vector<GfxColor> colorClearValues;
     float depthClearValue{ 1.0f };
@@ -47,7 +47,6 @@ void RenderPass::Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEnco
     desc.stencilClearValue = stencilClearValue;
     desc.occlusionQuerySet = m_occlusionQuerySet;
     desc.timestampQuerySet = m_timestampQuerySet;
-    desc.bundleExecution = bundleExecution;
 
     gfxCommandEncoderBeginRenderPass(commandEncoder, &desc, &m_activeEncoder);
 }

@@ -216,13 +216,15 @@ void EngineImpl::RunWindowFrameLoop(const std::function<bool()>& tick)
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultMultisampledRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, GfxSampleCount sampleCount, uint32_t viewCount, bool storeColor, bool storeDepth)
 {
-    return prev::render::pass::RenderPassBuilder(device)
-        .AddColorAttachment(colorFormat, sampleCount, {}, GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
+    prev::render::pass::RenderPassBuilder builder{ device };
+    builder.AddColorAttachment(colorFormat, sampleCount, {}, GFX_TEXTURE_LAYOUT_COLOR_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
         .AddColorAttachment(colorFormat, GFX_SAMPLE_COUNT_1, {}, colorLayout, GFX_LOAD_OP_CLEAR, storeColor ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
         .AddDepthAttachment(depthFormat, sampleCount, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_DONT_CARE)
-        .AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, storeDepth ? GFX_STORE_OP_STORE : GFX_STORE_OP_DONT_CARE, true)
-        .SetViewCount(viewCount)
-        .Build();
+        .SetViewCount(viewCount);
+    if (storeDepth) {
+        builder.AddDepthAttachment(depthFormat, GFX_SAMPLE_COUNT_1, 1.0f, 0, GFX_TEXTURE_LAYOUT_DEPTH_STENCIL_ATTACHMENT, GFX_LOAD_OP_CLEAR, GFX_STORE_OP_STORE, true);
+    }
+    return builder.Build();
 }
 
 std::unique_ptr<prev::render::pass::RenderPass> EngineImpl::CreateDefaultRenderPass(const prev::core::device::Device& device, GfxFormat colorFormat, GfxTextureLayout colorLayout, GfxFormat depthFormat, uint32_t viewCount, bool storeColor, bool storeDepth)

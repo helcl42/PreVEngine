@@ -28,7 +28,7 @@ public:
     ~RenderPass();
 
 public:
-    void Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder, bool bundleExecution = false);
+    void Begin(GfxFramebuffer framebuffer, GfxCommandEncoder commandEncoder);
 
     void End();
 

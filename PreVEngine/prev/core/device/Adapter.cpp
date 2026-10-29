@@ -32,6 +32,15 @@ std::vector<GfxQueueFamilyProperties> Adapter::GetQueueFamilies() const
     return families;
 }
 
+std::vector<const char*> Adapter::GetSupportedExtensions() const
+{
+    uint32_t count{ 0 };
+    gfxAdapterEnumerateExtensions(m_adapter, &count, nullptr);
+    std::vector<const char*> extensions(count);
+    gfxAdapterEnumerateExtensions(m_adapter, &count, extensions.data());
+    return extensions;
+}
+
 int32_t Adapter::FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlags, GfxSurface surface) const
 {
     const auto families{ GetQueueFamilies() };
@@ -53,6 +62,16 @@ int32_t Adapter::FindQueueFamily(GfxQueueFlags flags, GfxQueueFlags unwantedFlag
         return static_cast<int32_t>(i);
     }
     return -1;
+}
+
+bool Adapter::IsExtensionSupported(const std::string& extension) const
+{
+    for (const char* supportedExtension : GetSupportedExtensions()) {
+        if (extension == supportedExtension) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Adapter::Print() const

@@ -147,30 +147,27 @@ void XrEngineImpl::ResetInstance()
 
 void XrEngineImpl::ResetDevice()
 {
-    GfxAdapter selectedAdapter = m_xr->GetAdapter(*m_instance);
-
-    if (selectedAdapter) {
-        prev::core::device::Adapter adapter{ selectedAdapter };
-        const std::vector<std::string> extensions{
-            GFX_DEVICE_EXTENSION_SWAPCHAIN,
-            GFX_DEVICE_EXTENSION_ANISOTROPIC_FILTERING,
-            GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
-            GFX_DEVICE_EXTENSION_MULTIVIEW,
-        };
-        m_device = prev::core::device::DeviceFactory{}.Create(adapter, extensions, m_xr->GetRequiredDeviceExtensions());
+    const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
+    std::optional<prev::core::device::Adapter> adapter;
+    if (const GfxAdapter xrAdapter = m_xr->GetAdapter(*m_instance)) {
+        adapter = prev::core::device::Adapter{ xrAdapter };
     } else {
-        const GfxSurface surface = m_surface ? static_cast<GfxSurface>(*m_surface) : nullptr;
-        prev::core::device::Adapters adapters{ m_instance->GetHandle() };
-        const auto adapter{ adapters.Find(surface, m_config.gpuIndex) };
-        if (!adapter) {
-            throw std::runtime_error("Could not find a suitable GPU adapter");
-        }
-        std::vector<std::string> extensions{ m_xr->GetRequiredDeviceExtensions() };
-        if (surface) {
-            extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
-        }
-        m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions);
+        adapter = prev::core::device::Adapters{ m_instance->GetHandle() }.Find(surface, m_config.gpuIndex);
     }
+    if (!adapter) {
+        throw std::runtime_error("Could not find a suitable GPU adapter");
+    }
+
+    std::vector<std::string> extensions;
+    for (const char* extension : { GFX_DEVICE_EXTENSION_NON_SOLID_FILL, GFX_DEVICE_EXTENSION_MULTIVIEW, GFX_DEVICE_EXTENSION_DEPTH_STENCIL_RESOLVE }) {
+        if (adapter->IsExtensionSupported(extension)) {
+            extensions.push_back(extension);
+        }
+    }
+    if (surface) {
+        extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
+    }
+    m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions, m_xr->GetRequiredDeviceExtensions());
 
     if (!m_device) {
         throw std::runtime_error("Could not create logical device");
@@ -178,7 +175,7 @@ void XrEngineImpl::ResetDevice()
     m_device->Print();
 
     const auto& queue = m_device->GetQueue(prev::core::device::QueueType::GRAPHICS);
-    m_xr->UpdateGraphicsBinding(*m_instance, selectedAdapter, *m_device, queue);
+    m_xr->UpdateGraphicsBinding(*m_instance, *adapter, *m_device, queue);
 }
 
 void XrEngineImpl::ResetRenderPass()
@@ -196,6 +193,10 @@ void XrEngineImpl::ResetRenderPass()
     const uint32_t viewCount = GetPassViewCount();
     const bool storeColor = true;
     const bool storeDepth = m_xr->HasDepthImages();
+    if (m_config.samplesCount > 1 && storeDepth && !m_device->HasExtension(GFX_DEVICE_EXTENSION_DEPTH_STENCIL_RESOLVE)) {
+        LOGW("XR depth with MSAA needs depth resolve, which the device does not support; falling back to no MSAA");
+        m_config.samplesCount = 1;
+    }
     const GfxSampleCount sampleCount = static_cast<GfxSampleCount>(m_config.samplesCount);
 
     if (m_config.samplesCount > 1) {
