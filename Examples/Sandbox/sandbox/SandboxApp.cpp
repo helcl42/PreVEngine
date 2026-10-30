@@ -21,6 +21,9 @@ void SandboxApp::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS && keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_Escape) {
         prev::event::EventChannel::Post(prev::window::WindowCloseRequest{});
     }
+    if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS && keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_F11) {
+        prev::event::EventChannel::Post(prev::window::WindowFullScreenToggleRequest{});
+    }
 #ifdef ENABLE_XR
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS && keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_P) {
         SetArEnabled(!m_arEnabled);

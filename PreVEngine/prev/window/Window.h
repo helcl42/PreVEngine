@@ -35,6 +35,8 @@ public:
 
     bool HasFocus() const override;
 
+    bool IsFullScreen() const override;
+
     bool IsMouseLocked() const override;
 
     bool IsMouseCursorVisible() const override;
@@ -44,6 +46,8 @@ public:
     void SetPosition(const impl::Position& position) override;
 
     void SetSize(const impl::Size& size) override;
+
+    void SetFullScreen(bool fullScreen) override;
 
     void ShowKeyboard(bool enabled) override;
 
@@ -65,6 +69,10 @@ public:
 
     void operator()(const prev::window::WindowCloseRequest& windowCloseRequest);
 
+    void operator()(const prev::window::WindowFullScreenRequest& windowFullScreenRequest);
+
+    void operator()(const prev::window::WindowFullScreenToggleRequest& windowFullScreenToggleRequest);
+
 private:
     bool ProcessEvent(const impl::Event& e);
 
@@ -77,6 +85,10 @@ private:
     prev::event::EventHandler<Window, prev::input::mouse::MouseCursorVisibilityRequest> m_mouseCursorVisibilityHandler{ *this };
 
     prev::event::EventHandler<Window, prev::window::WindowCloseRequest> m_closeHandler{ *this };
+
+    prev::event::EventHandler<Window, prev::window::WindowFullScreenRequest> m_fullScreenHandler{ *this };
+
+    prev::event::EventHandler<Window, prev::window::WindowFullScreenToggleRequest> m_fullScreenToggleHandler{ *this };
 };
 
 } // namespace prev::window

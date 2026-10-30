@@ -40,7 +40,20 @@ struct WindowFocusChangeEvent {
     bool hasFocus{};
 };
 
+struct WindowFullScreenChangeEvent {
+    IWindow* window{};
+
+    bool fullScreen{};
+};
+
 struct WindowCloseRequest {
+};
+
+struct WindowFullScreenRequest {
+    bool fullScreen{};
+};
+
+struct WindowFullScreenToggleRequest {
 };
 } // namespace prev::window
 

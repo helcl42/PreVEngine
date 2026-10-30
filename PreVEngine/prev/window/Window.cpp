@@ -46,6 +46,11 @@ bool Window::HasFocus() const
     return m_windowImpl->HasFocus();
 }
 
+bool Window::IsFullScreen() const
+{
+    return m_windowImpl->IsFullScreen();
+}
+
 bool Window::IsMouseLocked() const
 {
     return m_windowImpl->IsMouseLocked();
@@ -69,6 +74,11 @@ void Window::SetPosition(const impl::Position& position)
 void Window::SetSize(const impl::Size& size)
 {
     m_windowImpl->SetSize(size.width, size.height);
+}
+
+void Window::SetFullScreen(bool fullScreen)
+{
+    m_windowImpl->SetFullScreen(fullScreen);
 }
 
 void Window::ShowKeyboard(bool enabled) // On Android, show the soft-keyboard.
@@ -123,6 +133,16 @@ void Window::operator()(const prev::window::WindowCloseRequest& windowCloseReque
     Close();
 }
 
+void Window::operator()(const prev::window::WindowFullScreenRequest& windowFullScreenRequest)
+{
+    SetFullScreen(windowFullScreenRequest.fullScreen);
+}
+
+void Window::operator()(const prev::window::WindowFullScreenToggleRequest& windowFullScreenToggleRequest)
+{
+    SetFullScreen(!IsFullScreen());
+}
+
 bool Window::ProcessEvent(const impl::Event& e)
 {
     switch (e.tag) {
@@ -146,6 +166,9 @@ bool Window::ProcessEvent(const impl::Event& e)
         break;
     case impl::Event::EventType::FOCUS:
         prev::event::EventChannel::Post(WindowFocusChangeEvent{ this, e.body.focus.hasFocus });
+        break;
+    case impl::Event::EventType::FULLSCREEN:
+        prev::event::EventChannel::Post(WindowFullScreenChangeEvent{ this, e.body.fullScreen.isFullScreen });
         break;
     case impl::Event::EventType::TOUCH:
         prev::event::EventChannel::Post(prev::input::touch::TouchEvent{ InputConvertor::GetTouchActionType(e.body.touch.action), e.body.touch.id, glm::vec2(e.body.touch.x, e.body.touch.y), glm::vec2(e.body.touch.w, e.body.touch.h) });

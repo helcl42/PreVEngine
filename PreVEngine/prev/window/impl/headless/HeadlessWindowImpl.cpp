@@ -11,6 +11,9 @@ HeadlessWindowImpl::HeadlessWindowImpl(const WindowInfo& windowInfo)
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
     m_eventQueue.Push(OnFocusEvent(true));
+    if (m_info.fullScreen) {
+        m_eventQueue.Push(OnFullScreenEvent(true));
+    }
 }
 
 HeadlessWindowImpl::~HeadlessWindowImpl()
@@ -39,6 +42,13 @@ void HeadlessWindowImpl::SetPosition(int32_t x, int32_t y)
 void HeadlessWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
     m_info.size = { w, h };
+}
+
+void HeadlessWindowImpl::SetFullScreen(bool fullScreen)
+{
+    if (fullScreen != m_info.fullScreen) {
+        m_eventQueue.Push(OnFullScreenEvent(fullScreen));
+    }
 }
 
 void HeadlessWindowImpl::SetMouseCursorVisible(bool visible)

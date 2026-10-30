@@ -27,6 +27,8 @@ public:
 
     void SetSize(uint32_t w, uint32_t h) override;
 
+    void SetFullScreen(bool fullScreen) override;
+
     void SetMouseCursorVisible(bool visible) override;
 
     GfxPlatformWindowHandle GetNativeWindowHandle() const override;

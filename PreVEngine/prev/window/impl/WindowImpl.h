@@ -32,6 +32,8 @@ public:
 
     bool HasFocus() const;
 
+    bool IsFullScreen() const;
+
     bool IsRunning() const;
 
     const WindowInfo& GetInfo() const;
@@ -60,6 +62,8 @@ public:
 
     virtual void SetSize(uint32_t w, uint32_t h) = 0;
 
+    virtual void SetFullScreen(bool fullScreen) = 0;
+
     virtual void SetMouseCursorVisible(bool visible) = 0;
 
     virtual GfxPlatformWindowHandle GetNativeWindowHandle() const = 0;
@@ -78,6 +82,8 @@ protected:
     Event OnResizeEvent(uint32_t width, uint32_t height); // Window resized
 
     Event OnFocusEvent(bool hasFocus); // Window gained/lost focus
+
+    Event OnFullScreenEvent(bool fullScreen); // Window entered/left fullscreen
 
     Event OnInitEvent(); // Window was initialized
 

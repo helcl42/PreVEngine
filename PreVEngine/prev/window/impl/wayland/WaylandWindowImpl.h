@@ -26,6 +26,8 @@ public:
 
     void SetSize(uint32_t w, uint32_t h) override;
 
+    void SetFullScreen(bool fullScreen) override;
+
     void SetMouseCursorVisible(bool visible) override;
 
     GfxPlatformWindowHandle GetNativeWindowHandle() const override;
@@ -130,7 +132,7 @@ private:
 
     uint32_t m_pointerSerial{};
 
-    bool m_fullscreen{};
+    Size m_windowedSize{}; // what a 0x0 configure out of fullscreen restores (buffer pixels)
 
     Position m_lastMousePosition{};
 

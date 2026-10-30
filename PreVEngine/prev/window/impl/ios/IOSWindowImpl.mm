@@ -67,6 +67,7 @@ IOSWindowImpl::IOSWindowImpl(const WindowInfo& windowInfo)
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
     m_eventQueue.Push(OnFocusEvent(true));
+    m_eventQueue.Push(OnFullScreenEvent(true)); // always
 }
 
 IOSWindowImpl::~IOSWindowImpl()
@@ -141,6 +142,11 @@ void IOSWindowImpl::SetPosition(int32_t x, int32_t y)
 }
 
 void IOSWindowImpl::SetSize(uint32_t w, uint32_t h)
+{
+    
+}
+
+void IOSWindowImpl::SetFullScreen(bool fullScreen)
 {
     
 }

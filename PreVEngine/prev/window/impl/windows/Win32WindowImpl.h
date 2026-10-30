@@ -21,6 +21,8 @@ public:
 
     void SetSize(uint32_t w, uint32_t h) override;
 
+    void SetFullScreen(bool fullScreen) override;
+
     void SetMouseCursorVisible(bool visible) override;
 
     GfxPlatformWindowHandle GetNativeWindowHandle() const override;
@@ -32,6 +34,8 @@ private:
     HINSTANCE m_hInstance{};
 
     HWND m_hWnd{};
+
+    WINDOWPLACEMENT m_windowedPlacement{ sizeof(WINDOWPLACEMENT) };
 
     MultiTouch m_MTouch{}; // Multi-Touch device
 };

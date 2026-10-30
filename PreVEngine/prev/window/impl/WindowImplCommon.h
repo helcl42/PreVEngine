@@ -78,6 +78,7 @@ struct Event {
         MOVE,
         RESIZE,
         FOCUS,
+        FULLSCREEN,
         TOUCH,
         CLOSE,
         INIT,
@@ -144,6 +145,11 @@ struct Event {
         {
             bool hasFocus;
         } focus;
+
+        struct // Window entered/left fullscreen
+        {
+            bool isFullScreen;
+        } fullScreen;
 
         struct // multi-touch display
         {

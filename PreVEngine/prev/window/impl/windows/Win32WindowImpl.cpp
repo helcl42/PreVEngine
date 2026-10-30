@@ -31,21 +31,6 @@ namespace {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 // 256
     };
 
-    void GetDesktopResolution(uint32_t& horizontal, uint32_t& vertical)
-    {
-        RECT desktop;
-        // Get a handle to the desktop window
-        const HWND hDesktop = GetDesktopWindow();
-        // Get the size of screen to the variable desktop
-        GetWindowRect(hDesktop, &desktop);
-
-        // The top left corner will have coordinates (0,0)
-        // and the bottom right corner will have coordinates
-        // (horizontal, vertical)
-        horizontal = static_cast<uint32_t>(desktop.right);
-        vertical = static_cast<uint32_t>(desktop.bottom);
-    }
-
     DWORD GetStyleFlags(bool fullScreen)
     {
         DWORD styleFlags;
@@ -107,45 +92,20 @@ Win32WindowImpl::Win32WindowImpl(const WindowInfo& windowInfo)
     ATOM atom = RegisterClassEx(&winClass);
     assert(atom && "Failed to register the window class.");
 
-    uint32_t screenWidth, screenHeight;
-    GetDesktopResolution(screenWidth, screenHeight);
-
-    bool fullScreen = false;
-    if (windowInfo.fullScreen) {
-        DEVMODE dmScreenSettings;
-        memset(&dmScreenSettings, 0, sizeof(dmScreenSettings));
-        dmScreenSettings.dmSize = sizeof(dmScreenSettings);
-        dmScreenSettings.dmPelsWidth = screenWidth;
-        dmScreenSettings.dmPelsHeight = screenHeight;
-        dmScreenSettings.dmBitsPerPel = 32;
-        dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-
-        if (windowInfo.size.width != static_cast<uint32_t>(screenWidth) && windowInfo.size.height != static_cast<uint32_t>(screenHeight)) {
-            if (ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN) == DISP_CHANGE_SUCCESSFUL) {
-                fullScreen = true;
-            } else {
-                MessageBox(NULL, "Fullscreen Mode not supported!\n Switch to window mode?", "Error", MB_OK | MB_ICONERROR);
-            }
-        }
-    }
-
     m_info.title = windowInfo.title;
-    m_info.fullScreen = fullScreen;
-    if (fullScreen) {
-        m_info.position = {};
-        m_info.size = { screenWidth, screenHeight };
-    } else {
-        m_info.position = { windowInfo.position.x, windowInfo.position.y };
-        m_info.size = { windowInfo.size.width, windowInfo.size.height };
-    }
+    m_info.position = { windowInfo.position.x, windowInfo.position.y };
+    m_info.size = { windowInfo.size.width, windowInfo.size.height };
 
-    const auto windowRect{ ComputeWindowRect(m_info.size.width, m_info.size.height, fullScreen) };
-    const auto dwStyle{ GetStyleFlags(fullScreen) };
+    const auto windowRect{ ComputeWindowRect(m_info.size.width, m_info.size.height, false) };
+    const auto dwStyle{ GetStyleFlags(false) };
 
     m_hWnd = CreateWindowEx(0, m_info.title.c_str(), m_info.title.c_str(), dwStyle, m_info.position.x, m_info.position.y, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL, m_hInstance, NULL);
     assert(m_hWnd && "Failed to create a window.");
 
     ShowWindow(m_hWnd, SW_SHOW);
+    if (windowInfo.fullScreen) {
+        SetFullScreen(true); // after showing, so the saved windowed placement is a visible one
+    }
     SetForegroundWindow(m_hWnd);
     SetFocus(m_hWnd);
 
@@ -369,6 +329,35 @@ void Win32WindowImpl::SetSize(uint32_t w, uint32_t h)
     SetWindowPos(m_hWnd, NULL, 0, 0, windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
 
     m_eventQueue.Push(OnResizeEvent(w, h)); // Trigger resize event
+}
+
+void Win32WindowImpl::SetFullScreen(bool fullScreen)
+{
+    if (m_info.fullScreen == fullScreen) {
+        return;
+    }
+
+    // Borderless window covering the monitor; leaving restores the saved windowed placement
+    if (fullScreen) {
+        GetWindowPlacement(m_hWnd, &m_windowedPlacement);
+    }
+
+    const LONG_PTR visible{ GetWindowLongPtr(m_hWnd, GWL_STYLE) & WS_VISIBLE };
+    SetWindowLongPtr(m_hWnd, GWL_STYLE, static_cast<LONG_PTR>(GetStyleFlags(fullScreen)) | visible);
+    SetWindowLongPtr(m_hWnd, GWL_EXSTYLE, static_cast<LONG_PTR>(GetStyleExFlags(fullScreen)));
+
+    if (fullScreen) {
+        MONITORINFO monitorInfo{ sizeof(MONITORINFO) };
+        GetMonitorInfo(MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST), &monitorInfo);
+        const RECT& rect{ monitorInfo.rcMonitor };
+        SetWindowPos(m_hWnd, HWND_TOP, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    } else {
+        SetWindowPlacement(m_hWnd, &m_windowedPlacement);
+        SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+    m_eventQueue.Push(OnFullScreenEvent(fullScreen));
+
+    PostMessage(m_hWnd, WM_RESHAPE, 0, 0); // report the new size/position
 }
 
 void Win32WindowImpl::SetMouseCursorVisible(bool visible)

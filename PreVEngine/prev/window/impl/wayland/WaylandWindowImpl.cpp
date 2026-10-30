@@ -6,6 +6,7 @@
 
 #include <linux/input.h>
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace prev::window::impl::wayland {
@@ -99,6 +100,7 @@ WaylandWindowImpl::WaylandWindowImpl(const WindowInfo& windowInfo)
     LOGI("Creating Wayland Window...");
 
     m_info = windowInfo;
+    m_info.fullScreen = false; // the compositor's configure reports it
 
     m_display = wl_display_connect(nullptr);
     if (!m_display) {
@@ -153,11 +155,11 @@ WaylandWindowImpl::WaylandWindowImpl(const WindowInfo& windowInfo)
     SetTitle(windowInfo.title);
 
     if (windowInfo.fullScreen) {
-        xdg_toplevel_set_fullscreen(m_topLevel, nullptr);
-        m_fullscreen = true;
+        SetFullScreen(true);
     }
 
     m_info.size = { m_info.size.width * m_outputScale, m_info.size.height * m_outputScale };
+    m_windowedSize = m_info.size;
 
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
@@ -250,6 +252,19 @@ void WaylandWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
 }
 
+void WaylandWindowImpl::SetFullScreen(bool fullScreen)
+{
+    if (m_info.fullScreen == fullScreen) {
+        return;
+    }
+
+    if (fullScreen) {
+        xdg_toplevel_set_fullscreen(m_topLevel, nullptr);
+    } else {
+        xdg_toplevel_unset_fullscreen(m_topLevel);
+    }
+}
+
 void WaylandWindowImpl::SetMouseCursorVisible(bool visible)
 {
     m_mouseCursorVisible = visible;
@@ -307,10 +322,25 @@ void WaylandWindowImpl::OnToplevelConfigure(void* data, xdg_toplevel* toplevel, 
 {
     WaylandWindowImpl* impl = static_cast<WaylandWindowImpl*>(data);
 
-    const Size newSize{ static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
+    // The compositor can enter or leave fullscreen on its own (e.g. a shortcut)
+    const auto* statesBegin{ static_cast<const uint32_t*>(states->data) };
+    const auto* statesEnd{ statesBegin + states->size / sizeof(uint32_t) };
+    const bool fullScreen{ std::find(statesBegin, statesEnd, XDG_TOPLEVEL_STATE_FULLSCREEN) != statesEnd };
+    if (fullScreen != impl->m_info.fullScreen) {
+        impl->m_eventQueue.Push(impl->OnFullScreenEvent(fullScreen));
+    }
+
+    // 0x0 leaves the size to the client; m_info.size is in buffer pixels, the configure in surface-local ones
+    Size newSize{ static_cast<uint32_t>(width * impl->m_outputScale), static_cast<uint32_t>(height * impl->m_outputScale) };
+    if (!fullScreen) {
+        if (newSize == Size{ 0, 0 }) {
+            newSize = impl->m_windowedSize; // out of fullscreen: back to the windowed size, not the monitor's
+        } else {
+            impl->m_windowedSize = newSize;
+        }
+    }
     if (newSize != Size{ 0, 0 } && impl->m_info.size != newSize) {
-        impl->m_info.size = { newSize.width * impl->m_outputScale, newSize.height * impl->m_outputScale };
-        impl->m_eventQueue.Push(impl->OnResizeEvent(impl->m_info.size.width, impl->m_info.size.height));
+        impl->m_eventQueue.Push(impl->OnResizeEvent(newSize.width, newSize.height));
     }
 }
 

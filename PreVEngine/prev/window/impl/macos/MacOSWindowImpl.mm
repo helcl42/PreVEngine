@@ -66,6 +66,11 @@ NSPoint ConvertPointFromScreenToView(NSWindow* window, NSView* view, NSPoint scr
     return viewPoint;
 }
 
+bool IsWindowFullScreen(NSWindow* window)
+{
+    return ([window styleMask] & NSWindowStyleMaskFullScreen) != 0;
+}
+
 MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
     : WindowImpl()
 {
@@ -126,6 +131,7 @@ MacOSWindowImpl::MacOSWindowImpl(const WindowInfo& windowInfo)
 
     m_state = std::make_unique<MacState>(window, view, layer);
     m_info = windowInfo;
+    m_info.fullScreen = false; // PollEvent reports it once the transition lands
 
     // Report size in pixels (backing store) for correct Retina support
     NSSize backingSize = [view convertSizeToBacking:[view bounds].size];
@@ -280,6 +286,12 @@ bool MacOSWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
         m_eventQueue.Push(OnResizeEvent(windowSize.width, windowSize.height));
     }
     
+    // The green title bar button enters or leaves fullscreen without SetFullScreen
+    const bool fullScreen{ IsWindowFullScreen(m_state->window) };
+    if(fullScreen != m_info.fullScreen) {
+        m_eventQueue.Push(OnFullScreenEvent(fullScreen));
+    }
+    
     if ([NSApp isActive]) {
         if(!m_hasFocus) {
             m_eventQueue.Push(OnFocusEvent(true));
@@ -340,6 +352,15 @@ void MacOSWindowImpl::SetSize(uint32_t w, uint32_t h)
 
     NSSize backingSize = [m_state->view convertSizeToBacking:[[m_state->window contentView] frame].size];
     m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(backingSize.width), static_cast<uint32_t>(backingSize.height)));
+}
+
+void MacOSWindowImpl::SetFullScreen(bool fullScreen)
+{
+    if(IsWindowFullScreen(m_state->window) == fullScreen) {
+        return;
+    }
+    
+    [m_state->window toggleFullScreen:nil];
 }
 
 void MacOSWindowImpl::SetMouseCursorVisible(bool visible)

@@ -28,11 +28,15 @@ public:
 
     virtual bool HasFocus() const = 0;
 
+    virtual bool IsFullScreen() const = 0;
+
     virtual void SetTitle(const std::string& title) = 0;
 
     virtual void SetPosition(const impl::Position& position) = 0;
 
     virtual void SetSize(const impl::Size& size) = 0;
+
+    virtual void SetFullScreen(bool fullScreen) = 0;
 
     virtual void ShowKeyboard(bool enabled) = 0;
 

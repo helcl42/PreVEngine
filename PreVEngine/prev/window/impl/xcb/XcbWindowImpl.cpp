@@ -8,6 +8,7 @@
 #include <X11/extensions/XInput2.h> // MultiTouch
 #endif
 
+#include <algorithm>
 #include <stdexcept>
 #include <string.h>
 
@@ -107,6 +108,7 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
         // XCB_EVENT_MASK_EXPOSURE |           // 32768
         // XCB_EVENT_MASK_VISIBILITY_CHANGE,   // 65536,
         XCB_EVENT_MASK_STRUCTURE_NOTIFY | // 131072   Window move/resize events
+        XCB_EVENT_MASK_PROPERTY_CHANGE | // 4194304  Window state (fullscreen)
         // XCB_EVENT_MASK_RESIZE_REDIRECT |    // 262144
         XCB_EVENT_MASK_FOCUS_CHANGE; // 2097152  Window focus
 
@@ -131,12 +133,15 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
 
     free(reply);
 
+    xcb_intern_atom_reply_t* atomWmState = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE");
+    xcb_intern_atom_reply_t* atomWmStateFullScreen = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE_FULLSCREEN");
+    m_atomWmState = atomWmState->atom;
+    m_atomWmStateFullScreen = atomWmStateFullScreen->atom;
+    free(atomWmStateFullScreen);
+    free(atomWmState);
+
     if (m_info.fullScreen) {
-        xcb_intern_atom_reply_t* atom_wm_state = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE");
-        xcb_intern_atom_reply_t* atom_wm_fullscreen = intern_atom_helper(m_xcbConnection, false, "_NET_WM_STATE_FULLSCREEN");
-        xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, atom_wm_state->atom, XCB_ATOM_ATOM, 32, 1, &(atom_wm_fullscreen->atom));
-        free(atom_wm_fullscreen);
-        free(atom_wm_state);
+        xcb_change_property(m_xcbConnection, XCB_PROP_MODE_REPLACE, m_xcbWindow, m_atomWmState, XCB_ATOM_ATOM, 32, 1, &m_atomWmStateFullScreen);
     }
 
     m_keyboardContext = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
@@ -149,6 +154,9 @@ XcbWindowImpl::XcbWindowImpl(const WindowInfo& windowInfo)
     SetPosition(m_info.position.x, m_info.position.y);
 
     m_eventQueue.Push(OnInitEvent());
+    if (m_info.fullScreen) {
+        m_eventQueue.Push(OnFullScreenEvent(true));
+    }
 }
 
 XcbWindowImpl::~XcbWindowImpl()
@@ -214,6 +222,25 @@ void XcbWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
     uint32_t values[] = { w, h };
     xcb_configure_window(m_xcbConnection, m_xcbWindow, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+    xcb_flush(m_xcbConnection);
+}
+
+void XcbWindowImpl::SetFullScreen(bool fullScreen)
+{
+    if (m_info.fullScreen == fullScreen) {
+        return;
+    }
+
+    // A mapped window asks the window manager (EWMH) instead of setting _NET_WM_STATE directly
+    xcb_client_message_event_t event{};
+    event.response_type = XCB_CLIENT_MESSAGE;
+    event.format = 32;
+    event.window = m_xcbWindow;
+    event.type = m_atomWmState;
+    event.data.data32[0] = fullScreen ? 1 : 0; // _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE
+    event.data.data32[1] = m_atomWmStateFullScreen;
+    event.data.data32[3] = 1; // source: normal application
+    xcb_send_event(m_xcbConnection, false, m_xcbScreen->root, XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, reinterpret_cast<const char*>(&event));
     xcb_flush(m_xcbConnection);
 }
 
@@ -379,6 +406,22 @@ void XcbWindowImpl::ProcessXEvent(xcb_generic_event_t* xEvent)
             m_eventQueue.Push(OnResizeEvent(configureEvent->width, configureEvent->height)); // window resized
         } else if (m_info.position != Position{ configureEvent->x, configureEvent->y }) {
             m_eventQueue.Push(OnMoveEvent(configureEvent->x, configureEvent->y)); // window moved
+        }
+        break;
+    }
+    case XCB_PROPERTY_NOTIFY: { // the window manager can enter or leave fullscreen on its own (e.g. a shortcut)
+        const auto propertyEvent{ (xcb_property_notify_event_t*)(xEvent) };
+        if (propertyEvent->atom == m_atomWmState) {
+            xcb_get_property_reply_t* reply = xcb_get_property_reply(m_xcbConnection, xcb_get_property(m_xcbConnection, false, m_xcbWindow, m_atomWmState, XCB_ATOM_ATOM, 0, 32), nullptr);
+            if (reply) {
+                const auto* atomsBegin{ static_cast<const xcb_atom_t*>(xcb_get_property_value(reply)) };
+                const auto* atomsEnd{ atomsBegin + xcb_get_property_value_length(reply) / sizeof(xcb_atom_t) };
+                const bool fullScreen{ std::find(atomsBegin, atomsEnd, m_atomWmStateFullScreen) != atomsEnd };
+                if (fullScreen != m_info.fullScreen) {
+                    m_eventQueue.Push(OnFullScreenEvent(fullScreen));
+                }
+                free(reply);
+            }
         }
         break;
     }

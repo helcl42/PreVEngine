@@ -78,6 +78,9 @@ EmscriptenWindowImpl::EmscriptenWindowImpl(const WindowInfo& windowInfo)
     m_eventQueue.Push(OnInitEvent());
     m_eventQueue.Push(OnResizeEvent(m_info.size.width, m_info.size.height));
     m_eventQueue.Push(OnFocusEvent(true));
+    if (m_info.fullScreen) {
+        m_eventQueue.Push(OnFullScreenEvent(true));
+    }
 }
 
 EmscriptenWindowImpl::~EmscriptenWindowImpl()
@@ -131,6 +134,16 @@ void EmscriptenWindowImpl::SetPosition(int32_t x, int32_t y)
 void EmscriptenWindowImpl::SetSize(uint32_t w, uint32_t h)
 {
     ApplyDisplaySize(); // the surface always tracks the display; layout only decides where it shows
+}
+
+void EmscriptenWindowImpl::SetFullScreen(bool fullScreen)
+{
+    // m_info.fullScreen follows FullscreenChangeCallback - the browser can refuse or exit on its own
+    if (fullScreen) {
+        emscripten_request_fullscreen(m_canvasSelector.c_str(), true); // deferred to the next user input event when not called from one
+    } else {
+        emscripten_exit_fullscreen();
+    }
 }
 
 void EmscriptenWindowImpl::ObserveDevicePixelBox()
@@ -311,7 +324,10 @@ EM_BOOL EmscriptenWindowImpl::FocusCallback(int eventType, const EmscriptenFocus
 EM_BOOL EmscriptenWindowImpl::FullscreenChangeCallback(int eventType, const EmscriptenFullscreenChangeEvent* fullscreenEvent, void* userData)
 {
     auto* self = static_cast<EmscriptenWindowImpl*>(userData);
-    self->m_info.fullScreen = fullscreenEvent->isFullscreen;
+    const bool fullScreen{ fullscreenEvent->isFullscreen != EM_FALSE };
+    if (fullScreen != self->m_info.fullScreen) {
+        self->m_eventQueue.Push(self->OnFullScreenEvent(fullScreen));
+    }
     const auto previous{ self->m_info.size };
     self->ApplyDisplaySize(); // same display either way; fullscreen only changes where the element shows
     self->m_eventQueue.Push(self->OnFocusEvent(true));

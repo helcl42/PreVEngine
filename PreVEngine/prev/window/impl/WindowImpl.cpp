@@ -34,6 +34,11 @@ bool WindowImpl::HasFocus() const
     return m_hasFocus;
 }
 
+bool WindowImpl::IsFullScreen() const
+{
+    return m_info.fullScreen;
+}
+
 const WindowInfo& WindowImpl::GetInfo() const
 {
     return m_info;
@@ -143,6 +148,15 @@ Event WindowImpl::OnFocusEvent(bool hasFocus)
 
     Event e{ Event::EventType::FOCUS };
     e.body.focus.hasFocus = hasFocus;
+    return e;
+}
+
+Event WindowImpl::OnFullScreenEvent(bool fullScreen)
+{
+    m_info.fullScreen = fullScreen;
+
+    Event e{ Event::EventType::FULLSCREEN };
+    e.body.fullScreen.isFullScreen = fullScreen;
     return e;
 }
 

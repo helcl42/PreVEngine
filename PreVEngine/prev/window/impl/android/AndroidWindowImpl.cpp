@@ -33,7 +33,7 @@ AndroidWindowImpl::AndroidWindowImpl(const WindowInfo& windowInfo)
     : WindowImpl()
 {
     m_info.size = {};
-    m_info.fullScreen = true;
+    m_eventQueue.Push(OnFullScreenEvent(true)); // always
 
     m_app = android_native_get_app_instance();
 
@@ -255,6 +255,10 @@ void AndroidWindowImpl::SetPosition(int32_t x, int32_t y)
 }
 
 void AndroidWindowImpl::SetSize(uint32_t w, uint32_t h)
+{
+}
+
+void AndroidWindowImpl::SetFullScreen(bool fullScreen)
 {
 }
 

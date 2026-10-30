@@ -27,6 +27,8 @@ public:
 
     void SetSize(uint32_t w, uint32_t h) override;
 
+    void SetFullScreen(bool fullScreen) override;
+
     void SetMouseCursorVisible(bool visible) override;
 
     GfxPlatformWindowHandle GetNativeWindowHandle() const override;
@@ -50,6 +52,10 @@ private:
     xcb_window_t m_xcbWindow{};
 
     xcb_intern_atom_reply_t* m_atomWmDeleteWindow{};
+
+    xcb_atom_t m_atomWmState{};
+
+    xcb_atom_t m_atomWmStateFullScreen{};
 
     //---xkb Keyboard---
     xkb_context* m_keyboardContext{}; // context for xkbcommon keyboard input
