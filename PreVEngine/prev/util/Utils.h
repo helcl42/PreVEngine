@@ -302,30 +302,30 @@ public:
         m_index = GetPrevious(step);
     }
 
-    CircularIndex operator++()
+    CircularIndex& operator++()
     {
-        auto prev{ *this };
         Increment(1);
-        return prev;
+        return *this;
     }
 
     CircularIndex operator++(int)
     {
+        auto prev{ *this };
         Increment(1);
-        return *this;
+        return prev;
     }
 
-    CircularIndex operator--()
+    CircularIndex& operator--()
     {
-        auto prev{ *this };
         Decrement(1);
-        return prev;
+        return *this;
     }
 
     CircularIndex operator--(int)
     {
+        auto prev{ *this };
         Decrement(1);
-        return *this;
+        return prev;
     }
 
     operator IndexType() const
