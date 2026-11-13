@@ -109,14 +109,20 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
             m_eventQueue.Push(OnFocusEvent(false));
             break;
         case APP_CMD_INIT_WINDOW:
-        case APP_CMD_CONFIG_CHANGED:
-            // THIS is workaround
-            if (m_app->window == NULL) {
-                LOGW("APP_CMD_CONFIG_CHANGED - but window is NULL - skipping event.");
-                break;
+            if (m_app->window != NULL) {
+                m_eventQueue.Push(OnChangeEvent());
+                m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
             }
-            m_eventQueue.Push(OnChangeEvent());
-            m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
+            break;
+        case APP_CMD_CONFIG_CHANGED:
+            if (m_app->window != NULL) {
+                m_eventQueue.Push(OnChangeEvent());
+            }
+            break;
+        case APP_CMD_WINDOW_RESIZED:
+            if (m_app->window != NULL) {
+                m_eventQueue.Push(OnResizeEvent(static_cast<uint32_t>(ANativeWindow_getWidth(m_app->window)), static_cast<uint32_t>(ANativeWindow_getHeight(m_app->window))));
+            }
             break;
         case APP_CMD_TERM_WINDOW:
             // Background, not a close: INIT_WINDOW (CHANGE) rebuilds on return. Synchronous observer:
