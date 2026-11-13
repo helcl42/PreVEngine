@@ -1,6 +1,7 @@
 #include "EngineImpl.h"
 
 #include "../../../common/Logger.h"
+#include "../../../input/gamepad/GamepadBackendFactory.h"
 #include "../../../render/pass/RenderPassBuilder.h"
 #include "../../../render/swapchain/SwapchainFactory.h"
 #include "../../../util/MathUtils.h"
@@ -152,6 +153,11 @@ void EngineImpl::ResetWindow()
     windowCreateInfo.height = m_config.windowSize.y;
 
     m_window = std::make_unique<prev::window::Window>(windowCreateInfo);
+}
+
+void EngineImpl::ResetGamepadManager()
+{
+    m_gamepadManager = std::make_unique<prev::input::gamepad::GamepadManager>(prev::input::gamepad::GamepadBackendFactory{}.Create(), m_config.gamepadDeadZones);
 }
 
 void EngineImpl::ResetSurface()

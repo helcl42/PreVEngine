@@ -3,11 +3,31 @@
 #ifdef GFX_HAS_ANDROID
 
 #include "../../../common/Logger.h"
+#include "../../../event/EventChannel.h"
+#include "../../../input/gamepad/impl/android/AndroidGamepadEvents.h"
 
 #include <thread>
 
 namespace prev::window::impl::android {
 namespace {
+    // Gamepad events stay off the keyboard/touch path, or B would turn into Android's Back.
+    void PostGamepadEvent(const AInputEvent* aEvent)
+    {
+        const int32_t deviceId{ AInputEvent_getDeviceId(aEvent) };
+        if (AInputEvent_getType(aEvent) == AINPUT_EVENT_TYPE_KEY) {
+            const int32_t action{ AKeyEvent_getAction(aEvent) };
+            if (action == AKEY_EVENT_ACTION_DOWN || action == AKEY_EVENT_ACTION_UP) {
+                prev::event::EventChannel::Post(prev::input::gamepad::impl::android::AndroidGamepadKeyEvent{ deviceId, AKeyEvent_getKeyCode(aEvent), action == AKEY_EVENT_ACTION_DOWN });
+            }
+        } else if (AInputEvent_getType(aEvent) == AINPUT_EVENT_TYPE_MOTION) {
+            prev::input::gamepad::impl::android::AndroidGamepadMotionEvent motionEvent{ deviceId, {} };
+            for (size_t i = 0; i < prev::input::gamepad::impl::android::MOTION_AXIS_COUNT; ++i) {
+                motionEvent.values[i] = AMotionEvent_getAxisValue(aEvent, prev::input::gamepad::impl::android::MOTION_AXIS_IDS[i], 0);
+            }
+            prev::event::EventChannel::Post(motionEvent);
+        }
+    }
+
     // Convert native Android key-code to cross-platform USB HID code.
     const uint8_t ANDROID_TO_HID[256] = {
         0, 227, 231, 0, 0, 0, 0, 39, 30, 31, 32, 33, 34, 35, 36, 37,
@@ -149,6 +169,12 @@ bool AndroidWindowImpl::PollEvent(bool waitForEvent, Event& outEvent)
             int32_t handled = 0;
             if (m_app->onInputEvent != NULL) {
                 handled = m_app->onInputEvent(m_app, aEvent);
+            }
+
+            if (prev::input::gamepad::impl::android::IsGamepadSource(AInputEvent_getSource(aEvent))) {
+                PostGamepadEvent(aEvent);
+                AInputQueue_finishEvent(m_app->inputQueue, aEvent, 1);
+                continue;
             }
 
             int32_t type = AInputEvent_getType(aEvent);

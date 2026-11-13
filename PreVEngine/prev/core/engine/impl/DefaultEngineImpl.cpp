@@ -35,6 +35,7 @@ void DefaultEngineImpl::Init()
     ResetTiming();
     ResetInstance();
     ResetWindow();
+    ResetGamepadManager();
     ResetSurface();
     ResetDevice();
     ResetRenderPass();
@@ -66,6 +67,7 @@ void DefaultEngineImpl::ShutDown()
 bool DefaultEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
+    m_gamepadManager->Update();
     m_time->Update();
     return result;
 }

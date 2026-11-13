@@ -51,6 +51,7 @@ void XrEngineImpl::Init()
     ResetTiming();
     ResetInstance();
     ResetWindow();
+    ResetGamepadManager();
     if (UsesWindowSurface()) {
         ResetSurface();
     }
@@ -92,6 +93,7 @@ void XrEngineImpl::ShutDown()
 bool XrEngineImpl::Update()
 {
     bool result{ m_window->ProcessEvents() };
+    m_gamepadManager->Update();
     m_xr->PollEvents();
     if (m_xr->IsExitRequested()) {
         m_window->Close(); // the same door as the game's Quit: on Android the activity finishes first

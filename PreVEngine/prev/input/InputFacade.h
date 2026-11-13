@@ -1,6 +1,7 @@
 #ifndef __INPUTS_H__
 #define __INPUTS_H__
 
+#include "gamepad/GamepadInputComponent.h"
 #include "keyboard/KeyboardInputComponnet.h"
 #include "mouse/MouseInputComponent.h"
 #include "touch/TouchInputComponent.h"
@@ -51,6 +52,18 @@ public:
 
     bool IsTouchActionListenerRegistered(touch::ITouchActionListener& listener) const;
 
+    bool RegisterGamepadButtonListener(gamepad::IGamepadButtonListener& listener);
+
+    bool UnregisterGamepadButtonListener(gamepad::IGamepadButtonListener& listener);
+
+    bool IsGamepadButtonListenerRegistered(gamepad::IGamepadButtonListener& listener) const;
+
+    bool RegisterGamepadConnectionListener(gamepad::IGamepadConnectionListener& listener);
+
+    bool UnregisterGamepadConnectionListener(gamepad::IGamepadConnectionListener& listener);
+
+    bool IsGamepadConnectionListenerRegistered(gamepad::IGamepadConnectionListener& listener) const;
+
 public:
     bool IsKeyPressed(const keyboard::KeyCode keyCode) const;
 
@@ -74,12 +87,28 @@ public:
 
     void SetMouseCursorVisible(bool visible);
 
+    std::vector<uint32_t> GetConnectedGamepads() const;
+
+    bool IsGamepadConnected(const uint32_t gamepadId) const;
+
+    bool IsGamepadButtonPressed(const uint32_t gamepadId, const gamepad::GamepadButton button) const;
+
+    float GetGamepadAxis(const uint32_t gamepadId, const gamepad::GamepadAxis axis) const;
+
+    glm::vec2 GetGamepadStick(const uint32_t gamepadId, const gamepad::GamepadStick stick) const;
+
+    gamepad::GamepadState GetGamepadState(const uint32_t gamepadId) const;
+
+    std::string GetGamepadName(const uint32_t gamepadId) const;
+
 private:
     keyboard::KeyboardInputComponnet m_keyboardInputComponent;
 
     mouse::MouseInputComponent m_mouseInputComponent;
 
     touch::TouchInputComponent m_touchInuptComponent;
+
+    gamepad::GamepadInputComponent m_gamepadInputComponent;
 };
 
 } // namespace prev::input

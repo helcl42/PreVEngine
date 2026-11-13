@@ -53,6 +53,7 @@ Open on a WebXR-capable headset browser (e.g. Meta Quest Browser) and press **En
 - **Cross-platform**: Win32, XCB, Wayland, Cocoa (macOS), UIKit (iOS), Android native, Web (Emscripten/WASM)
 - **XR (VR/AR)**: OpenXR (native - Windows, Linux, Android) and WebXR (browser, over WebGPU)
 - **Shader pipeline**: Slang → SPIR-V / WGSL (via slangc)
+- **Gamepads**: native, no SDL - evdev (Linux), XInput (Windows), GameController (macOS/iOS), input queue (Android), Gamepad API (Web)
 
 ## Clone
 

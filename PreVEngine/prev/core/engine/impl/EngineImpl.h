@@ -10,6 +10,7 @@
 #include "../../instance/Instance.h"
 
 #include "../../../event/EventHandler.h"
+#include "../../../input/gamepad/GamepadManager.h"
 #include "../../../render/IRootRenderer.h"
 #include "../../../render/pass/RenderPass.h"
 #include "../../../render/surface/Surface.h"
@@ -91,6 +92,8 @@ protected:
 
     void ResetWindow();
 
+    void ResetGamepadManager();
+
     void ResetSurface();
 
     std::unique_ptr<prev::render::swapchain::ISwapchain> CreateWindowSwapchain(uint32_t viewCount) const;
@@ -136,6 +139,8 @@ protected:
     std::unique_ptr<prev::core::instance::Instance> m_instance{};
 
     std::unique_ptr<prev::window::IWindow> m_window{};
+
+    std::unique_ptr<prev::input::gamepad::GamepadManager> m_gamepadManager{};
 
     std::unique_ptr<prev::render::surface::Surface> m_surface{};
 

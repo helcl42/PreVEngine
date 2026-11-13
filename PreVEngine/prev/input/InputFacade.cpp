@@ -76,6 +76,36 @@ bool InputsFacade::IsTouchActionListenerRegistered(touch::ITouchActionListener& 
     return m_touchInuptComponent.IsTouchActionListenerRegistered(listener);
 }
 
+bool InputsFacade::RegisterGamepadButtonListener(gamepad::IGamepadButtonListener& listener)
+{
+    return m_gamepadInputComponent.RegisterButtonListener(listener);
+}
+
+bool InputsFacade::UnregisterGamepadButtonListener(gamepad::IGamepadButtonListener& listener)
+{
+    return m_gamepadInputComponent.UnregisterButtonListener(listener);
+}
+
+bool InputsFacade::IsGamepadButtonListenerRegistered(gamepad::IGamepadButtonListener& listener) const
+{
+    return m_gamepadInputComponent.IsButtonListenerRegistered(listener);
+}
+
+bool InputsFacade::RegisterGamepadConnectionListener(gamepad::IGamepadConnectionListener& listener)
+{
+    return m_gamepadInputComponent.RegisterConnectionListener(listener);
+}
+
+bool InputsFacade::UnregisterGamepadConnectionListener(gamepad::IGamepadConnectionListener& listener)
+{
+    return m_gamepadInputComponent.UnregisterConnectionListener(listener);
+}
+
+bool InputsFacade::IsGamepadConnectionListenerRegistered(gamepad::IGamepadConnectionListener& listener) const
+{
+    return m_gamepadInputComponent.IsConnectionListenerRegistered(listener);
+}
+
 bool InputsFacade::IsKeyPressed(const keyboard::KeyCode keyCode) const
 {
     return m_keyboardInputComponent.IsKeyPressed(keyCode);
@@ -129,5 +159,40 @@ bool InputsFacade::IsMouseCursorVisible() const
 void InputsFacade::SetMouseCursorVisible(bool visible)
 {
     m_mouseInputComponent.SetCursorVisible(visible);
+}
+
+std::vector<uint32_t> InputsFacade::GetConnectedGamepads() const
+{
+    return m_gamepadInputComponent.GetConnectedGamepads();
+}
+
+bool InputsFacade::IsGamepadConnected(const uint32_t gamepadId) const
+{
+    return m_gamepadInputComponent.IsConnected(gamepadId);
+}
+
+bool InputsFacade::IsGamepadButtonPressed(const uint32_t gamepadId, const gamepad::GamepadButton button) const
+{
+    return m_gamepadInputComponent.IsButtonPressed(gamepadId, button);
+}
+
+float InputsFacade::GetGamepadAxis(const uint32_t gamepadId, const gamepad::GamepadAxis axis) const
+{
+    return m_gamepadInputComponent.GetAxis(gamepadId, axis);
+}
+
+glm::vec2 InputsFacade::GetGamepadStick(const uint32_t gamepadId, const gamepad::GamepadStick stick) const
+{
+    return m_gamepadInputComponent.GetStick(gamepadId, stick);
+}
+
+gamepad::GamepadState InputsFacade::GetGamepadState(const uint32_t gamepadId) const
+{
+    return m_gamepadInputComponent.GetState(gamepadId);
+}
+
+std::string InputsFacade::GetGamepadName(const uint32_t gamepadId) const
+{
+    return m_gamepadInputComponent.GetName(gamepadId);
 }
 } // namespace prev::input

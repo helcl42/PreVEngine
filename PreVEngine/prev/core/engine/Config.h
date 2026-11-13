@@ -2,6 +2,7 @@
 #define __ENGINE_CONFIG_H__
 
 #include "../../common/Common.h"
+#include "../../input/gamepad/GamepadCommon.h"
 #include "../../window/WindowCommon.h"
 
 namespace prev::core::engine {
@@ -48,6 +49,8 @@ struct Config {
     int32_t gpuIndex{ -1 };
 
     XrMode xrMode{ XrMode::VR }; // initial XR compositing mode (XR builds only)
+
+    prev::input::gamepad::GamepadDeadZones gamepadDeadZones{};
 };
 } // namespace prev::core::engine
 

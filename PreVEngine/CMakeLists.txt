@@ -25,6 +25,12 @@ file(GLOB SRC_LIST
     "prev/input/mouse/*.h" "prev/input/mouse/*.cpp"
     "prev/input/keyboard/*.h" "prev/input/keyboard/*.cpp"
     "prev/input/touch/*.h" "prev/input/touch/*.cpp"
+    "prev/input/gamepad/*.h" "prev/input/gamepad/*.cpp"
+    "prev/input/gamepad/impl/evdev/*.h" "prev/input/gamepad/impl/evdev/*.cpp"
+    "prev/input/gamepad/impl/windows/*.h" "prev/input/gamepad/impl/windows/*.cpp"
+    "prev/input/gamepad/impl/emscripten/*.h" "prev/input/gamepad/impl/emscripten/*.cpp"
+    "prev/input/gamepad/impl/android/*.h" "prev/input/gamepad/impl/android/*.cpp"
+    "prev/input/gamepad/impl/apple/*.h"
     "prev/render/*.h" "prev/render/*.cpp"
     "prev/render/buffer/*.h" "prev/render/buffer/*.cpp"
     "prev/render/framebuffer/*.h" "prev/render/framebuffer/*.cpp"
@@ -247,9 +253,11 @@ elseif(IOS)
     file(GLOB IOS_SRC_LIST 
         "platform/ios/*.h" "platform/ios/*.mm"
         "prev/window/impl/ios/*.h" "prev/window/impl/ios/*.mm"
+        "prev/input/gamepad/impl/apple/*.mm"
     )
     
     find_library(UIKIT_LIB UIKit)
+    find_library(GAME_CONTROLLER_LIB GameController)
     find_library(METALKIT_LIB METALKit)
     find_library(FOUNDATION_LIB Foundation)
   
@@ -265,6 +273,7 @@ elseif(IOS)
         ${UIKIT_LIB}
         ${METALKIT_LIB}
         ${FOUNDATION_LIB}
+        ${GAME_CONTROLLER_LIB}
     )
     
 elseif(APPLE)
@@ -276,9 +285,11 @@ elseif(APPLE)
     file(GLOB MACOS_SRC_LIST 
         "platform/macos/*.h" "platform/macos/*.mm"
         "prev/window/impl/macos/*.h" "prev/window/impl/macos/*.mm"
+        "prev/input/gamepad/impl/apple/*.mm"
     )
     
     find_library(COCOA_LIB Cocoa)
+    find_library(GAME_CONTROLLER_LIB GameController)
     find_library(QUARTZ_CORE_LIB QuartzCore)
 
     add_library(${PROJECT_NAME} STATIC
@@ -292,6 +303,7 @@ elseif(APPLE)
         gfx
         ${COCOA_LIB}
         ${QUARTZ_CORE_LIB}
+        ${GAME_CONTROLLER_LIB}
     )
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND NOT ANDROID)
     message("${PROJECT_NAME} - Linux")
