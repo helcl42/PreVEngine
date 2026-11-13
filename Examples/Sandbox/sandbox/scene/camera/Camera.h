@@ -31,6 +31,8 @@ public:
 
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
+    void operator()(const prev::input::gamepad::GamepadButtonEvent& buttonEvent);
+
     void operator()(const prev::core::NewIterationEvent& iterationEvent);
 
 public:
@@ -55,6 +57,7 @@ private:
     const float m_sensitivity{ 0.1f };
     const float m_moveSpeed{ 8.0f };
     const float m_verticalFov{ glm::radians(60.0f) };
+    const float m_gamepadLookSpeed{ 120.0f }; // degrees per second
 
     uint32_t m_viewCount{ 1 };
     std::shared_ptr<sandbox::component::CameraComponent> m_camera;
@@ -79,6 +82,7 @@ private:
     prev::event::EventHandler<Camera, prev::input::mouse::MouseEvent> m_mouseHandler{ *this };
     prev::event::EventHandler<Camera, prev::input::touch::TouchEvent> m_touchHandler{ *this };
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };
+    prev::event::EventHandler<Camera, prev::input::gamepad::GamepadButtonEvent> m_gamepadButtonHandler{ *this };
     prev::event::EventHandler<Camera, prev::core::NewIterationEvent> m_iterationHandler{ *this };
 };
 } // namespace sandbox::scene::camera

@@ -39,24 +39,32 @@ void Camera::Update(float deltaTime)
     const glm::vec3 right{ GetRightDirection() };
     const glm::vec3 worldUp{ 0.0f, 1.0f, 0.0f };
 
-    using prev::input::keyboard::KeyCode;
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_W)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_W)) {
         m_position += forward * distance;
     }
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_S)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_S)) {
         m_position -= forward * distance;
     }
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_A)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_A)) {
         m_position -= right * distance;
     }
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_D)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_D)) {
         m_position += right * distance;
     }
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_Q)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_Q)) {
         m_position -= worldUp * distance;
     }
-    if (m_inputFacade.IsKeyPressed(KeyCode::KEY_E)) {
+    if (m_inputFacade.IsKeyPressed(prev::input::keyboard::KeyCode::KEY_E)) {
         m_position += worldUp * distance;
+    }
+
+    for (const auto id : m_inputFacade.GetConnectedGamepads()) {
+        const glm::vec2 move{ m_inputFacade.GetGamepadStick(id, prev::input::gamepad::GamepadStick::LEFT) };
+        const glm::vec2 look{ m_inputFacade.GetGamepadStick(id, prev::input::gamepad::GamepadStick::RIGHT) };
+        const float rise{ m_inputFacade.GetGamepadAxis(id, prev::input::gamepad::GamepadAxis::RIGHT_TRIGGER) - m_inputFacade.GetGamepadAxis(id, prev::input::gamepad::GamepadAxis::LEFT_TRIGGER) };
+
+        m_position += (forward * move.y + right * move.x + worldUp * rise) * distance;
+        AddLook(look * (m_gamepadLookSpeed * deltaTime));
     }
 
     // Touch move pad (forward/backward only).
@@ -127,6 +135,13 @@ void Camera::operator()(const prev::input::touch::TouchEvent& touchEvent)
 void Camera::operator()(const prev::input::keyboard::KeyEvent& keyEvent)
 {
     if (keyEvent.action == prev::input::keyboard::KeyActionType::PRESS && keyEvent.keyCode == prev::input::keyboard::KeyCode::KEY_R) {
+        Reset();
+    }
+}
+
+void Camera::operator()(const prev::input::gamepad::GamepadButtonEvent& buttonEvent)
+{
+    if (buttonEvent.action == prev::input::gamepad::GamepadButtonActionType::PRESS && buttonEvent.button == prev::input::gamepad::GamepadButton::NORTH) {
         Reset();
     }
 }
