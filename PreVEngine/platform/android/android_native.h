@@ -5,6 +5,8 @@
 
 #include <android/asset_manager.h>
 
+#include <jni.h>
+
 #include <stdio.h>
 
 /// hijack fopen and route it through the android asset system so that we can pull things out of our package's APK
@@ -27,6 +29,25 @@ void android_native_show_keyboard(bool visible, int flags = 0); // Show/hide And
 
 int android_native_get_unicode_char(int eventType, int keyCode, int metaState);
 
-void android_native_force_finish_activity();
+// Attaches the calling thread to the JVM for the scope; detaches only if it was not attached before.
+class ScopedJniEnv final {
+public:
+    ScopedJniEnv();
+
+    ~ScopedJniEnv();
+
+    ScopedJniEnv(const ScopedJniEnv&) = delete;
+
+    ScopedJniEnv& operator=(const ScopedJniEnv&) = delete;
+
+    JNIEnv* Get() const;
+
+private:
+    JavaVM* m_vm{ nullptr };
+
+    JNIEnv* m_env{ nullptr };
+
+    bool m_attached{ false };
+};
 
 #endif

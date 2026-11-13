@@ -11,7 +11,4 @@ void android_main(struct android_app* state)
     PreVMain(0, NULL); // call the common main
 
     ANativeActivity_finish(state->activity);
-
-    // android_native_force_finish_activity();
-    // exit(0);
 }

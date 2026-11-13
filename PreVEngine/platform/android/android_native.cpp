@@ -117,17 +117,42 @@ android_app* android_native_get_app_instance()
     return g_androidApp;
 }
 
+ScopedJniEnv::ScopedJniEnv()
+{
+    if (!g_androidApp || !g_androidApp->activity || !g_androidApp->activity->vm) {
+        return;
+    }
+    m_vm = g_androidApp->activity->vm;
+    if (m_vm->GetEnv(reinterpret_cast<void**>(&m_env), JNI_VERSION_1_6) == JNI_EDETACHED) {
+        JavaVMAttachArgs args{ JNI_VERSION_1_6, "NativeThread", nullptr };
+        if (m_vm->AttachCurrentThread(&m_env, &args) != JNI_OK) {
+            m_env = nullptr;
+            return;
+        }
+        m_attached = true;
+    }
+}
+
+ScopedJniEnv::~ScopedJniEnv()
+{
+    if (m_attached) {
+        m_vm->DetachCurrentThread();
+    }
+}
+
+JNIEnv* ScopedJniEnv::Get() const
+{
+    return m_env;
+}
+
 #define CALL_OBJ_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallObjectMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
 #define CALL_BOOL_METHOD(OBJ, METHOD, SIGNATURE, ...) jniEnv->CallBooleanMethod(OBJ, jniEnv->GetMethodID(jniEnv->GetObjectClass(OBJ), METHOD, SIGNATURE), __VA_ARGS__)
 
 void android_native_show_keyboard(bool visible, int flags)
 {
-    // Attach current thread to the JVM.
-    JavaVM* javaVM = g_androidApp->activity->vm;
-    JNIEnv* jniEnv = g_androidApp->activity->env;
-    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
-    jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
-    if (result == JNI_ERR) {
+    ScopedJniEnv scopedEnv;
+    JNIEnv* jniEnv = scopedEnv.Get();
+    if (!jniEnv) {
         return;
     }
 
@@ -151,18 +176,13 @@ void android_native_show_keyboard(bool visible, int flags)
         jobject lBinder = CALL_OBJ_METHOD(lDecorView, "getWindowToken", "()Landroid/os/IBinder;", 0);
         jboolean lResult = CALL_BOOL_METHOD(lInputMethodManager, "hideSoftInputFromWindow", "(Landroid/os/IBinder;I)Z", lBinder, flags);
     }
-    // Finished with the JVM.
-    javaVM->DetachCurrentThread();
 }
 
 int android_native_get_unicode_char(int eventType, int keyCode, int metaState)
 {
-    JavaVM* javaVM = g_androidApp->activity->vm;
-    JNIEnv* jniEnv = g_androidApp->activity->env;
-
-    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
-    jint result = javaVM->AttachCurrentThread(&jniEnv, &Args);
-    if (result == JNI_ERR) {
+    ScopedJniEnv scopedEnv;
+    JNIEnv* jniEnv = scopedEnv.Get();
+    if (!jniEnv) {
         return 0;
     }
 
@@ -173,27 +193,6 @@ int android_native_get_unicode_char(int eventType, int keyCode, int metaState)
     jobject eventObj = jniEnv->NewObject(class_key_event, eventConstructor, eventType, keyCode);
     int unicodeKey = jniEnv->CallIntMethod(eventObj, method_get_unicode_char, metaState);
 
-    javaVM->DetachCurrentThread();
-
     // LOGI("Keycode: %d  MetaState: %d Unicode: %d", keyCode, metaState, unicodeKey);
     return unicodeKey;
-}
-
-void android_native_force_finish_activity()
-{
-    JavaVM* javaVM = g_androidApp->activity->vm;
-    JNIEnv* jniEnv = g_androidApp->activity->env;
-    JavaVMAttachArgs Args = { JNI_VERSION_1_6, "NativeThread", NULL };
-    javaVM->AttachCurrentThread(&jniEnv, &Args);
-
-    jclass classActivity = jniEnv->GetObjectClass(g_androidApp->activity->clazz);
-    jmethodID activityFinishID = jniEnv->GetMethodID(classActivity, "finish", "()V");
-
-    signal(SIGABRT, SIG_DFL);
-
-    jniEnv->CallVoidMethod(g_androidApp->activity->clazz, activityFinishID);
-
-    javaVM->DetachCurrentThread();
-
-    pthread_exit(NULL);
 }
