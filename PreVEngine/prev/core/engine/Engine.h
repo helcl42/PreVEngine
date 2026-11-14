@@ -5,6 +5,7 @@
 
 #include "impl/EngineImpl.h"
 
+#include "../../event/EventChannel.h"
 #include "../../render/IRootRenderer.h"
 #include "../../render/pass/RenderPass.h"
 #include "../../render/swapchain/ISwapchain.h"
@@ -49,6 +50,10 @@ private:
     bool Tick();
 
 private:
+    prev::event::Context m_eventContext{};
+
+    prev::event::Context::Scope m_eventContextScope{ m_eventContext };
+
     std::unique_ptr<prev::core::engine::impl::EngineImpl> m_engineImpl{};
 
     bool m_quit{ false };
