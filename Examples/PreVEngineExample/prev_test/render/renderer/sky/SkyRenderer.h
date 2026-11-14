@@ -134,7 +134,7 @@ private:
 
     struct DEFAULT_ALIGNMENT UniformsSkyPostProcessCS {
         DEFAULT_ALIGNMENT glm::vec4 resolution;
-        DEFAULT_ALIGNMENT glm::vec4 lisghtPosition;
+        DEFAULT_ALIGNMENT glm::vec4 lightPosition;
         DEFAULT_ALIGNMENT glm::mat4 inverseProjectionMatrix;
         DEFAULT_ALIGNMENT glm::mat4 inverseViewMatrix;
         DEFAULT_ALIGNMENT glm::vec4 lightDirection;

@@ -1,63 +1,63 @@
-#include "KeyboardInputComponnet.h"
+#include "KeyboardInputComponent.h"
 
 namespace prev::input::keyboard {
-bool KeyboardInputComponnet::RegisterKeyboardActionListener(IKeyboardActionListener& listener)
+bool KeyboardInputComponent::RegisterKeyboardActionListener(IKeyboardActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_keyActionObservers.Register(listener);
 }
 
-bool KeyboardInputComponnet::UnregisterKeyboardActionListener(IKeyboardActionListener& listener)
+bool KeyboardInputComponent::UnregisterKeyboardActionListener(IKeyboardActionListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_keyActionObservers.Unregister(listener);
 }
 
-bool KeyboardInputComponnet::IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const
+bool KeyboardInputComponent::IsKeyboardActionListenerRegistered(IKeyboardActionListener& listener) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_keyActionObservers.IsRegistered(listener);
 }
 
-bool KeyboardInputComponnet::RegisterTextListener(ITextListener& listener)
+bool KeyboardInputComponent::RegisterTextListener(ITextListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_textObservers.Register(listener);
 }
 
-bool KeyboardInputComponnet::UnregisterTextListener(ITextListener& listener)
+bool KeyboardInputComponent::UnregisterTextListener(ITextListener& listener)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_textObservers.Unregister(listener);
 }
 
-bool KeyboardInputComponnet::IsTextListenerRegistered(ITextListener& listener) const
+bool KeyboardInputComponent::IsTextListenerRegistered(ITextListener& listener) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_textObservers.IsRegistered(listener);
 }
 
-bool KeyboardInputComponnet::IsKeyPressed(const KeyCode keyCode) const
+bool KeyboardInputComponent::IsKeyPressed(const KeyCode keyCode) const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_pressedKeys.find(keyCode) != m_pressedKeys.cend();
 }
 
-std::set<KeyCode> KeyboardInputComponnet::GetPressedKeys() const
+std::set<KeyCode> KeyboardInputComponent::GetPressedKeys() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     return m_pressedKeys;
 }
 
-void KeyboardInputComponnet::operator()(const KeyEvent& keyEvent)
+void KeyboardInputComponent::operator()(const KeyEvent& keyEvent)
 {
     std::set<IKeyboardActionListener*> observers;
     {
@@ -75,7 +75,7 @@ void KeyboardInputComponnet::operator()(const KeyEvent& keyEvent)
     }
 }
 
-void KeyboardInputComponnet::operator()(const TextEvent& textEvent)
+void KeyboardInputComponent::operator()(const TextEvent& textEvent)
 {
     std::set<ITextListener*> observers;
     {

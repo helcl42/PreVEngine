@@ -17,7 +17,7 @@ public:
     void operator()(const prev::input::keyboard::KeyEvent& keyEvent);
 
 private:
-    prev::input::InputsFacade m_inputFacade;
+    prev::input::InputFacade m_inputFacade;
 
     prev::event::EventHandler<InputsHelper, prev::input::keyboard::KeyEvent> m_keyboardEventsHandler{ *this };
 };

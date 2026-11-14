@@ -25,7 +25,7 @@ public:
     void ShutDown() override;
 
 private:
-    void RemoveRayCastComponnet();
+    void RemoveRayCastComponent();
 
     void AddRayCastComponent(const bool mouseLocked);
 
@@ -47,7 +47,7 @@ private:
 
     glm::vec2 m_mousePosition;
 
-    prev::input::InputsFacade m_inputFacade;
+    prev::input::InputFacade m_inputFacade;
 
 private:
     prev::event::EventHandler<RayCaster, prev::core::NewIterationEvent> m_newIterationHandler{ *this };

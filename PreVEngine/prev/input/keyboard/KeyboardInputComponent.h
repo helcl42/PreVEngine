@@ -11,19 +11,19 @@
 #include <mutex>
 
 namespace prev::input::keyboard {
-class KeyboardInputComponnet final {
+class KeyboardInputComponent final {
 public:
-    KeyboardInputComponnet() = default;
+    KeyboardInputComponent() = default;
 
-    ~KeyboardInputComponnet() = default;
+    ~KeyboardInputComponent() = default;
 
-    KeyboardInputComponnet(const KeyboardInputComponnet& other) = delete;
+    KeyboardInputComponent(const KeyboardInputComponent& other) = delete;
 
-    KeyboardInputComponnet& operator=(const KeyboardInputComponnet& other) = delete;
+    KeyboardInputComponent& operator=(const KeyboardInputComponent& other) = delete;
 
-    KeyboardInputComponnet(KeyboardInputComponnet&& other) = delete;
+    KeyboardInputComponent(KeyboardInputComponent&& other) = delete;
 
-    KeyboardInputComponnet& operator=(KeyboardInputComponnet&& other) = delete;
+    KeyboardInputComponent& operator=(KeyboardInputComponent&& other) = delete;
 
 public:
     bool RegisterKeyboardActionListener(IKeyboardActionListener& listener);
@@ -49,9 +49,9 @@ public:
     void operator()(const TextEvent& textEvent);
 
 private:
-    prev::event::EventHandler<KeyboardInputComponnet, KeyEvent> m_keyEventsHandler{ *this };
+    prev::event::EventHandler<KeyboardInputComponent, KeyEvent> m_keyEventsHandler{ *this };
 
-    prev::event::EventHandler<KeyboardInputComponnet, TextEvent> m_textEventHandler{ *this };
+    prev::event::EventHandler<KeyboardInputComponent, TextEvent> m_textEventHandler{ *this };
 
 private:
     prev::common::pattern::Observer<IKeyboardActionListener> m_keyActionObservers;

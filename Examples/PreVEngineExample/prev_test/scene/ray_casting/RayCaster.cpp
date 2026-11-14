@@ -64,7 +64,7 @@ void RayCaster::ShutDown()
     SceneNode::ShutDown();
 }
 
-void RayCaster::RemoveRayCastComponnet()
+void RayCaster::RemoveRayCastComponent()
 {
     if (prev::scene::component::NodeComponentHelper::HasComponent<prev_test::component::ray_casting::IRayCasterComponent>(GetThis())) {
         prev::scene::component::NodeComponentHelper::RemoveComponents<prev_test::component::ray_casting::IRayCasterComponent>(GetThis());
@@ -92,7 +92,7 @@ void RayCaster::operator()(const prev::input::mouse::MouseEvent& mouseEvent)
 
 void RayCaster::operator()(const prev::input::mouse::MouseLockRequest& lockRequest)
 {
-    RemoveRayCastComponnet();
+    RemoveRayCastComponent();
     AddRayCastComponent(lockRequest.lock);
 }
 } // namespace prev_test::scene::ray_casting

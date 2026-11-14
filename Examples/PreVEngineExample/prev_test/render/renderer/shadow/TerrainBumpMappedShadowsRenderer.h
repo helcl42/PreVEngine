@@ -13,11 +13,11 @@
 #include <prev/scene/graph/ISceneNode.h>
 
 namespace prev_test::render::renderer::shadow {
-class TerrainBumplMappedShadowsRenderer final : public IRenderer<ShadowsRenderContext> {
+class TerrainBumpMappedShadowsRenderer final : public IRenderer<ShadowsRenderContext> {
 public:
-    TerrainBumplMappedShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
+    TerrainBumpMappedShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene);
 
-    ~TerrainBumplMappedShadowsRenderer() = default;
+    ~TerrainBumpMappedShadowsRenderer() = default;
 
 public:
     void Init() override;

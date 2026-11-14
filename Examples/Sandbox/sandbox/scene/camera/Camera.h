@@ -78,7 +78,7 @@ private:
     bool m_touchMoveForward{ false };
     bool m_touchMoveBackward{ false };
 
-    prev::input::InputsFacade m_inputFacade;
+    prev::input::InputFacade m_inputFacade;
     prev::event::EventHandler<Camera, prev::input::mouse::MouseEvent> m_mouseHandler{ *this };
     prev::event::EventHandler<Camera, prev::input::touch::TouchEvent> m_touchHandler{ *this };
     prev::event::EventHandler<Camera, prev::input::keyboard::KeyEvent> m_keyHandler{ *this };

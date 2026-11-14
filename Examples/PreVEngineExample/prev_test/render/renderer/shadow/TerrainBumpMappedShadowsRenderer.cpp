@@ -1,4 +1,4 @@
-#include "TerrainBumplMappedShadowsRenderer.h"
+#include "TerrainBumpMappedShadowsRenderer.h"
 
 #include "../RendererUtils.h"
 
@@ -13,14 +13,14 @@
 #include <prev/scene/component/NodeComponentHelper.h>
 
 namespace prev_test::render::renderer::shadow {
-TerrainBumplMappedShadowsRenderer::TerrainBumplMappedShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
+TerrainBumpMappedShadowsRenderer::TerrainBumpMappedShadowsRenderer(prev::core::device::Device& device, prev::render::pass::RenderPass& renderPass, prev::scene::IScene& scene)
     : m_device{ device }
     , m_renderPass{ renderPass }
     , m_scene{ scene }
 {
 }
 
-void TerrainBumplMappedShadowsRenderer::Init()
+void TerrainBumpMappedShadowsRenderer::Init()
 {
     // clang-format off
     m_shader = prev::render::shader::ShaderBuilder{ m_device }
@@ -70,13 +70,13 @@ void TerrainBumplMappedShadowsRenderer::Init()
     LOGI("Terrain Bump Mapped Shadows Uniforms Pools created");
 }
 
-void TerrainBumplMappedShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
+void TerrainBumpMappedShadowsRenderer::BeginFrame(const ShadowsRenderContext& renderContext)
 {
     m_shader->BeginFrame(renderContext.frameInFlightIndex);
     m_uniformsPool->BeginFrame(renderContext.frameInFlightIndex);
 }
 
-void TerrainBumplMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
+void TerrainBumpMappedShadowsRenderer::PreRender(const ShadowsRenderContext& renderContext)
 {
     const GfxViewport viewport{ static_cast<float>(renderContext.rect.origin.x), static_cast<float>(renderContext.rect.origin.y), static_cast<float>(renderContext.rect.extent.width), static_cast<float>(renderContext.rect.extent.height), 0.0f, 1.0f };
 
@@ -85,7 +85,7 @@ void TerrainBumplMappedShadowsRenderer::PreRender(const ShadowsRenderContext& re
     gfxRenderPassEncoderSetScissorRect(renderContext.renderPassEncoder, &renderContext.rect);
 }
 
-void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
+void TerrainBumpMappedShadowsRenderer::Render(const ShadowsRenderContext& renderContext, const std::shared_ptr<prev::scene::graph::ISceneNode>& node)
 {
     if (!node->GetTags().HasAny({ TAG_TERRAIN_NORMAL_MAPPED_RENDER_COMPONENT, TAG_TERRAIN_CONE_STEP_MAPPED_RENDER_COMPONENT })) {
         return;
@@ -125,17 +125,17 @@ void TerrainBumplMappedShadowsRenderer::Render(const ShadowsRenderContext& rende
     gfxRenderPassEncoderDrawIndexed(renderContext.renderPassEncoder, terrainComponent->GetModel()->GetMesh()->GetIndicesCount(), 1, 0, 0, 0);
 }
 
-void TerrainBumplMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
+void TerrainBumpMappedShadowsRenderer::PostRender(const ShadowsRenderContext& renderContext)
 {
 }
 
-void TerrainBumplMappedShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
+void TerrainBumpMappedShadowsRenderer::EndFrame(const ShadowsRenderContext& renderContext)
 {
     m_shader->EndFrame();
     m_uniformsPool->EndFrame();
 }
 
-void TerrainBumplMappedShadowsRenderer::ShutDown()
+void TerrainBumpMappedShadowsRenderer::ShutDown()
 {
     m_uniformsPool.reset();
 

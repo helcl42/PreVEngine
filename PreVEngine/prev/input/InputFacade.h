@@ -1,25 +1,25 @@
-#ifndef __INPUTS_H__
-#define __INPUTS_H__
+#ifndef __INPUT_FACADE_H__
+#define __INPUT_FACADE_H__
 
 #include "gamepad/GamepadInputComponent.h"
-#include "keyboard/KeyboardInputComponnet.h"
+#include "keyboard/KeyboardInputComponent.h"
 #include "mouse/MouseInputComponent.h"
 #include "touch/TouchInputComponent.h"
 
 namespace prev::input {
-class InputsFacade {
+class InputFacade {
 public:
-    InputsFacade() = default;
+    InputFacade() = default;
 
-    ~InputsFacade() = default;
+    ~InputFacade() = default;
 
-    InputsFacade(const InputsFacade& other) = delete;
+    InputFacade(const InputFacade& other) = delete;
 
-    InputsFacade& operator=(const InputsFacade& other) = delete;
+    InputFacade& operator=(const InputFacade& other) = delete;
 
-    InputsFacade(InputsFacade&& other) = delete;
+    InputFacade(InputFacade&& other) = delete;
 
-    InputsFacade& operator=(InputsFacade&& other) = delete;
+    InputFacade& operator=(InputFacade&& other) = delete;
 
 public:
     bool RegisterKeyboardActionListener(keyboard::IKeyboardActionListener& listener);
@@ -102,15 +102,15 @@ public:
     std::string GetGamepadName(const uint32_t gamepadId) const;
 
 private:
-    keyboard::KeyboardInputComponnet m_keyboardInputComponent;
+    keyboard::KeyboardInputComponent m_keyboardInputComponent;
 
     mouse::MouseInputComponent m_mouseInputComponent;
 
-    touch::TouchInputComponent m_touchInuptComponent;
+    touch::TouchInputComponent m_touchInputComponent;
 
     gamepad::GamepadInputComponent m_gamepadInputComponent;
 };
 
 } // namespace prev::input
 
-#endif // !__INPUTS_H__
+#endif // !__INPUT_FACADE_H__

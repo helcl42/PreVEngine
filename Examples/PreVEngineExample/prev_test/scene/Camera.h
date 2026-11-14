@@ -62,7 +62,7 @@ private:
     glm::vec2 m_prevTouchPosition{ 0.0f, 0.0f };
 
 private:
-    prev::input::InputsFacade m_inputFacade;
+    prev::input::InputFacade m_inputFacade;
 
     std::vector<std::shared_ptr<prev_test::component::transform::ITransformComponent>> m_transformComponents;
 

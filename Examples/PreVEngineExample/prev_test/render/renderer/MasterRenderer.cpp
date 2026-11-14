@@ -20,7 +20,7 @@
 #include "shadow/AnimationShadowsRenderer.h"
 #include "shadow/BumpMappedShadowsRenderer.h"
 #include "shadow/DefaultShadowsRenderer.h"
-#include "shadow/TerrainBumplMappedShadowsRenderer.h"
+#include "shadow/TerrainBumpMappedShadowsRenderer.h"
 #include "shadow/TerrainShadowsRenderer.h"
 #include "sky/LensFlareRenderer.h"
 #include "sky/SkyBoxRenderer.h"
@@ -196,7 +196,7 @@ void MasterRenderer::InitShadows()
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::DefaultShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::BumpMappedShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
-    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainBumplMappedShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
+    m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::TerrainBumpMappedShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
     m_shadowRenderers.emplace_back(std::make_unique<prev_test::render::renderer::shadow::AnimationBumpMappedShadowsRenderer>(m_device, *shadowsComponent->GetRenderPass(), m_scene));
 

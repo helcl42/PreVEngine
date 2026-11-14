@@ -177,7 +177,7 @@ public:
     ~IDGenerator() = default;
 
 public:
-    uint64_t GenrateNewId()
+    uint64_t GenerateNewId()
     {
         return ++m_id;
     }

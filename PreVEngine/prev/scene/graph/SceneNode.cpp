@@ -4,12 +4,12 @@
 
 namespace prev::scene::graph {
 SceneNode::SceneNode()
-    : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
+    : m_id(prev::util::IDGenerator::Instance().GenerateNewId())
 {
 }
 
 SceneNode::SceneNode(const prev::common::TagSet& tags)
-    : m_id(prev::util::IDGenerator::Instance().GenrateNewId())
+    : m_id(prev::util::IDGenerator::Instance().GenerateNewId())
     , m_tags(tags)
 {
 }

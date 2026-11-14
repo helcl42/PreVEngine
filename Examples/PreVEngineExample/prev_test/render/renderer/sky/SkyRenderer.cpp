@@ -358,7 +358,7 @@ void SkyRenderer::BeginFrame(const NormalRenderContext& renderContext)
 
         UniformsSkyPostProcessCS uniformsPostCS{};
         uniformsPostCS.resolution = glm::vec4(extent.width, extent.height, 0.0f, 0.0f);
-        uniformsPostCS.lisghtPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
+        uniformsPostCS.lightPosition = glm::vec4(lightPositionO1, 0.0f, 1.0f);
         uniformsPostCS.inverseProjectionMatrix = glm::inverse(renderContext.projectionMatrices[viewIndex]);
         uniformsPostCS.inverseViewMatrix = glm::inverse(renderContext.viewMatrices[viewIndex]);
         uniformsPostCS.lightDirection = glm::vec4(-mainLightComponent->GetDirection(), 0.0f);
