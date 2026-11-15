@@ -5,6 +5,7 @@
 #include "ImageFormat.h"
 #include "Pixel.h"
 
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
