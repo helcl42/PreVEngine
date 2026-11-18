@@ -130,12 +130,15 @@ void DefaultEngineImpl::ResetDevice()
         extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
     }
 
-    if (adapter->IsExtensionSupported(GFX_DEVICE_EXTENSION_NON_SOLID_FILL)) {
-        extensions.push_back(GFX_DEVICE_EXTENSION_NON_SOLID_FILL);
-    }
-    // Enable precise occlusion queries only when the selected adapter reports support.
-    if (adapter->IsExtensionSupported(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE)) {
-        extensions.push_back(GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE);
+    constexpr const char* optionalExtensions[]{
+        GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
+        GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE,
+        GFX_DEVICE_EXTENSION_TIMESTAMP_QUERY
+    };
+    for (const auto& extension : optionalExtensions) {
+        if (adapter->IsExtensionSupported(extension)) {
+            extensions.push_back(extension);
+        }
     }
 
     m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions);

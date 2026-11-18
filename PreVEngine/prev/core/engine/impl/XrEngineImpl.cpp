@@ -161,13 +161,20 @@ void XrEngineImpl::ResetDevice()
     }
 
     std::vector<std::string> extensions;
-    for (const char* extension : { GFX_DEVICE_EXTENSION_NON_SOLID_FILL, GFX_DEVICE_EXTENSION_MULTIVIEW, GFX_DEVICE_EXTENSION_DEPTH_STENCIL_RESOLVE }) {
+    if (surface) {
+        extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
+    }
+    constexpr const char* optionalExtensions[]{
+        GFX_DEVICE_EXTENSION_NON_SOLID_FILL,
+        GFX_DEVICE_EXTENSION_OCCLUSION_QUERY_PRECISE,
+        GFX_DEVICE_EXTENSION_TIMESTAMP_QUERY,
+        GFX_DEVICE_EXTENSION_MULTIVIEW,
+        GFX_DEVICE_EXTENSION_DEPTH_STENCIL_RESOLVE
+    };
+    for (const char* extension : optionalExtensions) {
         if (adapter->IsExtensionSupported(extension)) {
             extensions.push_back(extension);
         }
-    }
-    if (surface) {
-        extensions.push_back(GFX_DEVICE_EXTENSION_SWAPCHAIN);
     }
     m_device = prev::core::device::DeviceFactory{}.Create(*adapter, extensions, m_xr->GetRequiredDeviceExtensions());
 
