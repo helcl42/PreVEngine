@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       SLANG_VERSION: "2026.9.1"
 
@@ -44,10 +44,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
-        sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
         sudo apt update
-        sudo apt-get install -y vulkan-sdk libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
+        sudo apt-get install -y libvulkan-dev libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
 
     - name: Set reusable strings
       id: strings
