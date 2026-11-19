@@ -1,4 +1,4 @@
-name: Linux (Wayland) OpenXR - CI Build/Test
+name: Linux (XCB, Wayland) OpenXR - CI Build/Test
 
 on:
   push:
@@ -42,11 +42,10 @@ jobs:
       with:
         python-version: '3.12'
 
-    # libx11-dev: the vendored OpenXR-SDK's CMake defaults to the xlib presentation backend and needs the Xlib headers.
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt-get install -y libvulkan-dev libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev libx11-dev ninja-build
+        sudo apt-get install -y libdbus-1-3 libxkbcommon-x11-0 libxcb-icccm4 libxcb-render-util0 libxcb-xinput0 libxcb-xfixes0 libx11-xcb-dev libvulkan-dev xcb libxkbcommon-dev libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
 
     - name: Set reusable strings
       id: strings
@@ -72,7 +71,7 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -DENABLE_OPENXR=ON \
-        -DENABLE_XCB=OFF \
+        -DENABLE_XCB=ON \
         -DENABLE_WAYLAND=ON \
         -S ${{ github.workspace }}
 
@@ -81,28 +80,28 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir example-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-wayland-openxr-${{ matrix.compiler }}
+        mkdir example-linux-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-openxr-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: example-linux-wayland-openxr-${{ matrix.compiler }}
-        path: example-linux-wayland-openxr-${{ matrix.compiler }}
+        name: example-linux-openxr-${{ matrix.compiler }}
+        path: example-linux-openxr-${{ matrix.compiler }}
         retention-days: 7
 
     - name: Create Sandbox Artifact
       run: |
-        mkdir sandbox-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-wayland-openxr-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+        mkdir sandbox-linux-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-openxr-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-openxr-${{ matrix.compiler }}
 
     - name: Publish Sandbox Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sandbox-linux-wayland-openxr-${{ matrix.compiler }}
-        path: sandbox-linux-wayland-openxr-${{ matrix.compiler }}
+        name: sandbox-linux-openxr-${{ matrix.compiler }}
+        path: sandbox-linux-openxr-${{ matrix.compiler }}
         retention-days: 7
 
     - name: Run Tests

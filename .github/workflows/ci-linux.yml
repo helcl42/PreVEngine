@@ -1,4 +1,4 @@
-name: Linux (XCB) - CI Build/Test
+name: Linux (XCB, Wayland) - CI Build/Test
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt-get install -y libdbus-1-3 libxkbcommon-x11-0 libxcb-icccm4 libxcb-render-util0 libxcb-xinput0 libxcb-xfixes0 libx11-xcb-dev libvulkan-dev xcb libxkbcommon-dev libminizip-dev libstdc++6 libc6-dev build-essential ninja-build
+        sudo apt-get install -y libdbus-1-3 libxkbcommon-x11-0 libxcb-icccm4 libxcb-render-util0 libxcb-xinput0 libxcb-xfixes0 libx11-xcb-dev libvulkan-dev xcb libxkbcommon-dev libminizip-dev libstdc++6 libc6-dev build-essential libwayland-dev ninja-build
 
     - name: Set reusable strings
       id: strings
@@ -71,7 +71,7 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
         -DENABLE_XCB=ON \
-        -DENABLE_WAYLAND=OFF \
+        -DENABLE_WAYLAND=ON \
         -S ${{ github.workspace }}
 
     - name: Build
@@ -79,37 +79,31 @@ jobs:
 
     - name: Create Artifact
       run: |
-        mkdir example-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-xcb-${{ matrix.compiler }}
+        mkdir example-linux-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/assets example-linux-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/PreVEngineExample/PreVEngineExample example-linux-${{ matrix.compiler }}
 
     - name: Publish Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: example-linux-xcb-${{ matrix.compiler }}
-        path: example-linux-xcb-${{ matrix.compiler }}
+        name: example-linux-${{ matrix.compiler }}
+        path: example-linux-${{ matrix.compiler }}
         retention-days: 7
 
     - name: Create Sandbox Artifact
       run: |
-        mkdir sandbox-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-xcb-${{ matrix.compiler }}
-        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-xcb-${{ matrix.compiler }}
+        mkdir sandbox-linux-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/assets sandbox-linux-${{ matrix.compiler }}
+        cp -r ${{ steps.strings.outputs.build-output-dir }}/Examples/Sandbox/Sandbox sandbox-linux-${{ matrix.compiler }}
 
     - name: Publish Sandbox Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sandbox-linux-xcb-${{ matrix.compiler }}
-        path: sandbox-linux-xcb-${{ matrix.compiler }}
+        name: sandbox-linux-${{ matrix.compiler }}
+        path: sandbox-linux-${{ matrix.compiler }}
         retention-days: 7
-
-    - name: Setup xvfb for screen 0
-      run: Xvfb :1 -screen 0 1920x1080x24 &
 
     - name: Run Tests
       run: |
         cd ${{ steps.strings.outputs.build-output-dir }}/PreVEngineTests
         ./PreVEngineTests
-
-    - name: Tear down xvfb
-      run: killall Xvfb
