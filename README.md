@@ -258,13 +258,31 @@ The example app supports command-line configuration:
 | `--top` | 40 | Window Y position |
 | `--fullscreen` | 0 | Fullscreen mode |
 | `--vsync` | 1 | VSync |
-| `--backend` | auto | `vulkan` or `webgpu` |
+| `--color-managed` | 1 | Linear rendering with sRGB presentation |
+| `--backend` | `vulkan` (`webgpu` on web) | `vulkan` or `webgpu` |
 | `--sample-count` | 4 | MSAA samples |
 | `--swapchain-images` | 3 | Swapchain image count |
 | `--frames-in-flight` | 2 | Max frames in flight (0 = match swapchain image count) |
 | `--validation` | 1 | Enable validation layers |
 | `--gpu-index` | -1 | GPU adapter index (-1 = auto) |
 | `--window-system` | auto | `auto`, `headless`, `win32`, `macos`, `ios`, `android`, `emscripten`, `wayland`, `xcb`, `xlib` |
+| `--help` | | Print the options and exit |
+
+## Sandbox
+
+```bash
+./Sandbox --window-system wayland --vsync 0
+```
+
+| Option | Default | Description |
+|------|---------|-------------|
+| `--backend` | `vulkan` (`webgpu` on web) | `vulkan` or `webgpu` |
+| `--window-system` | auto | Same values as the example application |
+| `--sample-count` | 4 | MSAA samples |
+| `--vsync` | 1 | VSync |
+| `--color-managed` | 1 | Linear rendering with sRGB presentation |
+| `--ar` | off | Start XR builds in AR (passthrough) mode instead of VR |
+| `--help` | | Print the options and exit |
 
 ## 3rd Party Dependencies
 

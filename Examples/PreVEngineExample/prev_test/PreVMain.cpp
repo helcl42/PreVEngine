@@ -60,7 +60,7 @@ void PrintUsage(const char* programName)
     printf("  --sample-count <int>   MSAA sample count (default: 4)\n");
     printf("  --swapchain-images <int>  Swapchain image count (default: 3)\n");
     printf("  --frames-in-flight <int>  Max frames in flight (default: 2)\n");
-    printf("  --gpu <int>            GPU index to use (default: auto)\n");
+    printf("  --gpu-index <int>      GPU index to use (default: auto)\n");
     printf("  --backend <string>     Render backend: vulkan, webgpu (default: platform)\n");
     printf("  --help                 Print this help message\n");
 }
